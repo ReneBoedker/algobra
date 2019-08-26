@@ -13,9 +13,9 @@ func TestInit(t *testing.T) {
 func TestOverflowDetection(t *testing.T) {
 	var bigPrime uint
 	if uintBitSize == 32 {
-		bigPrime = uint(92683)
+		bigPrime = uint(65537)
 	} else {
-		bigPrime = uint(6074001001)
+		bigPrime = uint(4294967311)
 	}
 	_, err := Define(bigPrime)
 	if err == nil {

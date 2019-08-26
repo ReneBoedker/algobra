@@ -22,8 +22,8 @@ type PrimeField struct {
 }
 
 func Define(char uint) (*PrimeField, error) {
-	if char-1 >= 2<<((uintBitSize+1)/2) {
-		return nil, fmt.Errorf("Define: %d exceeds maximal field size (2^%d)", char, (uintBitSize+1)/2)
+	if char-1 >= 1<<(uintBitSize/2) {
+		return nil, fmt.Errorf("Define: %d exceeds maximal field size (2^%d)", char, uintBitSize/2)
 	}
 	_, _, err := basic.FactorizePrimePower(char)
 	if err != nil {
