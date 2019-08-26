@@ -1,48 +1,84 @@
-package finitefields
+package primefield
 
 import (
+	"algobra/basic"
+	"fmt"
 	"strconv"
 )
 
-type Element struct {
-	val uint
-	mod uint
+var uintBitSize uint
+
+func init() {
+	// Determine bit-size of uint type
+	i := ^uint(0)
+	for i > 0 {
+		uintBitSize++
+		i >>= 1
+	}
 }
 
-func New(val, mod uint) *Element {
-	return &Element{val: val % mod, mod: mod}
+type PrimeField struct {
+	char uint
+}
+
+func Define(char uint) (*PrimeField, error) {
+	if char-1 >= 2<<((uintBitSize+1)/2) {
+		return nil, fmt.Errorf("Define: %d exceeds maximal field size (2^%d)", char, (uintBitSize+1)/2)
+	}
+	_, _, err := basic.FactorizePrimePower(char)
+	if err != nil {
+		return nil, fmt.Errorf("Define: " + err.Error())
+	}
+	return &PrimeField{char: char}, nil
+}
+
+type Element struct {
+	field *PrimeField
+	val   uint
+}
+
+func (pf *PrimeField) Element(val uint) *Element {
+	return &Element{field: pf, val: val % pf.char}
+}
+
+func (pf *PrimeField) ElementFromSigned(val int) *Element {
+	val %= int(pf.char)
+	if val < 0 {
+		val += int(pf.char)
+	}
+	return pf.Element(uint(val))
 }
 
 func (a *Element) Equal(b *Element) bool {
-	if a.mod == b.mod && a.val == b.val {
+	if a.field == b.field && a.val == b.val {
 		return true
 	}
 	return false
 }
 
 func (a *Element) Plus(b *Element) *Element {
-	if a.mod != b.mod {
+	if a.field != b.field {
 		panic("Element.Plus: Elements are from different fields.")
 	}
-	return &Element{val: (a.val + b.val) % a.mod, mod: a.mod}
+	return a.field.Element(a.val + b.val)
 }
 
 func (a *Element) Neg() *Element {
-	return &Element{val: a.mod - a.val, mod: a.mod}
+	return a.field.Element(a.field.char - a.val)
 }
 
 func (a *Element) Minus(b *Element) *Element {
-	if a.mod != b.mod {
+	if a.field != b.field {
 		panic("Element.Minus: Elements are from different fields.")
 	}
 	return a.Plus(b.Neg())
 }
 
 func (a *Element) Mult(b *Element) *Element {
-	if a.mod != b.mod {
+	if a.field != b.field {
 		panic("Element.Mult: Elements are from different fields.")
 	}
-	return &Element{val: (a.val * b.val) % a.mod, mod: a.mod}
+	return a.field.Element(a.val * b.val)
 }
 
 func (a *Element) Inv() *Element {
@@ -51,7 +87,7 @@ func (a *Element) Inv() *Element {
 	}
 	// Implemented using the extended euclidean algorithm (see for instance
 	// [GG13])
-	r0 := a.mod
+	r0 := a.field.char
 	r1 := a.val
 	i0, i1 := 0, 1
 	for r1 > 0 {
@@ -60,9 +96,9 @@ func (a *Element) Inv() *Element {
 		i0, i1 = i1, i0-int(q)*i1
 	}
 	for i0 < 0 {
-		i0 += int(a.mod)
+		i0 += int(a.field.char)
 	}
-	return &Element{val: uint(i0), mod: a.mod}
+	return a.field.ElementFromSigned(i0)
 }
 
 func (a *Element) Nonzero() bool {
