@@ -49,8 +49,12 @@ func (f *Polynomial) Copy() *Polynomial {
 // Plus returns the sum of the two polynomials f and g.
 func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
 	if f.baseRing != g.baseRing {
-		panic(fmt.Sprintf("Polynomial.Plus: Polynomials incompatible\n'%#v'\n'%#v')",
-			f.baseRing, g.baseRing))
+		fNew, gNew, err := embedInCommonRing(f, g)
+		if err != nil {
+			panic(fmt.Sprintf("Polynomial.Plus: Polynomials incompatible\n'%#v'\n'%#v')",
+				f.baseRing, g.baseRing))
+		}
+		return fNew.Plus(gNew)
 	}
 	h := f.Copy()
 	for deg, c := range g.degrees {
@@ -224,6 +228,30 @@ func (f *Polynomial) reduce() {
 	if f.baseRing.id != nil {
 		f.baseRing.id.reduce(f)
 	}
+}
+
+// Embed f in another ring
+func embedInCommonRing(f, g *Polynomial) (fOut, gOut *Polynomial, err error) {
+	fOut = f.Copy()
+	gOut = g.Copy()
+	if f.baseRing.ring != g.baseRing.ring {
+		err = fmt.Errorf("embedInCommonRing: Rings '%v' and '%v' are not compatible",
+			f.baseRing.ring, g.baseRing.ring,
+		)
+		return
+	}
+	switch {
+	case f.baseRing.id == nil && g.baseRing.id == nil:
+		err = nil
+	case f.baseRing.id == nil && g.baseRing.id != nil:
+		fOut.baseRing = g.baseRing
+		err = nil
+	case f.baseRing != nil && g.baseRing.id == nil:
+		gOut.baseRing = f.baseRing
+	case f.baseRing != nil && g.baseRing.id != nil:
+		err = fmt.Errorf("embedInCommonRing: Polynomials defined over different quotient rings.")
+	}
+	return
 }
 
 // String returns the string representation of f. Variables are named 'X' and
