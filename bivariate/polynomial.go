@@ -266,7 +266,9 @@ func (f *Polynomial) String() string {
 		if i > 0 {
 			fmt.Fprint(&b, " + ")
 		}
-		fmt.Fprintf(&b, "%v", f.Coef(d))
+		if tmp := f.Coef(d); !tmp.One() || (d[0] == 0 && d[1] == 0) {
+			fmt.Fprintf(&b, "%v", tmp)
+		}
 		if d[0] == 1 {
 			fmt.Fprint(&b, "X")
 		}

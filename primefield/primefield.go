@@ -109,6 +109,10 @@ func (a *Element) Nonzero() bool {
 	return (a.val != 0)
 }
 
+func (a *Element) One() bool {
+	return (a.val == 1)
+}
+
 func (a *Element) String() string {
 	return strconv.FormatUint(uint64(a.val), 10)
 }
