@@ -19,7 +19,7 @@ type ideal []*Polynomial
 // NewIdeal returns a new polynomial ideal over the given ring. If the
 // generators are not defined over the given ring, the function panics.
 // Internally, this function computes a reduced Gröbner basis.
-func (r *ring) NewIdeal(generators ...*Polynomial) ideal {
+func (r *Ring) NewIdeal(generators ...*Polynomial) ideal {
 	targetRing := generators[0].baseRing
 	for _, g := range generators {
 		if g.baseRing != targetRing {
@@ -45,7 +45,7 @@ func monomialLcm(f, g *Polynomial) (lcm *Polynomial, ok bool) {
 	return lcm, true
 }
 
-func sPoly(f, g *Polynomial) (*Polynomial, error) {
+func SPolynomial(f, g *Polynomial) (*Polynomial, error) {
 	if f.baseRing != g.baseRing {
 		return nil, fmt.Errorf("sPoly: Inputs are defined over different rings")
 	}
@@ -67,7 +67,7 @@ func groebner(id ideal) ideal {
 				if j <= i {
 					continue
 				}
-				r, _ := sPoly(f, g)
+				r, _ := SPolynomial(f, g)
 				id.reduce(r)
 				if r.Nonzero() {
 					newGens = append(newGens, r)

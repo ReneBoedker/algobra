@@ -1,7 +1,7 @@
 package bivariate
 
 import (
-	ff "algobra/finitefields"
+	"algobra/primefield"
 	"fmt"
 	"sort"
 	"strings"
@@ -18,81 +18,22 @@ func subtractDegs(deg1, deg2 [2]uint) (deg [2]uint, ok bool) {
 	return deg, false
 }
 
-type ring struct {
-	char       uint
-	ord        order
-	reduceFunc func(*Polynomial)
-}
-
-// DefRing defines a new polynomial ring with the given characteristic, using
-// the order function ord. It returns a new ring-object
-func DefRing(characteristic uint, ord order) *ring {
-	return &ring{
-		char:       characteristic,
-		ord:        ord,
-		reduceFunc: func(f *Polynomial) { return },
-	}
-}
-
-// Zero returns a zero polynomial over the specified ring.
-func (r *ring) Zero() *Polynomial {
-	return &Polynomial{
-		baseRing: r,
-		degrees:  map[[2]uint]*ff.Element{},
-	}
-}
-
-// New defines a new polynomial with the given coefficients
-func (r *ring) New(coefs map[[2]uint]uint) *Polynomial {
-	m := make(map[[2]uint]*ff.Element)
-	for d, c := range coefs {
-		e := ff.New(c, r.char)
-		if e.Nonzero() {
-			m[d] = e
-		}
-	}
-	out := &Polynomial{baseRing: r, degrees: m}
-	r.reduceFunc(out)
-	return out
-}
-
-// func reduce(f *Polynomial) *Polynomial {
-// 	return f
-// }
-
-// Quotient defines the quotient of the given ring modulo the input ideal.
-// The return type is a new ring-object
-func (r *ring) Quotient(id ideal) (*ring, error) {
-	if r != id[0].baseRing {
-		return r, fmt.Errorf("ring.Quotient: Input argument not ideal of r")
-	}
-	for _, f := range id {
-		if f.baseRing != r {
-			return nil, fmt.Errorf(
-				"ring.Quotient: Ideal member %v not in ring",
-				f,
-			)
-		}
-	}
-	return &ring{
-		char:       r.char,
-		ord:        r.ord,
-		reduceFunc: id.reduce,
-	}, nil
-}
-
 type Polynomial struct {
-	baseRing *ring
-	degrees  map[[2]uint]*ff.Element
+	baseRing *Ring
+	degrees  map[[2]uint]*primefield.Element
+}
+
+func (f *Polynomial) baseField() *primefield.Field {
+	return f.baseRing.baseField
 }
 
 // Coef returns the coefficient of the monomial with degree specified by the
 // input. The return value is a finite field element.
-func (f *Polynomial) Coef(deg [2]uint) *ff.Element {
+func (f *Polynomial) Coef(deg [2]uint) *primefield.Element {
 	if d, ok := f.degrees[deg]; ok {
 		return d
 	}
-	return ff.New(0, f.baseRing.char)
+	return f.baseField().Element(0)
 }
 
 // Copy returns a new polynomial object over the same ring and with the same
@@ -107,7 +48,7 @@ func (f *Polynomial) Copy() *Polynomial {
 
 // Plus returns the sum of the two polynomials f and g.
 func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
-	if f.baseRing.char != g.baseRing.char {
+	if f.baseRing != g.baseRing {
 		panic("Polynomial.Plus: Polynomials incompatible")
 	}
 	h := f.Copy()
@@ -199,7 +140,7 @@ func (f *Polynomial) Normalize() *Polynomial {
 
 // Scale scales all coefficients of f by the given field element and returns the
 // result as a new polynomial.
-func (f *Polynomial) Scale(c *ff.Element) *Polynomial {
+func (f *Polynomial) Scale(c *primefield.Element) *Polynomial {
 	g := f.Copy()
 	for d := range g.degrees {
 		g.degrees[d] = g.degrees[d].Mult(c)
@@ -243,7 +184,7 @@ func (f *Polynomial) Ld() [2]uint {
 }
 
 // Lc returns the leading coefficient of f.
-func (f *Polynomial) Lc() *ff.Element {
+func (f *Polynomial) Lc() *primefield.Element {
 	return f.Coef(f.Ld())
 }
 
