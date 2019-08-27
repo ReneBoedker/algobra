@@ -39,6 +39,10 @@ func FactorizePrimePower(q uint) (p uint, n uint, err error) {
 			p = k + 1
 		}
 	}
+	if p == 0 {
+		// If no divisor was found so far, p is prime
+		return q, 1, nil
+	}
 	for q > 1 {
 		if q%p != 0 {
 			return 0, 0, fmt.Errorf("factorizePrimePower: %d does not seem to be a prime power.", q*Pow(p, n))

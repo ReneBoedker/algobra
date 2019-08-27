@@ -32,6 +32,10 @@ func Define(char uint) (*Field, error) {
 	return &Field{char: char}, nil
 }
 
+func (f *Field) String() string {
+	return fmt.Sprintf("Finite field of %d elements", f.char)
+}
+
 type Element struct {
 	field *Field
 	val   uint

@@ -58,7 +58,7 @@ func TestGroebner1(t *testing.T) {
 			{0, 2}: 6,
 		}),
 	}
-	if len(id) != 2 || (!id[0].Equal(expectedGens[0]) && !id[0].Equal(expectedGens[1])) || (!id[1].Equal(expectedGens[0]) && !id[1].Equal(expectedGens[1])) {
+	if len(id.generators) != 2 || (!id.generators[0].Equal(expectedGens[0]) && !id.generators[0].Equal(expectedGens[1])) || (!id.generators[1].Equal(expectedGens[0]) && !id.generators[1].Equal(expectedGens[1])) {
 		t.Errorf("Gröbner basis has wrong number of elements")
 	}
 }

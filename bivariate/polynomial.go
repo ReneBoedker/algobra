@@ -19,7 +19,7 @@ func subtractDegs(deg1, deg2 [2]uint) (deg [2]uint, ok bool) {
 }
 
 type Polynomial struct {
-	baseRing *Ring
+	baseRing *QuotientRing
 	degrees  map[[2]uint]*primefield.Element
 }
 
@@ -30,8 +30,8 @@ func (f *Polynomial) baseField() *primefield.Field {
 // Coef returns the coefficient of the monomial with degree specified by the
 // input. The return value is a finite field element.
 func (f *Polynomial) Coef(deg [2]uint) *primefield.Element {
-	if d, ok := f.degrees[deg]; ok {
-		return d
+	if c, ok := f.degrees[deg]; ok {
+		return c
 	}
 	return f.baseField().Element(0)
 }
@@ -49,7 +49,8 @@ func (f *Polynomial) Copy() *Polynomial {
 // Plus returns the sum of the two polynomials f and g.
 func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
 	if f.baseRing != g.baseRing {
-		panic("Polynomial.Plus: Polynomials incompatible")
+		panic(fmt.Sprintf("Polynomial.Plus: Polynomials incompatible\n'%#v'\n'%#v')",
+			f.baseRing, g.baseRing))
 	}
 	h := f.Copy()
 	for deg, c := range g.degrees {
@@ -59,7 +60,7 @@ func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
 		}
 		tmp := h.Coef(deg).Plus(c)
 		if tmp.Nonzero() {
-			h.degrees[deg] = h.Coef(deg)
+			h.degrees[deg] = tmp
 		} else {
 			delete(h.degrees, deg)
 		}
@@ -130,7 +131,8 @@ func (f *Polynomial) Mult(g *Polynomial) *Polynomial {
 }
 
 // Normalize creates a new polynomial obtained by normalizing f. That is,
-// f.Normalize() multiplied by f.Lc() is f.
+// f.Normalize() multiplied by f.Lc() is f. If f is the zero polynomial, the
+// zero polynomial is returned.
 func (f *Polynomial) Normalize() *Polynomial {
 	if f.Zero() {
 		return f
@@ -178,7 +180,7 @@ func (f *Polynomial) SortedDegrees() [][2]uint {
 	return degs
 }
 
-// Ld return the leading degree of f.
+// Ld returns the leading degree of f.
 func (f *Polynomial) Ld() [2]uint {
 	return f.SortedDegrees()[0]
 }
@@ -217,34 +219,12 @@ func (f *Polynomial) Monomial() bool {
 	return false
 }
 
-// Write lt(f) as quo*lt(g)
-func (f *Polynomial) something(g *Polynomial) (quo *Polynomial, ok bool) {
-	quo = f.baseRing.Zero()
-	ldf, ldg := f.Ld(), g.Ld()
-	if diff, ok := subtractDegs(ldf, ldg); ok {
-		quo.degrees[diff] = f.Coef(ldf).Mult(g.Coef(ldg).Inv())
-		fmt.Println(quo)
-		return quo, true
-	}
-	return quo, false
-}
-
 // Reduces f in-place
 func (f *Polynomial) reduce() {
-	f.baseRing.reduceFunc(f)
+	if f.baseRing.id != nil {
+		f.baseRing.id.reduce(f)
+	}
 }
-
-// func (f *Polynomial) reduce(l []*Polynomial) {
-// outer:
-// 	for true {// 		for _, g := range l {
-// 			if q, ok := g.something(f); ok {
-// 				f = f.Minus(g.Mult(q))
-// 				continue outer
-// 			}
-// 		}
-// 		break
-// 	}
-// }
 
 // String returns the string representation of f. Variables are named 'X' and
 // 'Y'.
