@@ -17,11 +17,11 @@ func init() {
 	}
 }
 
-type PrimeField struct {
+type Field struct {
 	char uint
 }
 
-func Define(char uint) (*PrimeField, error) {
+func Define(char uint) (*Field, error) {
 	if char-1 >= 1<<(uintBitSize/2) {
 		return nil, fmt.Errorf("Define: %d exceeds maximal field size (2^%d)", char, uintBitSize/2)
 	}
@@ -29,19 +29,23 @@ func Define(char uint) (*PrimeField, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Define: " + err.Error())
 	}
-	return &PrimeField{char: char}, nil
+	return &Field{char: char}, nil
+}
+
+func (f *Field) String() string {
+	return fmt.Sprintf("Finite field of %d elements", f.char)
 }
 
 type Element struct {
-	field *PrimeField
+	field *Field
 	val   uint
 }
 
-func (pf *PrimeField) Element(val uint) *Element {
+func (pf *Field) Element(val uint) *Element {
 	return &Element{field: pf, val: val % pf.char}
 }
 
-func (pf *PrimeField) ElementFromSigned(val int) *Element {
+func (pf *Field) ElementFromSigned(val int) *Element {
 	val %= int(pf.char)
 	if val < 0 {
 		val += int(pf.char)
@@ -103,6 +107,10 @@ func (a *Element) Inv() *Element {
 
 func (a *Element) Nonzero() bool {
 	return (a.val != 0)
+}
+
+func (a *Element) One() bool {
+	return (a.val == 1)
 }
 
 func (a *Element) String() string {

@@ -2,7 +2,20 @@ package basic
 
 import (
 	"fmt"
+	"math/bits"
 )
+
+func CeilLog(n uint) uint {
+	if n == 0 {
+		return 0
+	}
+	b := uint(bits.Len(n))
+	if bits.OnesCount(n) == 1 {
+		return b - 1
+	} else {
+		return b
+	}
+}
 
 func Pow(a, n uint) uint {
 	res := uint(1)
@@ -18,12 +31,17 @@ func FactorizePrimePower(q uint) (p uint, n uint, err error) {
 	} else if q%3 == 0 {
 		p = 3
 	}
-	for k := uint(6); p == 0; k += 6 {
+	maxP := CeilLog(q)
+	for k := uint(6); p == 0 && k-1 <= maxP; k += 6 {
 		if q%(k-1) == 0 {
 			p = k - 1
 		} else if q%(k+1) == 0 {
 			p = k + 1
 		}
+	}
+	if p == 0 {
+		// If no divisor was found so far, p is prime
+		return q, 1, nil
 	}
 	for q > 1 {
 		if q%p != 0 {

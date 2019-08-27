@@ -14,23 +14,36 @@ func max(values ...uint) uint {
 	return m
 }
 
-type ideal []*Polynomial
+type Ideal struct {
+	*ring
+	generators []*Polynomial
+	isGroebner int8 // 0=undecided, 1=true, -1=false
+	isMinimal  int8 // 0=undecided, 1=true, -1=false
+	isReduced  int8 // 0=undecided, 1=true, -1=false
+}
 
 // NewIdeal returns a new polynomial ideal over the given ring. If the
 // generators are not defined over the given ring, the function panics.
 // Internally, this function computes a reduced Gröbner basis.
-func (r *ring) NewIdeal(generators ...*Polynomial) ideal {
-	targetRing := generators[0].baseRing
-	for _, g := range generators {
-		if g.baseRing != targetRing {
+func (r *QuotientRing) NewIdeal(generators ...*Polynomial) *Ideal {
+	id := &Ideal{
+		ring:       r.ring,
+		generators: make([]*Polynomial, len(generators)),
+		isGroebner: 0,
+		isMinimal:  0,
+		isReduced:  0,
+	}
+	for i, g := range generators {
+		if g.baseRing != r {
 			panic("ring.NewIdeal: Generators defined over different rings")
 		}
+		id.generators[i] = g
 	}
-	return groebner(generators)
+	return id
 }
 
-func (id ideal) reduce(f *Polynomial) {
-	_, r := f.QuoRem(id...)
+func (id *Ideal) reduce(f *Polynomial) {
+	_, r := f.QuoRem(id.generators...)
 	*f = *r // For some reason using pointers alone is not enough
 }
 
@@ -45,7 +58,7 @@ func monomialLcm(f, g *Polynomial) (lcm *Polynomial, ok bool) {
 	return lcm, true
 }
 
-func sPoly(f, g *Polynomial) (*Polynomial, error) {
+func SPolynomial(f, g *Polynomial) (*Polynomial, error) {
 	if f.baseRing != g.baseRing {
 		return nil, fmt.Errorf("sPoly: Inputs are defined over different rings")
 	}
@@ -55,9 +68,9 @@ func sPoly(f, g *Polynomial) (*Polynomial, error) {
 	return q1[0].Mult(f).Minus(q2[0].Mult(g)), nil
 }
 
-func groebner(id ideal) ideal {
-	gb := make(ideal, len(id))
-	for i, g := range id {
+func (id *Ideal) GroebnerBasis() *Ideal {
+	gb := make([]*Polynomial, len(id.generators))
+	for i, g := range id.generators {
 		gb[i] = g.Copy()
 	}
 	for true {
@@ -67,7 +80,7 @@ func groebner(id ideal) ideal {
 				if j <= i {
 					continue
 				}
-				r, _ := sPoly(f, g)
+				r, _ := SPolynomial(f, g)
 				id.reduce(r)
 				if r.Nonzero() {
 					newGens = append(newGens, r)
@@ -79,25 +92,48 @@ func groebner(id ideal) ideal {
 		}
 		gb = append(gb, newGens...)
 	}
-	// ==== Convert gb to a minimal Gröbner basis ====
-	lts := make([]*Polynomial, len(gb))
-	for i := range gb {
-		gb[i] = gb[i].Normalize() //.Scale(gb[i].Lc().Inv())
-		lts[i] = gb[i].Lt()
+	return &Ideal{
+		ring:       id.ring,
+		generators: gb,
+		isGroebner: 1,
+		isMinimal:  0,
+		isReduced:  0,
 	}
-	for i := 0; i < len(gb); {
-		if _, r := lts[i].quoRemWithIgnore(i, id...); r.Zero() {
-			gb = append(gb[:i], gb[i+1:]...)
+}
+
+func (id *Ideal) MinimizeBasis() error {
+	if id.isGroebner != 1 {
+		return fmt.Errorf("Ideal.ReduceBasis(): Given ideal is not a Gröbner basis.")
+	}
+	lts := make([]*Polynomial, len(id.generators))
+	for i := range id.generators {
+		id.generators[i] = id.generators[i].Normalize()
+		lts[i] = id.generators[i].Lt()
+	}
+	for i := 0; i < len(id.generators); {
+		if _, r := lts[i].quoRemWithIgnore(i, lts...); r.Zero() {
+			id.generators = append(id.generators[:i], id.generators[i+1:]...)
 			lts = append(lts[:i], lts[i+1:]...)
 		} else {
 			i++
 		}
 	}
-	// ==== Convert to a reduced Gröbner basis ====
-	for i := range gb {
-		_, gb[i] = gb[i].quoRemWithIgnore(i, gb...)
+	id.isMinimal = 1
+	return nil
+}
+
+func (id *Ideal) ReduceBasis() error {
+	if id.isGroebner != 1 {
+		return fmt.Errorf("Ideal.ReduceBasis(): Given ideal is not a Gröbner basis.")
 	}
-	return gb
+	if id.isMinimal != 1 {
+		_ = id.MinimizeBasis()
+	}
+	for i := range id.generators {
+		_, id.generators[i] = id.generators[i].quoRemWithIgnore(i, id.generators...)
+	}
+	id.isReduced = 1
+	return nil
 }
 
 // Write f=qg if possible; otherwise set ok=false

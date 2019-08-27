@@ -1,11 +1,21 @@
 package bivariate
 
 import (
+	"algobra/primefield"
 	"testing"
 )
 
+func defineField(char uint, t *testing.T) *primefield.Field {
+	field, err := primefield.Define(char)
+	if err != nil {
+		t.Fatalf("Failed to define finite field of %d elements", char)
+	}
+	return field
+}
+
 func TestReduce(t *testing.T) {
-	r := DefRing(3, WDegLex(3, 4))
+	field := defineField(3, t)
+	r := DefRing(field, WDegLex(3, 4))
 	mod := r.New(map[[2]uint]uint{{9, 0}: 1, {1, 0}: 2})
 	id := r.NewIdeal(mod)
 	qr, err := r.Quotient(id)
@@ -26,7 +36,8 @@ func TestReduce(t *testing.T) {
 }
 
 func TestGroebner1(t *testing.T) {
-	r := DefRing(7, Lex(true))
+	field := defineField(7, t)
+	r := DefRing(field, Lex(true))
 	id := r.NewIdeal(
 		r.New(map[[2]uint]uint{
 			{1, 2}: 1,
@@ -47,13 +58,19 @@ func TestGroebner1(t *testing.T) {
 			{0, 2}: 6,
 		}),
 	}
-	if len(id) != 2 || (!id[0].Equal(expectedGens[0]) && !id[0].Equal(expectedGens[1])) || (!id[1].Equal(expectedGens[0]) && !id[1].Equal(expectedGens[1])) {
-		t.Errorf("Gröbner basis has wrong number of elements")
+	id = id.GroebnerBasis()
+	id.ReduceBasis()
+	if len(id.generators) != 2 {
+		t.Fatalf("Gröbner basis has wrong number of elements")
+	}
+	if (!id.generators[0].Equal(expectedGens[0]) && !id.generators[0].Equal(expectedGens[1])) || (!id.generators[1].Equal(expectedGens[0]) && !id.generators[1].Equal(expectedGens[1])) {
+		t.Errorf("Got Gröbner basis %v", id.generators)
 	}
 }
 
 func TestPow(t *testing.T) {
-	r := DefRing(3, Lex(true))
+	field := defineField(3, t)
+	r := DefRing(field, Lex(true))
 	inDegs := [][2]uint{{0, 0}, {1, 0}, {1, 1}, {0, 2}}
 	expectedPows := [][][2]uint{
 		{{0, 0}, {0, 0}, {0, 0}, {0, 0}},

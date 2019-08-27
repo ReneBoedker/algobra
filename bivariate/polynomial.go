@@ -1,7 +1,7 @@
 package bivariate
 
 import (
-	ff "algobra/finitefields"
+	"algobra/primefield"
 	"fmt"
 	"sort"
 	"strings"
@@ -18,81 +18,22 @@ func subtractDegs(deg1, deg2 [2]uint) (deg [2]uint, ok bool) {
 	return deg, false
 }
 
-type ring struct {
-	char       uint
-	ord        order
-	reduceFunc func(*Polynomial)
-}
-
-// DefRing defines a new polynomial ring with the given characteristic, using
-// the order function ord. It returns a new ring-object
-func DefRing(characteristic uint, ord order) *ring {
-	return &ring{
-		char:       characteristic,
-		ord:        ord,
-		reduceFunc: func(f *Polynomial) { return },
-	}
-}
-
-// Zero returns a zero polynomial over the specified ring.
-func (r *ring) Zero() *Polynomial {
-	return &Polynomial{
-		baseRing: r,
-		degrees:  map[[2]uint]*ff.Element{},
-	}
-}
-
-// New defines a new polynomial with the given coefficients
-func (r *ring) New(coefs map[[2]uint]uint) *Polynomial {
-	m := make(map[[2]uint]*ff.Element)
-	for d, c := range coefs {
-		e := ff.New(c, r.char)
-		if e.Nonzero() {
-			m[d] = e
-		}
-	}
-	out := &Polynomial{baseRing: r, degrees: m}
-	r.reduceFunc(out)
-	return out
-}
-
-// func reduce(f *Polynomial) *Polynomial {
-// 	return f
-// }
-
-// Quotient defines the quotient of the given ring modulo the input ideal.
-// The return type is a new ring-object
-func (r *ring) Quotient(id ideal) (*ring, error) {
-	if r != id[0].baseRing {
-		return r, fmt.Errorf("ring.Quotient: Input argument not ideal of r")
-	}
-	for _, f := range id {
-		if f.baseRing != r {
-			return nil, fmt.Errorf(
-				"ring.Quotient: Ideal member %v not in ring",
-				f,
-			)
-		}
-	}
-	return &ring{
-		char:       r.char,
-		ord:        r.ord,
-		reduceFunc: id.reduce,
-	}, nil
-}
-
 type Polynomial struct {
-	baseRing *ring
-	degrees  map[[2]uint]*ff.Element
+	baseRing *QuotientRing
+	degrees  map[[2]uint]*primefield.Element
+}
+
+func (f *Polynomial) baseField() *primefield.Field {
+	return f.baseRing.baseField
 }
 
 // Coef returns the coefficient of the monomial with degree specified by the
 // input. The return value is a finite field element.
-func (f *Polynomial) Coef(deg [2]uint) *ff.Element {
-	if d, ok := f.degrees[deg]; ok {
-		return d
+func (f *Polynomial) Coef(deg [2]uint) *primefield.Element {
+	if c, ok := f.degrees[deg]; ok {
+		return c
 	}
-	return ff.New(0, f.baseRing.char)
+	return f.baseField().Element(0)
 }
 
 // Copy returns a new polynomial object over the same ring and with the same
@@ -107,8 +48,13 @@ func (f *Polynomial) Copy() *Polynomial {
 
 // Plus returns the sum of the two polynomials f and g.
 func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
-	if f.baseRing.char != g.baseRing.char {
-		panic("Polynomial.Plus: Polynomials incompatible")
+	if f.baseRing != g.baseRing {
+		fNew, gNew, err := embedInCommonRing(f, g)
+		if err != nil {
+			panic(fmt.Sprintf("Polynomial.Plus: Polynomials incompatible\n'%#v'\n'%#v')",
+				f.baseRing, g.baseRing))
+		}
+		return fNew.Plus(gNew)
 	}
 	h := f.Copy()
 	for deg, c := range g.degrees {
@@ -118,7 +64,7 @@ func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
 		}
 		tmp := h.Coef(deg).Plus(c)
 		if tmp.Nonzero() {
-			h.degrees[deg] = h.Coef(deg)
+			h.degrees[deg] = tmp
 		} else {
 			delete(h.degrees, deg)
 		}
@@ -189,7 +135,8 @@ func (f *Polynomial) Mult(g *Polynomial) *Polynomial {
 }
 
 // Normalize creates a new polynomial obtained by normalizing f. That is,
-// f.Normalize() multiplied by f.Lc() is f.
+// f.Normalize() multiplied by f.Lc() is f. If f is the zero polynomial, the
+// zero polynomial is returned.
 func (f *Polynomial) Normalize() *Polynomial {
 	if f.Zero() {
 		return f
@@ -199,7 +146,7 @@ func (f *Polynomial) Normalize() *Polynomial {
 
 // Scale scales all coefficients of f by the given field element and returns the
 // result as a new polynomial.
-func (f *Polynomial) Scale(c *ff.Element) *Polynomial {
+func (f *Polynomial) Scale(c *primefield.Element) *Polynomial {
 	g := f.Copy()
 	for d := range g.degrees {
 		g.degrees[d] = g.degrees[d].Mult(c)
@@ -237,13 +184,13 @@ func (f *Polynomial) SortedDegrees() [][2]uint {
 	return degs
 }
 
-// Ld return the leading degree of f.
+// Ld returns the leading degree of f.
 func (f *Polynomial) Ld() [2]uint {
 	return f.SortedDegrees()[0]
 }
 
 // Lc returns the leading coefficient of f.
-func (f *Polynomial) Lc() *ff.Element {
+func (f *Polynomial) Lc() *primefield.Element {
 	return f.Coef(f.Ld())
 }
 
@@ -276,34 +223,36 @@ func (f *Polynomial) Monomial() bool {
 	return false
 }
 
-// Write lt(f) as quo*lt(g)
-func (f *Polynomial) something(g *Polynomial) (quo *Polynomial, ok bool) {
-	quo = f.baseRing.Zero()
-	ldf, ldg := f.Ld(), g.Ld()
-	if diff, ok := subtractDegs(ldf, ldg); ok {
-		quo.degrees[diff] = f.Coef(ldf).Mult(g.Coef(ldg).Inv())
-		fmt.Println(quo)
-		return quo, true
-	}
-	return quo, false
-}
-
 // Reduces f in-place
 func (f *Polynomial) reduce() {
-	f.baseRing.reduceFunc(f)
+	if f.baseRing.id != nil {
+		f.baseRing.id.reduce(f)
+	}
 }
 
-// func (f *Polynomial) reduce(l []*Polynomial) {
-// outer:
-// 	for true {// 		for _, g := range l {
-// 			if q, ok := g.something(f); ok {
-// 				f = f.Minus(g.Mult(q))
-// 				continue outer
-// 			}
-// 		}
-// 		break
-// 	}
-// }
+// Embed f in another ring
+func embedInCommonRing(f, g *Polynomial) (fOut, gOut *Polynomial, err error) {
+	fOut = f.Copy()
+	gOut = g.Copy()
+	if f.baseRing.ring != g.baseRing.ring {
+		err = fmt.Errorf("embedInCommonRing: Rings '%v' and '%v' are not compatible",
+			f.baseRing.ring, g.baseRing.ring,
+		)
+		return
+	}
+	switch {
+	case f.baseRing.id == nil && g.baseRing.id == nil:
+		err = nil
+	case f.baseRing.id == nil && g.baseRing.id != nil:
+		fOut.baseRing = g.baseRing
+		err = nil
+	case f.baseRing != nil && g.baseRing.id == nil:
+		gOut.baseRing = f.baseRing
+	case f.baseRing != nil && g.baseRing.id != nil:
+		err = fmt.Errorf("embedInCommonRing: Polynomials defined over different quotient rings.")
+	}
+	return
+}
 
 // String returns the string representation of f. Variables are named 'X' and
 // 'Y'.
@@ -317,7 +266,9 @@ func (f *Polynomial) String() string {
 		if i > 0 {
 			fmt.Fprint(&b, " + ")
 		}
-		fmt.Fprintf(&b, "%v", f.Coef(d))
+		if tmp := f.Coef(d); !tmp.One() || (d[0] == 0 && d[1] == 0) {
+			fmt.Fprintf(&b, "%v", tmp)
+		}
 		if d[0] == 1 {
 			fmt.Fprint(&b, "X")
 		}
