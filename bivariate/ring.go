@@ -49,6 +49,15 @@ func (r *QuotientRing) New(coefs map[[2]uint]uint) *Polynomial {
 	return out
 }
 
+// New defines a new polynomial with the given coefficients
+func (r *QuotientRing) NewFromString(s string) (*Polynomial, error) {
+	m, err := polynomialStringToMap(s)
+	if err != nil {
+		return r.Zero(), err
+	}
+	return r.New(m), nil
+}
+
 // Quotient defines the quotient of the given ring modulo the input ideal.
 // The return type is a new ring-object
 func (r *QuotientRing) Quotient(id *Ideal) (*QuotientRing, error) {

@@ -68,27 +68,6 @@ func TestGroebner1(t *testing.T) {
 	}
 }
 
-func TestPow(t *testing.T) {
-	field := defineField(3, t)
-	r := DefRing(field, Lex(true))
-	inDegs := [][2]uint{{0, 0}, {1, 0}, {1, 1}, {0, 2}}
-	expectedPows := [][][2]uint{
-		{{0, 0}, {0, 0}, {0, 0}, {0, 0}},
-		{{0, 0}, {1, 0}, {1, 1}, {0, 2}},
-		{{0, 0}, {2, 0}, {2, 2}, {0, 4}},
-		{{0, 0}, {3, 0}, {3, 3}, {0, 6}},
-	}
-	for i, d1 := range inDegs {
-		f := r.New(map[[2]uint]uint{d1: 1})
-		for n, exp := range expectedPows {
-			g := f.Pow(uint(n))
-			if g.Ld() != exp[i] {
-				t.Errorf("Pow failed: %v^%d = %v (Expected %v)", f, n, g, exp[i])
-			}
-		}
-	}
-}
-
 func TestLexOrder(t *testing.T) {
 	ord := Lex(true)
 	degrees := [][2][2]uint{
