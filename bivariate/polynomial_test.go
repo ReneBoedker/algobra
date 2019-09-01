@@ -49,7 +49,9 @@ func TestParsing(t *testing.T) {
 	}
 	for i, err := range testErrs {
 		if err != nil {
-			t.Errorf("Failed to parse polynomial %v", testPolys[i])
+			t.Errorf("Failed to parse polynomial %s. Received error %v",
+				testStrings[i],
+				err)
 		}
 	}
 	testPolys = append(testPolys, ring.New(map[[2]uint]uint{

@@ -50,12 +50,26 @@ func (r *QuotientRing) New(coefs map[[2]uint]uint) *Polynomial {
 }
 
 // New defines a new polynomial with the given coefficients
+func (r *QuotientRing) NewFromSigned(coefs map[[2]uint]int) *Polynomial {
+	m := make(map[[2]uint]*primefield.Element)
+	for d, c := range coefs {
+		e := r.baseField.ElementFromSigned(c)
+		if e.Nonzero() {
+			m[d] = e
+		}
+	}
+	out := &Polynomial{baseRing: r, degrees: m}
+	out.reduce()
+	return out
+}
+
+// New defines a new polynomial with the given coefficients
 func (r *QuotientRing) NewFromString(s string) (*Polynomial, error) {
-	m, err := polynomialStringToMap(s)
+	m, err := polynomialStringToSignedMap(s)
 	if err != nil {
 		return r.Zero(), err
 	}
-	return r.New(m), nil
+	return r.NewFromSigned(m), nil
 }
 
 // Quotient defines the quotient of the given ring modulo the input ideal.
