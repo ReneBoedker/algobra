@@ -1,7 +1,7 @@
 package bivariate
 
 import (
-	"fmt"
+	"algobra/errors"
 )
 
 func max(values ...uint) uint {
@@ -25,7 +25,8 @@ type Ideal struct {
 // NewIdeal returns a new polynomial ideal over the given ring. If the
 // generators are not defined over the given ring, the function panics.
 // Internally, this function computes a reduced Gröbner basis.
-func (r *QuotientRing) NewIdeal(generators ...*Polynomial) *Ideal {
+func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
+	const op = "Defining ideal"
 	id := &Ideal{
 		ring:       r.ring,
 		generators: make([]*Polynomial, len(generators)),
@@ -35,11 +36,14 @@ func (r *QuotientRing) NewIdeal(generators ...*Polynomial) *Ideal {
 	}
 	for i, g := range generators {
 		if g.baseRing != r {
-			panic("ring.NewIdeal: Generators defined over different rings")
+			return nil, errors.New(
+				op, errors.InputIncompatible,
+				"Generators defined over different rings",
+			)
 		}
 		id.generators[i] = g
 	}
-	return id
+	return id, nil
 }
 
 func (id *Ideal) reduce(f *Polynomial) {
@@ -59,8 +63,12 @@ func monomialLcm(f, g *Polynomial) (lcm *Polynomial, ok bool) {
 }
 
 func SPolynomial(f, g *Polynomial) (*Polynomial, error) {
+	const op = "Computing S-polynomial"
 	if f.baseRing != g.baseRing {
-		return nil, fmt.Errorf("sPoly: Inputs are defined over different rings")
+		return nil, errors.New(
+			op, errors.InputIncompatible,
+			"Inputs are defined over different rings",
+		)
 	}
 	lcm, _ := monomialLcm(f.Lt(), g.Lt())
 	q1, _ := lcm.QuoRem(f.Lt())
@@ -102,8 +110,12 @@ func (id *Ideal) GroebnerBasis() *Ideal {
 }
 
 func (id *Ideal) MinimizeBasis() error {
+	const op = "Minimizing Gröbner basis"
 	if id.isGroebner != 1 {
-		return fmt.Errorf("Ideal.ReduceBasis(): Given ideal is not a Gröbner basis.")
+		return errors.New(
+			op, errors.InputIncompatible,
+			"Given ideal is not a Gröbner basis.",
+		)
 	}
 	lts := make([]*Polynomial, len(id.generators))
 	for i := range id.generators {
@@ -123,8 +135,12 @@ func (id *Ideal) MinimizeBasis() error {
 }
 
 func (id *Ideal) ReduceBasis() error {
+	const op = "Reducing Gröbner basis"
 	if id.isGroebner != 1 {
-		return fmt.Errorf("Ideal.ReduceBasis(): Given ideal is not a Gröbner basis.")
+		return errors.New(
+			op, errors.InputIncompatible,
+			"Given ideal is not a Gröbner basis.",
+		)
 	}
 	if id.isMinimal != 1 {
 		_ = id.MinimizeBasis()
@@ -138,8 +154,18 @@ func (id *Ideal) ReduceBasis() error {
 
 // Write f=qg if possible; otherwise set ok=false
 func (f *Polynomial) monomialDivideBy(g *Polynomial) (q *Polynomial, ok bool, err error) {
-	if !f.Monomial() || !g.Monomial() {
-		return nil, false, fmt.Errorf("Polynomial.monomialDividesBy: Input is not a monomial")
+	const op = "Dividing monomials"
+	if !f.Monomial() {
+		return nil, false, errors.New(
+			op, errors.InputIncompatible,
+			"Object %v is not a monomial", f,
+		)
+	}
+	if !g.Monomial() {
+		return nil, false, errors.New(
+			op, errors.InputIncompatible,
+			"Input %v is not a monomial", g,
+		)
 	}
 	ldf, ldg := f.Ld(), g.Ld()
 	if d, ok := subtractDegs(ldf, ldg); ok {
@@ -165,6 +191,7 @@ outer:
 				continue
 			}
 			if mquo, ok, err := p.Lt().monomialDivideBy(g.Lt()); err != nil {
+				// Should not occur
 				panic(err)
 			} else if ok {
 				// Lt(g) divides p.Lt()

@@ -17,7 +17,7 @@ func TestReduce(t *testing.T) {
 	field := defineField(3, t)
 	r := DefRing(field, WDegLex(3, 4))
 	mod := r.New(map[[2]uint]uint{{9, 0}: 1, {1, 0}: 2})
-	id := r.NewIdeal(mod)
+	id, _ := r.NewIdeal(mod)
 	qr, err := r.Quotient(id)
 	if err != nil {
 		t.Errorf("Failed to construct quotient ring")
@@ -38,7 +38,7 @@ func TestReduce(t *testing.T) {
 func TestGroebner1(t *testing.T) {
 	field := defineField(7, t)
 	r := DefRing(field, Lex(true))
-	id := r.NewIdeal(
+	id, _ := r.NewIdeal(
 		r.New(map[[2]uint]uint{
 			{1, 2}: 1,
 			{0, 3}: 6,

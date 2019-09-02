@@ -1,12 +1,14 @@
 package bivariate
 
 import (
+	"algobra/errors"
 	"algobra/primefield"
 	"fmt"
 	"sort"
 	"strings"
 )
 
+// addDegs will add two bivariate degrees
 func addDegs(deg1, deg2 [2]uint) [2]uint {
 	return [2]uint{deg1[0] + deg2[0], deg1[1] + deg2[1]}
 }
@@ -232,10 +234,13 @@ func (f *Polynomial) reduce() {
 
 // Embed f in another ring
 func embedInCommonRing(f, g *Polynomial) (fOut, gOut *Polynomial, err error) {
+	const op = "Embedding in common ring"
 	fOut = f.Copy()
 	gOut = g.Copy()
 	if f.baseRing.ring != g.baseRing.ring {
-		err = fmt.Errorf("embedInCommonRing: Rings '%v' and '%v' are not compatible",
+		err = errors.New(
+			op, errors.InputIncompatible,
+			"Rings '%v' and '%v' are not compatible",
 			f.baseRing.ring, g.baseRing.ring,
 		)
 		return
@@ -249,7 +254,10 @@ func embedInCommonRing(f, g *Polynomial) (fOut, gOut *Polynomial, err error) {
 	case f.baseRing != nil && g.baseRing.id == nil:
 		gOut.baseRing = f.baseRing
 	case f.baseRing != nil && g.baseRing.id != nil:
-		err = fmt.Errorf("embedInCommonRing: Polynomials defined over different quotient rings.")
+		err = errors.New(
+			op, errors.InputIncompatible,
+			"Polynomials defined over different quotient rings.",
+		)
 	}
 	return
 }

@@ -10,14 +10,15 @@ type Op string
 type Kind uint8
 
 const (
-	Other                Kind = iota // General error type
-	Input                            // General input error
-	InputIncompatible                // Inputs are incompatible
-	InputTooLarge                    // Given input exceeds some upper bound
-	Parsing                          // General parsing error
-	ParsingVariableNames             // Parsing encountered unexpected variable names
-	Overflow                         // Overflow error
-	Internal                         // Internal error
+	Other             Kind = iota // General error type
+	Input                         // General input error
+	InputValue                    // Input has wrong "value" (e.g. not a monomial)
+	InputIncompatible             // Inputs are incompatible with each other
+	InputTooLarge                 // Input exceeds some upper bound
+	Parsing                       // General parsing error
+	ParsingVarNames               // Parsing encountered unexpected variable names
+	Overflow                      // Overflow error
+	Internal                      // Internal error
 )
 
 type Error struct {
