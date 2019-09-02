@@ -2,6 +2,8 @@ package bivariate
 
 import (
 	"algobra/errors"
+	"fmt"
+	"strings"
 )
 
 func max(values ...uint) uint {
@@ -20,6 +22,14 @@ type Ideal struct {
 	isGroebner int8 // 0=undecided, 1=true, -1=false
 	isMinimal  int8 // 0=undecided, 1=true, -1=false
 	isReduced  int8 // 0=undecided, 1=true, -1=false
+}
+
+func (id *Ideal) String() string {
+	var sb strings.Builder
+	for _, g := range id.generators {
+		fmt.Fprint(&sb, g)
+	}
+	return fmt.Sprintf("Ideal <%s> over %v", sb.String(), id.ring)
 }
 
 // NewIdeal returns a new polynomial ideal over the given ring. If the

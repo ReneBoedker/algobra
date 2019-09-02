@@ -1,10 +1,11 @@
 package bivariate
 
 import (
+	"algobra/errors"
 	"testing"
 )
 
-func TestParsing(t *testing.T) {
+func TestParsingWellFormed(t *testing.T) {
 	field := defineField(7, t)
 	ring := DefRing(field, Lex(true))
 	testStrings := []string{
@@ -37,6 +38,57 @@ func TestParsing(t *testing.T) {
 					"The two polynomials f_%d=%v and f_%d=%v are not equal (but they should be)",
 					i, f, j, testPolys[j])
 			}
+		}
+	}
+}
+
+func TestParsingIllFormed(t *testing.T) {
+	field := defineField(7, t)
+	ring := DefRing(field, Lex(true))
+	testStrings := []string{
+		"2^2 X",
+		"X^2-+Y^3",
+		"X^^4Y^5",
+		"a^3y^4",
+	}
+	testPolys := make([]*Polynomial, len(testStrings), len(testStrings)+1)
+	testErrs := make([]error, len(testStrings))
+	for i, s := range testStrings {
+		testPolys[i], testErrs[i] = ring.NewFromString(s)
+	}
+	for i, err := range testErrs {
+		if err == nil {
+			t.Errorf("Parsing %q returned polynomial %v instead of an error",
+				testStrings[i], testPolys[i])
+		} else if !errors.Is(errors.Parsing, err) {
+			t.Errorf("Expected errors.Parsing while parsing %q, but received error %q",
+				testStrings[i], err.Error())
+		}
+	}
+}
+
+func TestParseOutput(t *testing.T) {
+	char := uint(13)
+	field := defineField(char, t)
+	ring := DefRing(field, Lex(false))
+	for i := 0; i < 1000; i++ {
+		// Create random polynomial up to 50 different degrees
+		nDegs := (uint(prg.Uint32()) % 50) + 1
+		coefMap := make(map[[2]uint]uint)
+		for j := uint(0); j < nDegs; j++ {
+			deg := [2]uint{
+				uint(prg.Uint32()),
+				uint(prg.Uint32()),
+			}
+			coef := uint(prg.Uint32()) % char
+			coefMap[deg] = coef
+		}
+		f := ring.New(coefMap)
+
+		if g, err := ring.NewFromString(f.String()); err != nil {
+			t.Errorf("Parsing formatted output of %v returns error %q", f, err)
+		} else if !f.Equal(g) {
+			t.Errorf("Formatted output of %v is parsed as %v", f, g)
 		}
 	}
 }

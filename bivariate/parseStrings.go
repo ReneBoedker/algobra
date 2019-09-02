@@ -1,7 +1,7 @@
 package bivariate
 
 import (
-	"fmt"
+	"algobra/errors"
 	"regexp"
 	"strconv"
 	"strings"
@@ -10,55 +10,79 @@ import (
 type monomialMatch struct {
 	sign string
 	coef string
-	var1 string
-	deg1 string
-	var2 string
-	deg2 string
+	vars [2]string
+	degs [2]string
 }
 
-func newMonomialMatch(match []string) (*monomialMatch, error) {
+func newMonomialMatch(match []string, op errors.Op) (*monomialMatch, error) {
 	if len(match) != 7 {
-		return nil, fmt.Errorf(
-			"newMonomialmatch: Input match has unexpected form (%v)",
-			match)
+		return nil, errors.New(
+			op, errors.Parsing,
+			"Regexp-match has unexpected form (%v)", match,
+		)
 	}
 	out := &monomialMatch{
 		sign: match[1],
 		coef: match[2],
-		var1: strings.ToLower(match[3]),
-		deg1: match[4],
-		var2: strings.ToLower(match[5]),
-		deg2: match[6],
+		vars: [2]string{
+			strings.ToLower(match[3]),
+			strings.ToLower(match[5]),
+		},
+		degs: [2]string{
+			match[4],
+			match[6],
+		},
 	}
-	err := out.ensureVariableOrder()
+
+	// Check that the match is not only a sign
+	if out.coef == "" && out.vars == [2]string{"", ""} && out.degs == [2]string{"", ""} {
+		return nil, errors.New(
+			op, errors.Parsing,
+			"Found regexp-match containing only a sign (full match %q)", match[0],
+		)
+	}
+
+	// Check that all exponents correspond to a variable (e.g. preventing 2^4)
+	for i := 0; i < 2; i++ {
+		if out.vars[i] == "" && out.degs[i] != "" {
+			return nil, errors.New(
+				op, errors.Parsing,
+				"Found empty variable, but non-empty exponent %q", out.degs[i],
+			)
+		}
+	}
+	err := out.ensureVariableOrder(op)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (m *monomialMatch) ensureVariableOrder() error {
+func (m *monomialMatch) ensureVariableOrder(op errors.Op) error {
 	switch {
-	case m.var1 == "x" && (m.var2 == "y" || m.var2 == ""):
+	case m.vars[0] == "x" && (m.vars[1] == "y" || m.vars[1] == ""):
 		// Correct; do nothing
-	case m.var1 == "y" && (m.var2 == "x" || m.var2 == ""):
-		m.var1, m.var2 = m.var2, m.var1
-		m.deg1, m.deg2 = m.deg2, m.deg1
-	case m.var1 == "" && m.var2 == "":
+	case m.vars[0] == "y" && (m.vars[1] == "x" || m.vars[1] == ""):
+		m.vars[0], m.vars[1] = m.vars[1], m.vars[0]
+		m.degs[0], m.degs[1] = m.degs[1], m.degs[0]
+	case m.vars[0] == "" && m.vars[1] == "":
 		// Correct; do nothing
 	default:
-		return fmt.Errorf("monomialMatch: Cannot parse regex-match %v", m)
+		return errors.New(
+			op, errors.Parsing,
+			"Unexpected variable names in match %v", m,
+		)
 	}
 	return nil
 }
 
-func (m *monomialMatch) degreesAndCoef() (deg [2]uint, coef int, err error) {
+func (m *monomialMatch) degreesAndCoef(op errors.Op) (deg [2]uint, coef int, err error) {
 	if m.coef == "" {
 		coef = 1
 	} else {
 		tmp, err := strconv.ParseInt(m.coef, 10, 0)
 		if err != nil {
-			return deg, coef, err
+			return deg, coef, errors.Wrap(op, errors.Conversion, err)
 		} else {
 			coef = int(tmp)
 		}
@@ -66,22 +90,19 @@ func (m *monomialMatch) degreesAndCoef() (deg [2]uint, coef int, err error) {
 	if m.sign == "-" {
 		coef *= -1
 	}
-	if m.var1 != "" {
-		deg[0], err = parseDegree(m.deg1)
-		if err != nil {
-			return
-		}
-	}
-	if m.var2 != "" {
-		deg[1], err = parseDegree(m.deg2)
-		if err != nil {
-			return
+	for i := 0; i < 2; i++ {
+		if m.vars[i] != "" {
+			deg[i], err = parseExponent(m.degs[i])
+			if err != nil {
+				err = errors.Wrap(op, errors.Conversion, err)
+				return
+			}
 		}
 	}
 	return
 }
 
-func parseDegree(s string) (uint, error) {
+func parseExponent(s string) (uint, error) {
 	if s == "" {
 		return 1, nil
 	}
@@ -90,6 +111,7 @@ func parseDegree(s string) (uint, error) {
 }
 
 func polynomialStringToSignedMap(s string) (map[[2]uint]int, error) {
+	const op = "Parsing polynomial from string"
 	matches := regexp.MustCompile(
 		`\s*(?P<sign>^|\+|-)\s*`+
 			`(?P<coef>[0-9]*)\s*\*?\s*`+
@@ -101,19 +123,19 @@ func polynomialStringToSignedMap(s string) (map[[2]uint]int, error) {
 		matchLen += len(m[0])
 	}
 	if matchLen != len(s) {
-		return nil, fmt.Errorf(
-			"Failed to parse string %s as polynomial. Lengths do not match (%d ≠ %d)",
-			s, matchLen, len(s))
+		return nil, errors.New(
+			op, errors.Parsing,
+			"Cannot parse %s; lengths do not match (%d ≠ %d)",
+			s, matchLen, len(s),
+		)
 	}
 	out := make(map[[2]uint]int)
 	for _, m := range matches {
-		tmp, err := newMonomialMatch(m)
+		tmp, err := newMonomialMatch(m, op)
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(tmp)
-		deg, coef, err2 := tmp.degreesAndCoef()
-		fmt.Printf("deg: %v, coef: %v\n\n", deg, coef)
+		deg, coef, err2 := tmp.degreesAndCoef(op)
 		if err2 != nil {
 			return nil, err2
 		}

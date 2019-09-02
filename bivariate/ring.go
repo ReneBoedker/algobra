@@ -3,6 +3,7 @@ package bivariate
 import (
 	"algobra/errors"
 	"algobra/primefield"
+	"fmt"
 )
 
 type ring struct {
@@ -13,6 +14,20 @@ type ring struct {
 type QuotientRing struct {
 	*ring
 	id *Ideal
+}
+
+func (r *ring) String() string {
+	return fmt.Sprintf("Bivariate polynomial ring over %v", r.baseField)
+}
+
+func (r *QuotientRing) String() string {
+	if r.id == nil {
+		return r.ring.String()
+	}
+	return fmt.Sprintf(
+		"Quotient ring of bivariate polynomials over %v modulo %v",
+		r.ring, r.id,
+	)
 }
 
 // DefRing defines a new polynomial ring with the given characteristic, using

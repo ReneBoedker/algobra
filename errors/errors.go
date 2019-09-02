@@ -16,7 +16,7 @@ const (
 	InputIncompatible             // Inputs are incompatible with each other
 	InputTooLarge                 // Input exceeds some upper bound
 	Parsing                       // General parsing error
-	ParsingVarNames               // Parsing encountered unexpected variable names
+	Conversion                    // Conversion error
 	Overflow                      // Overflow error
 	Internal                      // Internal error
 )
