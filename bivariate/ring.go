@@ -1,8 +1,8 @@
 package bivariate
 
 import (
+	"algobra/errors"
 	"algobra/primefield"
-	"fmt"
 )
 
 type ring struct {
@@ -75,21 +75,28 @@ func (r *QuotientRing) NewFromString(s string) (*Polynomial, error) {
 // Quotient defines the quotient of the given ring modulo the input ideal.
 // The return type is a new ring-object
 func (r *QuotientRing) Quotient(id *Ideal) (*QuotientRing, error) {
+	const op = "Define quotient ring"
 	if r.id != nil {
-		return r, fmt.Errorf("Quotient: Given ring is already reduced modulo an ideal")
+		return r, errors.New(
+			op, errors.InputValue,
+			"Given ring is already reduced modulo an ideal",
+		)
 	}
 	if id.isGroebner != 1 {
 		id = id.GroebnerBasis()
 		_ = id.ReduceBasis()
 	}
 	if r.ring != id.ring {
-		return r, fmt.Errorf("ring.Quotient: Input argument not ideal of r")
+		return r, errors.New(
+			op, errors.InputIncompatible,
+			"Input argument not ideal of ring '%v'", r,
+		)
 	}
 	for _, f := range id.generators {
 		if f.baseRing != r {
-			return nil, fmt.Errorf(
-				"ring.Quotient: Ideal member %v not in ring",
-				f,
+			return nil, errors.New(
+				op, errors.InputIncompatible,
+				"Ideal member %v not in ring", f,
 			)
 		}
 	}

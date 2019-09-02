@@ -1,6 +1,7 @@
 package primefield
 
 import (
+	"algobra/errors"
 	"testing"
 )
 
@@ -20,6 +21,8 @@ func TestOverflowDetection(t *testing.T) {
 	_, err := Define(bigPrime)
 	if err == nil {
 		t.Errorf("Define succeeded even though p=%d", bigPrime)
+	} else if !errors.Is(errors.InputTooLarge, err) {
+		t.Errorf("Define failed, but the error kind was unexpected")
 	}
 }
 
@@ -37,12 +40,12 @@ func TestGf2(t *testing.T) {
 	for i := range elems {
 		for j := range elems {
 			if t1, t2 := elems[i].Plus(elems[j]), sumTable[i][j]; !t1.Equal(t2) {
-				t.Errorf("GF(2) failed: %d+%d=%d (Expected %d)",
-					elems[i].val, elems[j].val, t1, t2)
+				t.Errorf("GF(2) failed: %v+%v=%v (Expected %v)",
+					elems[i], elems[j], t1, t2)
 			}
 			if t1, t2 := elems[i].Mult(elems[j]), prodTable[i][j]; !t1.Equal(t2) {
-				t.Errorf("GF(2) failed: %d*%d=%d (Expected %d)",
-					elems[i].val, elems[j].val, t1.val, t2.val)
+				t.Errorf("GF(2) failed: %v*%v=%v (Expected %v)",
+					elems[i], elems[j], t1, t2)
 			}
 		}
 	}

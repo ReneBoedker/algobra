@@ -2,6 +2,7 @@ package primefield
 
 import (
 	"algobra/basic"
+	"algobra/errors"
 	"fmt"
 	"strconv"
 )
@@ -22,12 +23,16 @@ type Field struct {
 }
 
 func Define(char uint) (*Field, error) {
+	const op = "Defining prime field"
 	if char-1 >= 1<<(uintBitSize/2) {
-		return nil, fmt.Errorf("Define: %d exceeds maximal field size (2^%d)", char, uintBitSize/2)
+		return nil, errors.New(
+			op, errors.InputTooLarge,
+			"%d exceeds maximal field size (2^%d)", char, uintBitSize/2,
+		)
 	}
 	_, _, err := basic.FactorizePrimePower(char)
 	if err != nil {
-		return nil, fmt.Errorf("Define: " + err.Error())
+		return nil, errors.Wrap(op, errors.Other, err)
 	}
 	return &Field{char: char}, nil
 }
