@@ -44,6 +44,10 @@ func TestGf2(t *testing.T) {
 					t.Errorf("GF(2) failed: %v+%v=%v (Expected %v)",
 						elems[i], elems[j], t1, t2)
 				}
+				if t1, t2 := elems[i].Minus(elems[j]).val, sumTable[i][j].val; t1 != t2 { // Note that Plus=Minus
+					t.Errorf("GF(7) failed: %d-%d=%d (Expected %d)",
+						elems[i].val, elems[j].val, t1, t2)
+				}
 				if t1, t2 := elems[i].Mult(elems[j]), prodTable[i][j]; !t1.Equal(t2) {
 					t.Errorf("GF(2) failed: %v*%v=%v (Expected %v)",
 						elems[i], elems[j], t1, t2)
@@ -70,6 +74,11 @@ func TestGf3(t *testing.T) {
 			{elems[1], elems[2], elems[0]},
 			{elems[2], elems[0], elems[1]},
 		}
+		diffTable := [][]*Element{
+			{elems[0], elems[2], elems[1]},
+			{elems[1], elems[0], elems[2]},
+			{elems[2], elems[1], elems[0]},
+		}
 		prodTable := [][]*Element{
 			{elems[0], elems[0], elems[0]},
 			{elems[0], elems[1], elems[2]},
@@ -79,6 +88,10 @@ func TestGf3(t *testing.T) {
 			for j := range elems {
 				if t1, t2 := elems[i].Plus(elems[j]).val, sumTable[i][j].val; t1 != t2 {
 					t.Errorf("GF(3) failed: %d+%d=%d (Expected %d)",
+						elems[i].val, elems[j].val, t1, t2)
+				}
+				if t1, t2 := elems[i].Minus(elems[j]).val, diffTable[i][j].val; t1 != t2 {
+					t.Errorf("GF(7) failed: %d-%d=%d (Expected %d)",
 						elems[i].val, elems[j].val, t1, t2)
 				}
 				if t1, t2 := elems[i].Mult(elems[j]).val, prodTable[i][j].val; t1 != t2 {
@@ -117,6 +130,15 @@ func TestGf7(t *testing.T) {
 			{elems[5], elems[6], elems[0], elems[1], elems[2], elems[3], elems[4]},
 			{elems[6], elems[0], elems[1], elems[2], elems[3], elems[4], elems[5]},
 		}
+		diffTable := [][]*Element{
+			{elems[0], elems[6], elems[5], elems[4], elems[3], elems[2], elems[1]},
+			{elems[1], elems[0], elems[6], elems[5], elems[4], elems[3], elems[2]},
+			{elems[2], elems[1], elems[0], elems[6], elems[5], elems[4], elems[3]},
+			{elems[3], elems[2], elems[1], elems[0], elems[6], elems[5], elems[4]},
+			{elems[4], elems[3], elems[2], elems[1], elems[0], elems[6], elems[5]},
+			{elems[5], elems[4], elems[3], elems[2], elems[1], elems[0], elems[6]},
+			{elems[6], elems[5], elems[4], elems[3], elems[2], elems[1], elems[0]},
+		}
 		prodTable := [][]*Element{
 			{elems[0], elems[0], elems[0], elems[0], elems[0], elems[0], elems[0]},
 			{elems[0], elems[1], elems[2], elems[3], elems[4], elems[5], elems[6]},
@@ -130,6 +152,10 @@ func TestGf7(t *testing.T) {
 			for j := range elems {
 				if t1, t2 := elems[i].Plus(elems[j]).val, sumTable[i][j].val; t1 != t2 {
 					t.Errorf("GF(7) failed: %d+%d=%d (Expected %d)",
+						elems[i].val, elems[j].val, t1, t2)
+				}
+				if t1, t2 := elems[i].Minus(elems[j]).val, diffTable[i][j].val; t1 != t2 {
+					t.Errorf("GF(7) failed: %d-%d=%d (Expected %d)",
 						elems[i].val, elems[j].val, t1, t2)
 				}
 				if t1, t2 := elems[i].Mult(elems[j]).val, prodTable[i][j].val; t1 != t2 {
@@ -152,6 +178,17 @@ func TestGf7(t *testing.T) {
 	// With tables
 	field.ComputeTables(true, true)
 	test(field)
+}
+
+func TestEqual(t *testing.T) {
+	field, _ := Define(23)
+	if !field.Element(20).Equal(field.ElementFromSigned(-3)) {
+		t.Errorf("Reported 20!=20 (mod 23)")
+	}
+	field2, _ := Define(13)
+	if field.Element(7).Equal(field2.ElementFromSigned(7)) {
+		t.Errorf("Reported equality for elements from different fields")
+	}
 }
 
 func TestTableMemory(t *testing.T) {
