@@ -19,7 +19,9 @@ func init() {
 }
 
 type Field struct {
-	char uint
+	char      uint
+	addTable  *table
+	multTable *table
 }
 
 func Define(char uint) (*Field, error) {
@@ -34,11 +36,28 @@ func Define(char uint) (*Field, error) {
 	if err != nil {
 		return nil, errors.Wrap(op, errors.Other, err)
 	}
-	return &Field{char: char}, nil
+	return &Field{char: char, addTable: nil, multTable: nil}, nil
 }
 
 func (f *Field) String() string {
 	return fmt.Sprintf("Finite field of %d elements", f.char)
+}
+
+func (f *Field) ComputeTables(add, mult bool) (err error) {
+	if add && f.addTable == nil {
+		f.addTable, err = newTable(f, func(i, j uint) uint {
+			return (i + j) % f.char
+		})
+	}
+	if mult && f.multTable == nil {
+		f.multTable, err = newTable(f, func(i, j uint) uint {
+			return (i * j) % f.char
+		})
+	}
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 type Element struct {
@@ -69,6 +88,9 @@ func (a *Element) Plus(b *Element) *Element {
 	if a.field != b.field {
 		panic("Element.Plus: Elements are from different fields.")
 	}
+	if a.field.addTable != nil {
+		return a.field.Element(a.field.addTable.lookup(a.val, b.val))
+	}
 	return a.field.Element(a.val + b.val)
 }
 
@@ -86,6 +108,9 @@ func (a *Element) Minus(b *Element) *Element {
 func (a *Element) Mult(b *Element) *Element {
 	if a.field != b.field {
 		panic("Element.Mult: Elements are from different fields.")
+	}
+	if a.field.multTable != nil {
+		return a.field.Element(a.field.multTable.lookup(a.val, b.val))
 	}
 	return a.field.Element(a.val * b.val)
 }
