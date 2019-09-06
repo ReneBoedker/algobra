@@ -10,15 +10,17 @@ type Op string
 type Kind uint8
 
 const (
-	Other             Kind = iota // General error type
-	Input                         // General input error
-	InputValue                    // Input has wrong "value" (e.g. not a monomial)
-	InputIncompatible             // Inputs are incompatible with each other
-	InputTooLarge                 // Input exceeds some upper bound
-	Parsing                       // General parsing error
-	Conversion                    // Conversion error
-	Overflow                      // Overflow error
-	Internal                      // Internal error
+	Other              Kind = iota // General error type
+	Inherit                        // Inherit kind when wrapping
+	Input                          // General input error
+	InputValue                     // Input has wrong "value" (e.g. not a monomial)
+	InputIncompatible              // Inputs incompatible with each other
+	InputTooLarge                  // Input exceeds some upper bound
+	ArithmeticIncompat             // Objects not compatible for given operation
+	Parsing                        // General parsing error
+	Conversion                     // Conversion error
+	Overflow                       // Overflow error
+	Internal                       // Internal error
 )
 
 type Error struct {
@@ -48,7 +50,7 @@ func Is(kind Kind, err error) bool {
 	if !ok {
 		return false
 	}
-	if e.Kind != Other {
+	if e.Kind != Other && e.Kind != Inherit {
 		return e.Kind == kind
 	}
 	if e.Err != nil {

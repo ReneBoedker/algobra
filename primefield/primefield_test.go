@@ -5,29 +5,145 @@ import (
 	"testing"
 )
 
+func DefineField(char uint) *Field {
+	f, err := Define(char)
+	if err != nil {
+		// Testing code is wrong, so panic
+		panic(err)
+	}
+	return f
+}
+
 func TestInit(t *testing.T) {
-	if uintBitSize == 0 {
+	if uintBitSize != 32 && uintBitSize != 64 {
 		t.Error("init() failed to detect size of uint")
 	}
 }
 
 func TestOverflowDetection(t *testing.T) {
+	origSize := uintBitSize
+	defer func() { uintBitSize = origSize }()
+	for _, size := range [2]uint{32, 64} {
+		uintBitSize = size
+		var bigPrime uint
+		if uintBitSize == 32 {
+			bigPrime = uint(65537)
+		} else {
+			bigPrime = uint(4294967311)
+		}
+		_, err := Define(bigPrime)
+		if err == nil {
+			t.Errorf(
+				"Define succeeded for bit size %d even though p=%d",
+				uintBitSize, bigPrime,
+			)
+		} else if !errors.Is(errors.InputTooLarge, err) {
+			t.Errorf("Define failed, but the error kind was unexpected")
+		}
+	}
+}
+
+func TestNonPrimeInput(t *testing.T) {
+	testCases := []uint{0, 1, 8, 10, 77}
+	for _, char := range testCases {
+		if _, err := Define(char); err == nil {
+			t.Errorf(
+				"Defining field with characteristic %d did not return an error",
+				char,
+			)
+		} else if !errors.Is(errors.InputValue, err) {
+			t.Errorf(
+				"Defining field with characteristic %d returned error, but wrong kind",
+				char,
+			)
+		}
+	}
+}
+
+func TestEqual(t *testing.T) {
+	field := DefineField(23)
+	if !field.Element(20).Equal(field.ElementFromSigned(-3)) {
+		t.Errorf("Reported 20!=20 (mod 23)")
+	}
+	field2 := DefineField(13)
+	if field.Element(7).Equal(field2.ElementFromSigned(7)) {
+		t.Errorf("Reported equality for elements from different fields")
+	}
+}
+
+func TestTableMemory(t *testing.T) {
 	var bigPrime uint
 	if uintBitSize == 32 {
-		bigPrime = uint(65537)
+		bigPrime = uint(16411)
 	} else {
-		bigPrime = uint(4294967311)
+		bigPrime = uint(11587)
 	}
-	_, err := Define(bigPrime)
-	if err == nil {
-		t.Errorf("Define succeeded even though p=%d", bigPrime)
+	f, _ := Define(bigPrime)
+	if err := f.ComputeTables(true, false); err == nil {
+		t.Errorf("No error returned")
 	} else if !errors.Is(errors.InputTooLarge, err) {
-		t.Errorf("Define failed, but the error kind was unexpected")
+		t.Errorf("Error returned has wrong kind. Expected errors.InputTooLarge, "+
+			"but received error %q", err.Error())
+	}
+}
+
+func TestArithmeticErrors(t *testing.T) {
+	fieldA := DefineField(11)
+	fieldB := DefineField(17)
+
+	a := fieldA.Element(0)
+	b := fieldB.Element(10)
+	// Cannot invert zero
+	if e := a.Inv(); e.Err() == nil {
+		t.Errorf("Inverting zero did not set error status")
+	} else if !errors.Is(errors.InputValue, e.Err()) {
+		t.Errorf("Inverting zero set error status, but not InputValue-error")
+	}
+
+	// Cannot use elements from different fields
+	if e := a.Plus(b); e.Err() == nil {
+		t.Errorf("Adding elements from different fields did not set error status")
+	}
+	if e := a.Mult(b); e.Err() == nil {
+		t.Errorf("Multiplying elements from different fields did not set error status")
+	}
+	if e := a.Minus(b); e.Err() == nil {
+		t.Errorf("Subtracting elements from different fields did not set error status")
+	}
+
+	// Error is passed on to last result
+	if e := b.Plus(b.Minus(a.Inv())); e.Err() == nil {
+		t.Errorf("Last result did not have error status")
+	} else if !errors.Is(errors.InputValue, e.Err()) {
+		// Inverting gives InputValue-error. This should be the last kind as well
+		t.Errorf("Last result did not retain the original error status")
+	}
+	if e := b.Minus(b).Inv().Mult(b); e.Err() == nil {
+		t.Errorf("Last result did not have error status")
+	} else if !errors.Is(errors.InputValue, e.Err()) {
+		// Inverting gives InputValue-error. This should be the last kind as well
+		t.Errorf("Last result did not retain the original error status")
+	}
+}
+
+func TestBools(t *testing.T) {
+	field := DefineField(47)
+	if field.Element(0).Nonzero() {
+		t.Errorf("Element(0) element considered non-zero")
+	}
+	if !field.Element(0).Zero() {
+		t.Errorf("Element(0) element not considered zero")
+	}
+	if !field.Element(1).One() {
+		t.Errorf("Element(1) not considered as one")
+	}
+	if !field.Element(1).Nonzero() {
+		t.Errorf("Element(1) not considered non-zero")
 	}
 }
 
 func TestGf2(t *testing.T) {
-	field, _ := Define(2)
+	field := DefineField(2)
 	test := func(field *Field) {
 		elems := []*Element{field.Element(0), field.Element(1)}
 		sumTable := [][]*Element{
@@ -66,7 +182,7 @@ func TestGf2(t *testing.T) {
 }
 
 func TestGf3(t *testing.T) {
-	field, _ := Define(3)
+	field := DefineField(3)
 	test := func(field *Field) {
 		elems := []*Element{field.Element(0), field.Element(1), field.Element(2)}
 		sumTable := [][]*Element{
@@ -115,7 +231,7 @@ func TestGf3(t *testing.T) {
 }
 
 func TestGf7(t *testing.T) {
-	field, _ := Define(7)
+	field := DefineField(7)
 	test := func(field *Field) {
 		elems := []*Element{
 			field.Element(0), field.Element(1), field.Element(2), field.Element(3),
@@ -178,31 +294,4 @@ func TestGf7(t *testing.T) {
 	// With tables
 	field.ComputeTables(true, true)
 	test(field)
-}
-
-func TestEqual(t *testing.T) {
-	field, _ := Define(23)
-	if !field.Element(20).Equal(field.ElementFromSigned(-3)) {
-		t.Errorf("Reported 20!=20 (mod 23)")
-	}
-	field2, _ := Define(13)
-	if field.Element(7).Equal(field2.ElementFromSigned(7)) {
-		t.Errorf("Reported equality for elements from different fields")
-	}
-}
-
-func TestTableMemory(t *testing.T) {
-	var bigPrime uint
-	if uintBitSize == 32 {
-		bigPrime = uint(16411)
-	} else {
-		bigPrime = uint(11587)
-	}
-	f, _ := Define(bigPrime)
-	if err := f.ComputeTables(true, false); err == nil {
-		t.Errorf("No error returned")
-	} else if !errors.Is(errors.InputTooLarge, err) {
-		t.Errorf("Error returned has wrong kind. Expected errors.InputTooLarge, "+
-			"but received error %q", err.Error())
-	}
 }

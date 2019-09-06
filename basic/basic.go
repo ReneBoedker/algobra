@@ -1,7 +1,7 @@
 package basic
 
 import (
-	"fmt"
+	"algobra/errors"
 	"math/bits"
 )
 
@@ -26,6 +26,15 @@ func Pow(a, n uint) uint {
 }
 
 func FactorizePrimePower(q uint) (p uint, n uint, err error) {
+	const op = "Factorizing prime power"
+
+	if q == 0 || q == 1 {
+		return 0, 0, errors.New(
+			op, errors.InputValue,
+			"%d is not a prime power.", q,
+		)
+	}
+
 	if q%2 == 0 {
 		p = 2
 	} else if q%3 == 0 {
@@ -45,7 +54,10 @@ func FactorizePrimePower(q uint) (p uint, n uint, err error) {
 	}
 	for q > 1 {
 		if q%p != 0 {
-			return 0, 0, fmt.Errorf("factorizePrimePower: %d does not seem to be a prime power.", q*Pow(p, n))
+			return 0, 0, errors.New(
+				op, errors.InputValue,
+				"%d does not seem to be a prime power.", q*Pow(p, n),
+			)
 		}
 		q /= p
 		n++

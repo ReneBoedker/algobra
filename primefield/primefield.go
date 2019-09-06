@@ -24,17 +24,33 @@ type Field struct {
 	multTable *table
 }
 
+// Define creates a new finite field with prime characteristic. If char is not a
+// prime, the package returns
 func Define(char uint) (*Field, error) {
 	const op = "Defining prime field"
+
+	if char == 0 {
+		return nil, errors.New(
+			op, errors.InputValue,
+			"Field characteristic cannot be zero",
+		)
+	}
+
 	if char-1 >= 1<<(uintBitSize/2) {
 		return nil, errors.New(
 			op, errors.InputTooLarge,
 			"%d exceeds maximal field size (2^%d)", char, uintBitSize/2,
 		)
 	}
-	_, _, err := basic.FactorizePrimePower(char)
+
+	_, n, err := basic.FactorizePrimePower(char)
 	if err != nil {
-		return nil, errors.Wrap(op, errors.Other, err)
+		return nil, errors.Wrap(op, errors.Inherit, err)
+	} else if n != 1 {
+		return nil, errors.New(
+			op, errors.InputValue,
+			"%d is not a prime", char,
+		)
 	}
 	return &Field{char: char, addTable: nil, multTable: nil}, nil
 }
@@ -63,6 +79,7 @@ func (f *Field) ComputeTables(add, mult bool) (err error) {
 type Element struct {
 	field *Field
 	val   uint
+	err   error
 }
 
 func (pf *Field) Element(val uint) *Element {
@@ -77,6 +94,10 @@ func (pf *Field) ElementFromSigned(val int) *Element {
 	return pf.Element(uint(val))
 }
 
+func (a *Element) Err() error {
+	return a.err
+}
+
 func (a *Element) Equal(b *Element) bool {
 	if a.field == b.field && a.val == b.val {
 		return true
@@ -85,8 +106,12 @@ func (a *Element) Equal(b *Element) bool {
 }
 
 func (a *Element) Plus(b *Element) *Element {
-	if a.field != b.field {
-		panic("Element.Plus: Elements are from different fields.")
+	const op = "Adding elements"
+	if tmp := hasErr(op, a, b); tmp != nil {
+		return tmp
+	}
+	if tmp := checkCompatible(op, a, b); tmp != nil {
+		return tmp
 	}
 	if a.field.addTable != nil {
 		return a.field.Element(a.field.addTable.lookup(a.val, b.val))
@@ -99,15 +124,23 @@ func (a *Element) Neg() *Element {
 }
 
 func (a *Element) Minus(b *Element) *Element {
-	if a.field != b.field {
-		panic("Element.Minus: Elements are from different fields.")
+	const op = "Subtracting elements"
+	if tmp := hasErr(op, a, b); tmp != nil {
+		return tmp
+	}
+	if tmp := checkCompatible(op, a, b); tmp != nil {
+		return tmp
 	}
 	return a.Plus(b.Neg())
 }
 
 func (a *Element) Mult(b *Element) *Element {
-	if a.field != b.field {
-		panic("Element.Mult: Elements are from different fields.")
+	const op = "Multiplying elements"
+	if tmp := hasErr(op, a, b); tmp != nil {
+		return tmp
+	}
+	if tmp := checkCompatible(op, a, b); tmp != nil {
+		return tmp
 	}
 	if a.field.multTable != nil {
 		return a.field.Element(a.field.multTable.lookup(a.val, b.val))
@@ -116,8 +149,14 @@ func (a *Element) Mult(b *Element) *Element {
 }
 
 func (a *Element) Inv() *Element {
+	const op = "Inverting element"
 	if a.val == 0 {
-		panic("Element.Inv: Cannot invert zero element")
+		out := a.field.Element(0)
+		out.err = errors.New(
+			op, errors.InputValue,
+			"Cannot invert zero element",
+		)
+		return out
 	}
 	// Implemented using the extended euclidean algorithm (see for instance
 	// [GG13])
@@ -135,6 +174,10 @@ func (a *Element) Inv() *Element {
 	return a.field.ElementFromSigned(i0)
 }
 
+func (a *Element) Zero() bool {
+	return (a.val == 0)
+}
+
 func (a *Element) Nonzero() bool {
 	return (a.val != 0)
 }
@@ -145,6 +188,38 @@ func (a *Element) One() bool {
 
 func (a *Element) String() string {
 	return strconv.FormatUint(uint64(a.val), 10)
+}
+
+// hasErr is an internal method for checking if one of two inputs has a non-nil
+// error field.
+func hasErr(op errors.Op, a, b *Element) *Element {
+	switch {
+	case a.err != nil:
+		a.err = errors.Wrap(
+			op, errors.Inherit,
+			a.err,
+		)
+		return a
+	case b.err != nil:
+		b.err = errors.Wrap(
+			op, errors.Inherit,
+			b.err,
+		)
+		return b
+	}
+	return nil
+}
+
+func checkCompatible(op errors.Op, a, b *Element) *Element {
+	if a.field != b.field {
+		out := a.field.Element(0)
+		out.err = errors.New(
+			op, errors.ArithmeticIncompat,
+			"%v and %v defined over different fields", a, b,
+		)
+		return out
+	}
+	return nil
 }
 
 /* Copyright 2019 René Bødker Christensen
