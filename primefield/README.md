@@ -7,12 +7,12 @@ To use the package, simply define the field -- or fields -- that you want to wor
 // import "github.com/ReneBoedker/algobra/primefield"
 ff,err:=Define(7)
 if err!=nil {
-	// Define returns an error if the characteristic is not a prime (or too large)
+    // Define returns an error if the characteristic is not a prime (or too large)
 }
 
 a:=ff.Element(3)
 b:=ff.Element(6)
-c:=a.Plus(b)		// c = 2
+c:=a.Plus(b)    // c = 2
 ```
 
 ### Error handling
@@ -20,7 +20,7 @@ In order to allow method chaining for arithmetic operations -- such as `a.Plus(b
 ``` go
 a:=field.Element(0).Inv()
 if a.Err()!=nil {
-	// Handle error
+    // Handle error
 }
 ```
 
@@ -30,6 +30,6 @@ By default, the package will perform the computation each time two elements are 
 ```go
 err:=ff.ComputeTables(true,false)   // Precompute the addition table
 if err!=nil {
-   // Table exceeds maximal memory usage
+    // Table exceeds maximal memory usage
 }
 ```
