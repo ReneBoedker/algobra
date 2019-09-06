@@ -8,7 +8,7 @@ import (
 
 type ring struct {
 	baseField *primefield.Field
-	ord       order
+	ord       Order
 }
 
 type QuotientRing struct {
@@ -32,7 +32,7 @@ func (r *QuotientRing) String() string {
 
 // DefRing defines a new polynomial ring with the given characteristic, using
 // the order function ord. It returns a new ring-object
-func DefRing(field *primefield.Field, ord order) *QuotientRing {
+func DefRing(field *primefield.Field, ord Order) *QuotientRing {
 	return &QuotientRing{
 		ring: &ring{
 			baseField: field,
@@ -78,7 +78,15 @@ func (r *QuotientRing) NewFromSigned(coefs map[[2]uint]int) *Polynomial {
 	return out
 }
 
-// New defines a new polynomial with the given coefficients
+// NewFromString defines a polynomial by parsing s.
+//
+// The string s must use 'X' and 'Y' as variable names, but lowercase letters are
+// accepted. Multiplication symbol '*' is allowed, but not necessary.
+// Additionally, Singular-style exponents are allowed, meaning that "X2Y3" is
+// interpreted as "X^2Y^3".
+//
+// If the string cannot be parsed, the function returns the zero polynomial and
+// a Parsing-error.
 func (r *QuotientRing) NewFromString(s string) (*Polynomial, error) {
 	m, err := polynomialStringToSignedMap(s)
 	if err != nil {
@@ -88,6 +96,7 @@ func (r *QuotientRing) NewFromString(s string) (*Polynomial, error) {
 }
 
 // Quotient defines the quotient of the given ring modulo the input ideal.
+//
 // The return type is a new ring-object
 func (r *QuotientRing) Quotient(id *Ideal) (*QuotientRing, error) {
 	const op = "Define quotient ring"
@@ -115,10 +124,18 @@ func (r *QuotientRing) Quotient(id *Ideal) (*QuotientRing, error) {
 			)
 		}
 	}
-	return &QuotientRing{
+
+	qr := &QuotientRing{
 		ring: r.ring,
-		id:   id,
-	}, nil
+		id:   nil,
+	}
+	idConv := id.Copy()
+	// Mark the generators as 'belonging' to the new ring
+	for i := range idConv.generators {
+		idConv.generators[i].baseRing = qr
+	}
+	qr.id = idConv
+	return qr, nil
 }
 
 /* Copyright 2019 René Bødker Christensen

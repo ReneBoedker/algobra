@@ -8,11 +8,26 @@ import (
 	"strings"
 )
 
-// addDegs will add two bivariate degrees
-func addDegs(deg1, deg2 [2]uint) [2]uint {
-	return [2]uint{deg1[0] + deg2[0], deg1[1] + deg2[1]}
+// addDegs computes the component-wise sum of deg1 and deg2
+//
+// If either component overflows the size of the uint type, the function returns
+// an Overflow-error
+func addDegs(deg1, deg2 [2]uint) (sum [2]uint, err error) {
+	const op = "Adding degrees"
+	sum = [2]uint{deg1[0] + deg2[0], deg1[1] + deg2[1]}
+	if sum[0] < deg1[0] || sum[1] < deg1[1] {
+		err = errors.New(
+			op, errors.Overflow,
+			"%v + %v overflows uint", deg1, deg2,
+		)
+	}
+	return
 }
 
+// subtractDegs computes the component-wise difference deg1 and deg2
+//
+// The return value ok indicates whether each component of deg1 is at least as
+// large as the corresponding component of deg2.
 func subtractDegs(deg1, deg2 [2]uint) (deg [2]uint, ok bool) {
 	if deg1[0] >= deg2[0] && deg1[1] >= deg2[1] {
 		return [2]uint{deg1[0] - deg2[0], deg1[1] - deg2[1]}, true
@@ -23,10 +38,17 @@ func subtractDegs(deg1, deg2 [2]uint) (deg [2]uint, ok bool) {
 type Polynomial struct {
 	baseRing *QuotientRing
 	degrees  map[[2]uint]*primefield.Element
+	err      error
 }
 
-func (f *Polynomial) baseField() *primefield.Field {
+// BaseField returns the field over which the coefficients of f are defined.
+func (f *Polynomial) BaseField() *primefield.Field {
 	return f.baseRing.baseField
+}
+
+// Err returns the error status of f.
+func (f *Polynomial) Err() error {
+	return f.err
 }
 
 // Coef returns the coefficient of the monomial with degree specified by the
@@ -35,7 +57,7 @@ func (f *Polynomial) Coef(deg [2]uint) *primefield.Element {
 	if c, ok := f.degrees[deg]; ok {
 		return c
 	}
-	return f.baseField().Element(0)
+	return f.BaseField().Element(0)
 }
 
 // Copy returns a new polynomial object over the same ring and with the same
@@ -49,15 +71,23 @@ func (f *Polynomial) Copy() *Polynomial {
 }
 
 // Plus returns the sum of the two polynomials f and g.
+//
+// If f and g are defined over different rings, a new polynomial is returned
+// with an ArithmeticIncompat-error as error status.
+//
+// When f or g has a non-nil error status, its error is wrapped and the same
+// polynomial is returned.
 func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
-	if f.baseRing != g.baseRing {
-		fNew, gNew, err := embedInCommonRing(f, g)
-		if err != nil {
-			panic(fmt.Sprintf("Polynomial.Plus: Polynomials incompatible\n'%#v'\n'%#v')",
-				f.baseRing, g.baseRing))
-		}
-		return fNew.Plus(gNew)
+	const op = "Adding polynomials"
+
+	if tmp := hasErr(op, f, g); tmp != nil {
+		return tmp
 	}
+
+	if tmp := checkCompatible(op, f, g); tmp != nil {
+		return tmp
+	}
+
 	h := f.Copy()
 	for deg, c := range g.degrees {
 		if _, ok := h.degrees[deg]; !ok {
@@ -102,26 +132,57 @@ func (f *Polynomial) Equal(g *Polynomial) bool {
 }
 
 // Minus returns polynomial difference f-g.
+//
+// If f and g are defined over different rings, a new polynomial is returned
+// with an ArithmeticIncompat-error as error status.
+//
+// When f or g has a non-nil error status, its error is wrapped and the same
+// polynomial is returned.
 func (f *Polynomial) Minus(g *Polynomial) *Polynomial {
+	const op = "Subtracting polynomials"
+
+	if tmp := hasErr(op, f, g); tmp != nil {
+		return tmp
+	}
+
+	if tmp := checkCompatible(op, f, g); tmp != nil {
+		return tmp
+	}
+
 	return f.Plus(g.Neg())
 }
 
 // Internal method. Multiplies the two polynomials f and g, but does not reduce
 // the result according to the specified ring.
 func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
+	const op = "Multiplying polynomials"
+
+	if tmp := hasErr(op, f, g); tmp != nil {
+		return tmp
+	}
+
+	if tmp := checkCompatible(op, f, g); tmp != nil {
+		return tmp
+	}
+
 	h := f.baseRing.Zero()
 	for degf, cf := range f.degrees {
 		for degg, cg := range g.degrees {
 			tmp := cf.Mult(cg)
 			if tmp.Nonzero() {
-				if c, ok := h.degrees[addDegs(degf, degg)]; ok {
+				degSum, err := addDegs(degf, degg)
+				if err != nil {
+					h = f.baseRing.Zero()
+					h.err = errors.Wrap(op, errors.Inherit, err)
+				}
+				if c, ok := h.degrees[degSum]; ok {
 					if c.Plus(tmp).Nonzero() {
-						h.degrees[addDegs(degf, degg)] = c.Plus(tmp)
+						h.degrees[degSum] = c.Plus(tmp)
 					} else {
-						delete(h.degrees, addDegs(degf, degg))
+						delete(h.degrees, degSum)
 					}
 				} else {
-					h.degrees[addDegs(degf, degg)] = tmp
+					h.degrees[degSum] = tmp
 				}
 			}
 		}
@@ -130,6 +191,12 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 }
 
 // Mult returns the product of the polynomials f and g
+//
+// If f and g are defined over different rings, a new polynomial is returned
+// with an ArithmeticIncompat-error as error status.
+//
+// When f or g has a non-nil error status, its error is wrapped and the same
+// polynomial is returned.
 func (f *Polynomial) Mult(g *Polynomial) *Polynomial {
 	h := f.multNoReduce(g)
 	h.reduce()
@@ -137,16 +204,17 @@ func (f *Polynomial) Mult(g *Polynomial) *Polynomial {
 }
 
 // Normalize creates a new polynomial obtained by normalizing f. That is,
-// f.Normalize() multiplied by f.Lc() is f. If f is the zero polynomial, the
-// zero polynomial is returned.
+// f.Normalize() multiplied by f.Lc() is f.
+//
+// If f is the zero polynomial, a copy of f is returned.
 func (f *Polynomial) Normalize() *Polynomial {
 	if f.Zero() {
-		return f
+		return f.Copy()
 	}
 	return f.Scale(f.Lc().Inv())
 }
 
-// Scale scales all coefficients of f by the given field element and returns the
+// Scale scales all coefficients of f by the field element c and returns the
 // result as a new polynomial.
 func (f *Polynomial) Scale(c *primefield.Element) *Polynomial {
 	g := f.Copy()
@@ -156,15 +224,26 @@ func (f *Polynomial) Scale(c *primefield.Element) *Polynomial {
 	return g
 }
 
-// Pow raises f to the power of n, and return the result in a new polynomial.
+// Pow raises f to the power of n.
+//
+// If the computation causes the degree of f to overflow, the returned
+// polynomial has adn Overflow-error as error status.
 func (f *Polynomial) Pow(n uint) *Polynomial {
+	const op = "Computing polynomial power"
+
 	out := f.baseRing.New(map[[2]uint]uint{
 		{0, 0}: 1,
 	})
 	g := f.Copy()
+
 	for n > 0 {
 		if n%2 == 1 {
 			out = out.Mult(g)
+			if out.Err() != nil {
+				out = f.baseRing.Zero()
+				out.err = errors.Wrap(op, errors.Inherit, out.Err())
+				return out
+			}
 		}
 		n /= 2
 		g = g.Mult(g)
@@ -172,8 +251,9 @@ func (f *Polynomial) Pow(n uint) *Polynomial {
 	return out
 }
 
-// SortedDegrees returns a list containing the degrees is the support of f. The
-// list is sorted according to the ring order with higher orders preceding
+// SortedDegrees returns a list containing the degrees is the support of f.
+//
+// The list is sorted according to the ring order with higher orders preceding
 // lower orders in the list.
 func (f *Polynomial) SortedDegrees() [][2]uint {
 	degs := make([][2]uint, 0, len(f.degrees))
@@ -228,39 +308,38 @@ func (f *Polynomial) Monomial() bool {
 // Reduces f in-place
 func (f *Polynomial) reduce() {
 	if f.baseRing.id != nil {
-		f.baseRing.id.reduce(f)
+		f.baseRing.id.Reduce(f)
 	}
 }
 
-// Embed f in another ring
-func embedInCommonRing(f, g *Polynomial) (fOut, gOut *Polynomial, err error) {
-	const op = "Embedding in common ring"
-	fOut = f.Copy()
-	gOut = g.Copy()
-	if f.baseRing.ring != g.baseRing.ring {
-		err = errors.New(
-			op, errors.InputIncompatible,
-			"Rings '%v' and '%v' are not compatible",
-			f.baseRing.ring, g.baseRing.ring,
-		)
-		return
-	}
-	switch {
-	case f.baseRing.id == nil && g.baseRing.id == nil:
-		err = nil
-	case f.baseRing.id == nil && g.baseRing.id != nil:
-		fOut.baseRing = g.baseRing
-		err = nil
-	case f.baseRing != nil && g.baseRing.id == nil:
-		gOut.baseRing = f.baseRing
-	case f.baseRing != nil && g.baseRing.id != nil:
-		err = errors.New(
-			op, errors.InputIncompatible,
-			"Polynomials defined over different quotient rings.",
-		)
-	}
-	return
-}
+// // Embed f in another ring
+// func embedInCommonRing(f, g *Polynomial) (fOut, gOut *Polynomial, err error) {
+// 	const op = "Embedding in common ring"
+// 	fOut = f.Copy()
+// 	gOut = g.Copy()
+// 	if f.baseRing.ring != g.baseRing.ring {
+// 		err = errors.New(
+// 			op, errors.InputIncompatible,
+// 			"Rings '%v' and '%v' are not compatible",
+// 			f.baseRing.ring, g.baseRing.ring,
+// 		)
+// 	}
+// 	switch {
+// 	case f.baseRing.id == nil && g.baseRing.id == nil:
+// 		err = nil
+// 	case f.baseRing.id == nil && g.baseRing.id != nil:
+// 		fOut.baseRing = g.baseRing
+// 		err = nil
+// 	case f.baseRing != nil && g.baseRing.id == nil:
+// 		gOut.baseRing = f.baseRing
+// 	case f.baseRing != nil && g.baseRing.id != nil:
+// 		err = errors.New(
+// 			op, errors.InputIncompatible,
+// 			"Polynomials defined over different quotient rings.",
+// 		)
+// 	}
+// 	return
+// }
 
 // String returns the string representation of f. Variables are named 'X' and
 // 'Y'.
@@ -291,6 +370,46 @@ func (f *Polynomial) String() string {
 		}
 	}
 	return b.String()
+}
+
+// hasErr is an internal method for checking if f or g has a non-nil error
+// field.
+//
+// It returns the first polynomial with non-nil error status after wrapping the
+// error. The new error inherits the kind from the old.
+func hasErr(op errors.Op, f, g *Polynomial) *Polynomial {
+	switch {
+	case f.err != nil:
+		f.err = errors.Wrap(
+			op, errors.Inherit,
+			f.err,
+		)
+		return f
+	case g.err != nil:
+		g.err = errors.Wrap(
+			op, errors.Inherit,
+			g.err,
+		)
+		return g
+	}
+	return nil
+}
+
+// checkCompatible is an internal method for checking if f and g are compatible;
+// that is, if they are defined over the same ring.
+//
+// If not, the return value is an element with error status set to
+// ArithmeticIncompat.
+func checkCompatible(op errors.Op, f, g *Polynomial) *Polynomial {
+	if f.baseRing != g.baseRing {
+		out := f.baseRing.Zero()
+		out.err = errors.New(
+			op, errors.ArithmeticIncompat,
+			"%v and %v defined over different rings", f, g,
+		)
+		return out
+	}
+	return nil
 }
 
 /* Copyright 2019 René Bødker Christensen

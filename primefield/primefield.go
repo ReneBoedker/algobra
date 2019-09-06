@@ -115,7 +115,7 @@ func (f *Field) ElementFromSigned(val int) *Element {
 	return f.Element(uint(val))
 }
 
-// Err returns the error status of a
+// Err returns the error status of a.
 func (a *Element) Err() error {
 	return a.err
 }
@@ -153,7 +153,7 @@ func (a *Element) Plus(b *Element) *Element {
 	return a.field.Element(a.val + b.val)
 }
 
-// Neg returns -a
+// Neg returns -a (modulo the characteristic)
 func (a *Element) Neg() *Element {
 	return a.field.Element(a.field.char - a.val)
 }

@@ -15,7 +15,7 @@ func TestAddAndSubDegs(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		a, b := uint(prg.Uint64()), uint(prg.Uint64())
 		c, d := uint(prg.Uint64()), uint(prg.Uint64())
-		if tmp := addDegs([2]uint{a, b}, [2]uint{c, d}); tmp != [2]uint{a + c, b + d} {
+		if tmp, _ := addDegs([2]uint{a, b}, [2]uint{c, d}); tmp != [2]uint{a + c, b + d} {
 			t.Errorf("addDegs({%d,%d},{%d,%d})=%v (Expected {%d,%d})", a, b, c, d, tmp, a+c, b+d)
 		}
 		tmp, ok := subtractDegs([2]uint{a, b}, [2]uint{c, d})

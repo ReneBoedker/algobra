@@ -15,7 +15,7 @@ func defineField(char uint, t *testing.T) *primefield.Field {
 
 func TestReduce(t *testing.T) {
 	field := defineField(3, t)
-	r := DefRing(field, WDegLex(3, 4))
+	r := DefRing(field, WDegLex(3, 4, false))
 	mod := r.New(map[[2]uint]uint{{9, 0}: 1, {1, 0}: 2})
 	id, _ := r.NewIdeal(mod)
 	qr, err := r.Quotient(id)
