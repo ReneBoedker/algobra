@@ -6,6 +6,12 @@ import (
 
 var maxMem uint = 1 << 19 // Maximal memory allowed per table in KiB (default: 512 MiB)
 
+// SetMaxMemory redefines the maximal amount of memory an addition or
+// multiplication table is allowed to use. The value is in KiB.
+func SetMaxMemory(max uint) {
+	maxMem = max
+}
+
 type table struct {
 	t [][]uint
 }

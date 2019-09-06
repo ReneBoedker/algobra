@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+// Number of bits in a uint type
 var uintBitSize uint
 
 func init() {
@@ -24,8 +25,11 @@ type Field struct {
 	multTable *table
 }
 
-// Define creates a new finite field with prime characteristic. If char is not a
-// prime, the package returns
+// Define creates a new finite field with prime characteristic.
+//
+// If char is not a prime, the package returns an InputValue-error. If char
+// implies that multiplication will overflow uint, the function returns an
+// InputTooLarge-error.
 func Define(char uint) (*Field, error) {
 	const op = "Defining prime field"
 
@@ -55,24 +59,33 @@ func Define(char uint) (*Field, error) {
 	return &Field{char: char, addTable: nil, multTable: nil}, nil
 }
 
+// String returns the string representation of f
 func (f *Field) String() string {
 	return fmt.Sprintf("Finite field of %d elements", f.char)
 }
 
+// ComputeTables will precompute either the addition or multiplication tables
+// (or both) for the field f.
+//
+// Returns an InputTooLarge-error if the estimated memory usage exceeds the
+// maximal value.
 func (f *Field) ComputeTables(add, mult bool) (err error) {
 	if add && f.addTable == nil {
 		f.addTable, err = newTable(f, func(i, j uint) uint {
 			return (i + j) % f.char
 		})
 	}
+
 	if mult && f.multTable == nil {
 		f.multTable, err = newTable(f, func(i, j uint) uint {
 			return (i * j) % f.char
 		})
 	}
+
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -82,22 +95,32 @@ type Element struct {
 	err   error
 }
 
-func (pf *Field) Element(val uint) *Element {
-	return &Element{field: pf, val: val % pf.char}
+// Element defines a new element over f with value val
+//
+// The returned element will automatically be reduced modulo the characteristic.
+func (f *Field) Element(val uint) *Element {
+	return &Element{field: f, val: val % f.char}
 }
 
-func (pf *Field) ElementFromSigned(val int) *Element {
-	val %= int(pf.char)
+// ElementFromSigned defines a new element over f with value val
+//
+// The returned element will be reduced modulo the characteristic automatically.
+// Negative values are reduced to a positive remainder (as opposed to the
+// %-operator in Go).
+func (f *Field) ElementFromSigned(val int) *Element {
+	val %= int(f.char)
 	if val < 0 {
-		val += int(pf.char)
+		val += int(f.char)
 	}
-	return pf.Element(uint(val))
+	return f.Element(uint(val))
 }
 
+// Err returns the error status of a
 func (a *Element) Err() error {
 	return a.err
 }
 
+// Equal tests equality of elements a and b
 func (a *Element) Equal(b *Element) bool {
 	if a.field == b.field && a.val == b.val {
 		return true
@@ -105,51 +128,89 @@ func (a *Element) Equal(b *Element) bool {
 	return false
 }
 
+// Plus returns the sum of elements a and b
+//
+// If a and b are defined over different fields, a new element is returned with
+// an ArithmeticIncompat-error as error status.
+//
+// When a or b has a non-nil error status, its error is wrapped and the same
+// element is returned.
 func (a *Element) Plus(b *Element) *Element {
 	const op = "Adding elements"
+
 	if tmp := hasErr(op, a, b); tmp != nil {
 		return tmp
 	}
+
 	if tmp := checkCompatible(op, a, b); tmp != nil {
 		return tmp
 	}
+
 	if a.field.addTable != nil {
 		return a.field.Element(a.field.addTable.lookup(a.val, b.val))
 	}
+
 	return a.field.Element(a.val + b.val)
 }
 
+// Neg returns -a
 func (a *Element) Neg() *Element {
 	return a.field.Element(a.field.char - a.val)
 }
 
+// Minus returns the sum of elements a and b
+//
+// If a and b are defined over different fields, a new element is returned with
+// an ArithmeticIncompat-error as error status.
+//
+// When a or b has a non-nil error status, its error is wrapped and the same
+// element is returned.
 func (a *Element) Minus(b *Element) *Element {
 	const op = "Subtracting elements"
+
 	if tmp := hasErr(op, a, b); tmp != nil {
 		return tmp
 	}
+
 	if tmp := checkCompatible(op, a, b); tmp != nil {
 		return tmp
 	}
+
 	return a.Plus(b.Neg())
 }
 
+// Mult returns the sum of elements a and b
+//
+// If a and b are defined over different fields, a new element is returned with
+// an ArithmeticIncompat-error as error status.
+//
+// When a or b has a non-nil error status, its error is wrapped and the same
+// element is returned.
 func (a *Element) Mult(b *Element) *Element {
 	const op = "Multiplying elements"
+
 	if tmp := hasErr(op, a, b); tmp != nil {
 		return tmp
 	}
+
 	if tmp := checkCompatible(op, a, b); tmp != nil {
 		return tmp
 	}
+
 	if a.field.multTable != nil {
 		return a.field.Element(a.field.multTable.lookup(a.val, b.val))
 	}
+
 	return a.field.Element(a.val * b.val)
 }
 
+// Inv returns the inverse of a
+//
+// If a is the zero element, the return value is an element with
+// InputValue-error as error status.
 func (a *Element) Inv() *Element {
 	const op = "Inverting element"
+
 	if a.val == 0 {
 		out := a.field.Element(0)
 		out.err = errors.New(
@@ -158,6 +219,7 @@ func (a *Element) Inv() *Element {
 		)
 		return out
 	}
+
 	// Implemented using the extended euclidean algorithm (see for instance
 	// [GG13])
 	r0 := a.field.char
@@ -174,24 +236,31 @@ func (a *Element) Inv() *Element {
 	return a.field.ElementFromSigned(i0)
 }
 
+// Zero returns a boolean describing whether a is the zero element
 func (a *Element) Zero() bool {
 	return (a.val == 0)
 }
 
+// Nonzero returns a boolean describing whether a is a non-zero element
 func (a *Element) Nonzero() bool {
 	return (a.val != 0)
 }
 
+// One returns a boolean describing whether a is one
 func (a *Element) One() bool {
 	return (a.val == 1)
 }
 
+// String returns the string representation of a
 func (a *Element) String() string {
 	return strconv.FormatUint(uint64(a.val), 10)
 }
 
-// hasErr is an internal method for checking if one of two inputs has a non-nil
-// error field.
+// hasErr is an internal method for checking if a or b has a non-nil error
+// field.
+//
+// It returns the first element with non-nil error status after wrapping the
+// error. The new error inherits the kind from the old.
 func hasErr(op errors.Op, a, b *Element) *Element {
 	switch {
 	case a.err != nil:
@@ -210,6 +279,11 @@ func hasErr(op errors.Op, a, b *Element) *Element {
 	return nil
 }
 
+// checkCompatible is an internal method for checking if a and b are compatible;
+// that is, if they are defined over the same field.
+//
+// If not, the return value is an element with error status set to
+// ArithmeticIncompat.
 func checkCompatible(op errors.Op, a, b *Element) *Element {
 	if a.field != b.field {
 		out := a.field.Element(0)
