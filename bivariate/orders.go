@@ -1,6 +1,8 @@
 package bivariate
 
-// Order function. Return value is meant to be interpreted as:
+// Order function.
+//
+// Return value is meant to be interpreted in the following way:
 // -1: deg1<deg2; 0: deg1==deg2; 1: deg1>deg2
 type Order func(deg1, deg2 [2]uint) int
 

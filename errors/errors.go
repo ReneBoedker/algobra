@@ -5,13 +5,16 @@ import (
 	"strings"
 )
 
+// Operation type.
+//
+// Indicates the operation performed when the error occurred.
 type Op string
 
 type Kind uint8
 
+// Defined error kinds.
 const (
-	Other              Kind = iota // General error type
-	Inherit                        // Inherit kind when wrapping
+	Inherit            Kind = iota // Inherit kind when wrapping
 	Input                          // General input error
 	InputValue                     // Input has wrong "value" (e.g. not a monomial)
 	InputIncompatible              // Inputs incompatible with each other
@@ -29,6 +32,9 @@ type Error struct {
 	Err  error // The underlying error
 }
 
+// New creates a new error.
+//
+// The message can contain formatting directives for the inputs in formatArgs.
 func New(op Op, kind Kind, message string, formatArgs ...interface{}) *Error {
 	return &Error{
 		Op:   op,
@@ -37,6 +43,7 @@ func New(op Op, kind Kind, message string, formatArgs ...interface{}) *Error {
 	}
 }
 
+// Wrap takes an existing error and wraps it in a new operation and kind.
 func Wrap(op Op, kind Kind, err error) *Error {
 	return &Error{
 		Op:   op,
@@ -45,12 +52,16 @@ func Wrap(op Op, kind Kind, err error) *Error {
 	}
 }
 
+// Is determines if an error has a certain kind.
+//
+// If err is not the Error type defined in this package, the function returns
+// false.
 func Is(kind Kind, err error) bool {
 	e, ok := err.(*Error)
 	if !ok {
 		return false
 	}
-	if e.Kind != Other && e.Kind != Inherit {
+	if e.Kind != Inherit {
 		return e.Kind == kind
 	}
 	if e.Err != nil {
@@ -59,6 +70,7 @@ func Is(kind Kind, err error) bool {
 	return false
 }
 
+// Error formats the error as a string.
 func (e *Error) Error() string {
 	var sb strings.Builder
 
