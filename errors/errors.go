@@ -58,16 +58,15 @@ func Wrap(op Op, kind Kind, err error) *Error {
 // false.
 func Is(kind Kind, err error) bool {
 	e, ok := err.(*Error)
-	if !ok {
+
+	switch {
+	case !ok:
 		return false
-	}
-	if e.Kind != Inherit {
+	case e.Kind != Inherit:
 		return e.Kind == kind
 	}
-	if e.Err != nil {
-		return Is(kind, e.Err)
-	}
-	return false
+
+	return Is(kind, e.Err)
 }
 
 // Error formats the error as a string.
