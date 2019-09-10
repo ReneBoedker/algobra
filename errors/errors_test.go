@@ -60,3 +60,18 @@ func TestBuiltInError(t *testing.T) {
 		}
 	}
 }
+
+func TestFormat(t *testing.T) {
+	inner := New(
+		"Inner", Parsing,
+		"String = %q; Uint = %d", "Test", uint(31415),
+	)
+	outer := Wrap("Outer", Inherit, inner)
+	expected := "Outer: Inner: String = \"Test\"; Uint = 31415"
+	if outer.Error() != expected {
+		t.Errorf(
+			"Error formatting gave %q, but %q was expected",
+			outer.Error(), expected,
+		)
+	}
+}
