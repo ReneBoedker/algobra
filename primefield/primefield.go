@@ -64,6 +64,11 @@ func (f *Field) String() string {
 	return fmt.Sprintf("Finite field of %d elements", f.char)
 }
 
+// Char returns the characteristic of f
+func (f *Field) Char() uint {
+	return f.char
+}
+
 // ComputeTables will precompute either the addition or multiplication tables
 // (or both) for the field f.
 //
@@ -115,9 +120,18 @@ func (f *Field) ElementFromSigned(val int) *Element {
 	return f.Element(uint(val))
 }
 
+func (f *Element) Copy() *Element {
+	return f.field.Element(f.val)
+}
+
 // Err returns the error status of a.
 func (a *Element) Err() error {
 	return a.err
+}
+
+// Uint returns the value of a represented as a uint.
+func (a *Element) Uint() uint {
+	return a.val
 }
 
 // Equal tests equality of elements a and b
@@ -202,6 +216,25 @@ func (a *Element) Mult(b *Element) *Element {
 	}
 
 	return a.field.Element(a.val * b.val)
+}
+
+// Pow returns a raised to the power of n
+func (a *Element) Pow(n uint) *Element {
+	if n > 0 {
+		// Use that a^p=a
+		n = (n % a.field.Char()) + 1
+	}
+
+	out := a.field.Element(1)
+	b := a.Copy()
+	for n > 0 {
+		if n%2 == 1 {
+			out = out.Mult(b)
+		}
+		n /= 2
+		b = b.Mult(b)
+	}
+	return out
 }
 
 // Inv returns the inverse of a

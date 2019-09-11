@@ -70,6 +70,15 @@ func (f *Polynomial) Copy() *Polynomial {
 	return h
 }
 
+// Eval evaluates f at the given point.
+func (f *Polynomial) Eval(point [2]*primefield.Element) *primefield.Element {
+	out := f.baseRing.baseField.Element(0)
+	for deg, coef := range f.degrees {
+		out = out.Plus(coef.Mult(point[0].Pow(deg[0])).Mult(point[1].Pow(deg[1])))
+	}
+	return out
+}
+
 // Plus returns the sum of the two polynomials f and g.
 //
 // If f and g are defined over different rings, a new polynomial is returned

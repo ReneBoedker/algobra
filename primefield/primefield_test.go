@@ -2,8 +2,12 @@ package primefield
 
 import (
 	"algobra/errors"
+	"math/rand"
 	"testing"
+	"time"
 )
+
+var prg = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 
 func DefineField(char uint) *Field {
 	f, err := Define(char)
@@ -139,6 +143,19 @@ func TestBools(t *testing.T) {
 	}
 	if !field.Element(1).Nonzero() {
 		t.Errorf("Element(1) not considered non-zero")
+	}
+}
+
+func TestConversion(t *testing.T) {
+	field := DefineField(71)
+	for i := 0; i < 1000; i++ {
+		val := uint(prg.Uint32())
+		a := field.Element(val)
+		if a.Uint() != val%71 {
+			t.Errorf("Conversion to uint failed for a = %d. Received %d",
+				val, a.Uint(),
+			)
+		}
 	}
 }
 
