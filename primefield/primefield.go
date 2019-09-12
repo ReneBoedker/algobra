@@ -220,9 +220,9 @@ func (a *Element) Mult(b *Element) *Element {
 
 // Pow returns a raised to the power of n
 func (a *Element) Pow(n uint) *Element {
-	if n > 0 {
+	for n >= a.field.Char() {
 		// Use that a^p=a
-		n = (n % a.field.Char()) + 1
+		n = (n % a.field.Char()) + (n / a.field.Char())
 	}
 
 	out := a.field.Element(1)

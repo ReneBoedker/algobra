@@ -1,7 +1,7 @@
 package bivariate
 
 import (
-	//"algobra/primefield"
+	"algobra/primefield"
 	"math/rand"
 	"testing"
 	"time"
@@ -51,6 +51,38 @@ func TestPow(t *testing.T) {
 			if g.Ld() != exp[i] {
 				t.Errorf("Pow failed: %v^%d = %v (Expected %v)", f, n, g, exp[i])
 			}
+		}
+	}
+}
+
+func TestEval(t *testing.T) {
+	field := defineField(13, t)
+	r := DefRing(field, WDegLex(13, 14, false))
+	f, err := r.NewFromString("X^2-1")
+	if err != nil {
+		panic(err)
+	}
+	evPoints := [][2]*primefield.Element{
+		{field.Element(0), field.Element(0)},
+		{field.Element(1), field.Element(0)},
+		{field.Element(1), field.Element(2)},
+		{field.Element(1), field.Element(10)},
+		{field.Element(2), field.Element(5)},
+	}
+	expected := []*primefield.Element{
+		field.ElementFromSigned(-1),
+		field.Element(0),
+		field.Element(0),
+		field.Element(0),
+		field.Element(3),
+	}
+
+	for i, p := range evPoints {
+		if v := f.Eval(p); !v.Equal(expected[i]) {
+			t.Errorf(
+				"%v evaluated at %v gave %v rather than %v",
+				f, p, v, expected[i],
+			)
 		}
 	}
 }

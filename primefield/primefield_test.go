@@ -159,6 +159,27 @@ func TestConversion(t *testing.T) {
 	}
 }
 
+func TestPow(t *testing.T) {
+	field := DefineField(13)
+	elems := []uint{0, 1, 2, 3, 4}
+	expectedPows := [][][2]uint{
+		[][2]uint{{0, 1}, {1, 0}, {2, 0}},
+		[][2]uint{{0, 1}, {1, 1}, {5, 1}, {14, 1}},
+		[][2]uint{{0, 1}, {2, 4}, {3, 8}, {4, 3}},
+		[][2]uint{{0, 1}, {1, 3}, {2, 9}, {3, 1}, {4, 3}},
+		[][2]uint{{0, 1}, {1, 4}, {2, 3}, {3, 12}},
+	}
+	for i, val := range elems {
+		elem := field.Element(val)
+		for _, j := range expectedPows[i] {
+			res := elem.Pow(j[0])
+			if !res.Equal(field.Element(j[1])) {
+				t.Errorf("Pow failed: %v^%d = %v (Expected %v)", elem, j[0], res, j[1])
+			}
+		}
+	}
+}
+
 func TestGf2(t *testing.T) {
 	field := DefineField(2)
 	test := func(field *Field) {
