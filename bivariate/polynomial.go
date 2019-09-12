@@ -61,6 +61,11 @@ func (f *Polynomial) Coef(deg [2]uint) *primefield.Element {
 	return f.BaseField().Element(0)
 }
 
+// SetCoef sets the coefficient of the monomial with degree deg in f to val.
+func (f *Polynomial) SetCoef(deg [2]uint, val *primefield.Element) {
+	f.coefs[deg] = val
+}
+
 // Copy returns a new polynomial object over the same ring and with the same
 // coefficients as f.
 func (f *Polynomial) Copy() *Polynomial {
