@@ -19,7 +19,7 @@ func monomialLcm(f, g *Polynomial) (lcm *Polynomial, ok bool) {
 		return nil, false
 	}
 	ldf, ldg := f.Ld(), g.Ld()
-	lcm = f.baseRing.New(map[[2]uint]uint{
+	lcm = f.baseRing.Polynomial(map[[2]uint]uint{
 		{max(ldf[0], ldg[0]), max(ldf[1], ldg[1])}: 1,
 	})
 	return lcm, true

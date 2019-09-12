@@ -16,13 +16,13 @@ func defineField(char uint, t *testing.T) *primefield.Field {
 func TestReduce(t *testing.T) {
 	field := defineField(3, t)
 	r := DefRing(field, WDegLex(3, 4, false))
-	mod := r.New(map[[2]uint]uint{{9, 0}: 1, {1, 0}: 2})
+	mod := r.Polynomial(map[[2]uint]uint{{9, 0}: 1, {1, 0}: 2})
 	id, _ := r.NewIdeal(mod)
 	qr, err := r.Quotient(id)
 	if err != nil {
 		t.Errorf("Failed to construct quotient ring")
 	}
-	f := qr.New(map[[2]uint]uint{
+	f := qr.Polynomial(map[[2]uint]uint{
 		{12, 3}: 1,
 	})
 	// mod.QuoRem(id)
@@ -39,21 +39,21 @@ func TestGroebner1(t *testing.T) {
 	field := defineField(7, t)
 	r := DefRing(field, Lex(true))
 	id, _ := r.NewIdeal(
-		r.New(map[[2]uint]uint{
+		r.Polynomial(map[[2]uint]uint{
 			{1, 2}: 1,
 			{0, 3}: 6,
 		}),
-		r.New(map[[2]uint]uint{
+		r.Polynomial(map[[2]uint]uint{
 			{0, 3}: 1,
 			{0, 2}: 6,
 		}),
 	)
 	expectedGens := []*Polynomial{
-		r.New(map[[2]uint]uint{
+		r.Polynomial(map[[2]uint]uint{
 			{1, 2}: 1,
 			{0, 2}: 6,
 		}),
-		r.New(map[[2]uint]uint{
+		r.Polynomial(map[[2]uint]uint{
 			{0, 3}: 1,
 			{0, 2}: 6,
 		}),

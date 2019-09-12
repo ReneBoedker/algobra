@@ -54,8 +54,8 @@ func (r *QuotientRing) Zero() *Polynomial {
 	}
 }
 
-// New defines a new polynomial with the given coefficients
-func (r *QuotientRing) New(coefs map[[2]uint]uint) *Polynomial {
+// Polynomial defines a new polynomial with the given coefficients
+func (r *QuotientRing) Polynomial(coefs map[[2]uint]uint) *Polynomial {
 	m := make(map[[2]uint]*primefield.Element)
 	for d, c := range coefs {
 		e := r.baseField.Element(c)
@@ -68,8 +68,8 @@ func (r *QuotientRing) New(coefs map[[2]uint]uint) *Polynomial {
 	return out
 }
 
-// NewFromSigned defines a new polynomial with the given coefficients
-func (r *QuotientRing) NewFromSigned(coefs map[[2]uint]int) *Polynomial {
+// PolynomialFromSigned defines a new polynomial with the given coefficients
+func (r *QuotientRing) PolynomialFromSigned(coefs map[[2]uint]int) *Polynomial {
 	m := make(map[[2]uint]*primefield.Element)
 	for d, c := range coefs {
 		e := r.baseField.ElementFromSigned(c)
@@ -82,7 +82,7 @@ func (r *QuotientRing) NewFromSigned(coefs map[[2]uint]int) *Polynomial {
 	return out
 }
 
-// NewFromString defines a polynomial by parsing s.
+// PolynomialFromString defines a polynomial by parsing s.
 //
 // The string s must use 'X' and 'Y' as variable names, but lowercase letters are
 // accepted. Multiplication symbol '*' is allowed, but not necessary.
@@ -91,12 +91,12 @@ func (r *QuotientRing) NewFromSigned(coefs map[[2]uint]int) *Polynomial {
 //
 // If the string cannot be parsed, the function returns the zero polynomial and
 // a Parsing-error.
-func (r *QuotientRing) NewFromString(s string) (*Polynomial, error) {
+func (r *QuotientRing) PolynomialFromString(s string) (*Polynomial, error) {
 	m, err := polynomialStringToSignedMap(s)
 	if err != nil {
 		return r.Zero(), err
 	}
-	return r.NewFromSigned(m), nil
+	return r.PolynomialFromSigned(m), nil
 }
 
 // Quotient defines the quotient of the given ring modulo the input ideal.

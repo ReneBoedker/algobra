@@ -55,7 +55,7 @@ func allDistinct(points [][2]*primefield.Element) bool {
 // lagrangeBasis computes a "lagrange-type" basis element. That is, it computes
 // a polynomial that evaluates to 1 in point and to 0 in any other point.
 func (r *QuotientRing) lagrangeBasis(point [2]*primefield.Element) *Polynomial {
-	f := r.New(map[[2]uint]uint{
+	f := r.Polynomial(map[[2]uint]uint{
 		{0, 0}: 1,
 	})
 
@@ -67,7 +67,7 @@ func (r *QuotientRing) lagrangeBasis(point [2]*primefield.Element) *Polynomial {
 			ld := [2]uint{0, 0}
 			ld[i] = 1
 
-			f = f.Mult(r.New(map[[2]uint]uint{
+			f = f.Mult(r.Polynomial(map[[2]uint]uint{
 				ld:     1,
 				{0, 0}: r.baseField.Char() - j,
 			})).Scale(point[i].Minus(r.baseField.Element(j)).Inv())

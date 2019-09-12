@@ -241,7 +241,7 @@ func (f *Polynomial) Scale(c *primefield.Element) *Polynomial {
 func (f *Polynomial) Pow(n uint) *Polynomial {
 	const op = "Computing polynomial power"
 
-	out := f.baseRing.New(map[[2]uint]uint{
+	out := f.baseRing.Polynomial(map[[2]uint]uint{
 		{0, 0}: 1,
 	})
 	g := f.Copy()

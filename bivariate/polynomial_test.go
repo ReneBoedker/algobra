@@ -45,7 +45,7 @@ func TestPow(t *testing.T) {
 		{{0, 0}, {3, 0}, {3, 3}, {0, 6}},
 	}
 	for i, d1 := range inDegs {
-		f := r.New(map[[2]uint]uint{d1: 1})
+		f := r.Polynomial(map[[2]uint]uint{d1: 1})
 		for n, exp := range expectedPows {
 			g := f.Pow(uint(n))
 			if g.Ld() != exp[i] {
@@ -58,7 +58,7 @@ func TestPow(t *testing.T) {
 func TestEval(t *testing.T) {
 	field := defineField(13, t)
 	r := DefRing(field, WDegLex(13, 14, false))
-	f, err := r.NewFromString("X^2-1")
+	f, err := r.PolynomialFromString("X^2-1")
 	if err != nil {
 		panic(err)
 	}

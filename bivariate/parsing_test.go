@@ -16,7 +16,7 @@ func TestParsingWellFormed(t *testing.T) {
 	testPolys := make([]*Polynomial, len(testStrings), len(testStrings)+1)
 	testErrs := make([]error, len(testStrings))
 	for i, s := range testStrings {
-		testPolys[i], testErrs[i] = ring.NewFromString(s)
+		testPolys[i], testErrs[i] = ring.PolynomialFromString(s)
 	}
 	for i, err := range testErrs {
 		if err != nil {
@@ -25,7 +25,7 @@ func TestParsingWellFormed(t *testing.T) {
 				err)
 		}
 	}
-	testPolys = append(testPolys, ring.New(map[[2]uint]uint{
+	testPolys = append(testPolys, ring.Polynomial(map[[2]uint]uint{
 		{3, 2}: 2,
 		{3, 0}: 1,
 		{0, 1}: 5,
@@ -54,7 +54,7 @@ func TestParsingIllFormed(t *testing.T) {
 	testPolys := make([]*Polynomial, len(testStrings), len(testStrings)+1)
 	testErrs := make([]error, len(testStrings))
 	for i, s := range testStrings {
-		testPolys[i], testErrs[i] = ring.NewFromString(s)
+		testPolys[i], testErrs[i] = ring.PolynomialFromString(s)
 	}
 	for i, err := range testErrs {
 		if err == nil {
@@ -83,9 +83,9 @@ func TestParseOutput(t *testing.T) {
 			coef := uint(prg.Uint32()) % char
 			coefMap[deg] = coef
 		}
-		f := ring.New(coefMap)
+		f := ring.Polynomial(coefMap)
 
-		if g, err := ring.NewFromString(f.String()); err != nil {
+		if g, err := ring.PolynomialFromString(f.String()); err != nil {
 			t.Errorf("Parsing formatted output of %v returns error %q", f, err)
 		} else if !f.Equal(g) {
 			t.Errorf("Formatted output of %v is parsed as %v", f, g)
