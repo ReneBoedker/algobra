@@ -2,12 +2,12 @@ package bivariate
 
 import (
 	"algobra/errors"
-	"algobra/primefield"
+	"algobra/finitefield"
 	"fmt"
 )
 
 type ring struct {
-	baseField *primefield.Field
+	baseField *finitefield.Field
 	ord       Order
 }
 
@@ -36,7 +36,7 @@ func (r *QuotientRing) String() string {
 
 // DefRing defines a new polynomial ring with the given characteristic, using
 // the order function ord. It returns a new ring-object
-func DefRing(field *primefield.Field, ord Order) *QuotientRing {
+func DefRing(field *finitefield.Field, ord Order) *QuotientRing {
 	return &QuotientRing{
 		ring: &ring{
 			baseField: field,
@@ -50,15 +50,14 @@ func DefRing(field *primefield.Field, ord Order) *QuotientRing {
 func (r *QuotientRing) Zero() *Polynomial {
 	return &Polynomial{
 		baseRing: r,
-		coefs:    map[[2]uint]*primefield.Element{},
+		coefs:    map[[2]uint]*finitefield.Element{},
 	}
 }
 
 // Polynomial defines a new polynomial with the given coefficients
-func (r *QuotientRing) Polynomial(coefs map[[2]uint]uint) *Polynomial {
-	m := make(map[[2]uint]*primefield.Element)
-	for d, c := range coefs {
-		e := r.baseField.Element(c)
+func (r *QuotientRing) Polynomial(coefs map[[2]uint]*finitefield.Element) *Polynomial {
+	m := make(map[[2]uint]*finitefield.Element)
+	for d, e := range coefs {
 		if e.Nonzero() {
 			m[d] = e
 		}
@@ -69,18 +68,18 @@ func (r *QuotientRing) Polynomial(coefs map[[2]uint]uint) *Polynomial {
 }
 
 // PolynomialFromSigned defines a new polynomial with the given coefficients
-func (r *QuotientRing) PolynomialFromSigned(coefs map[[2]uint]int) *Polynomial {
-	m := make(map[[2]uint]*primefield.Element)
-	for d, c := range coefs {
-		e := r.baseField.ElementFromSigned(c)
-		if e.Nonzero() {
-			m[d] = e
-		}
-	}
-	out := &Polynomial{baseRing: r, coefs: m}
-	out.reduce()
-	return out
-}
+// func (r *QuotientRing) PolynomialFromSigned(coefs map[[2]uint]int) *Polynomial {
+// 	m := make(map[[2]uint]*finitefield.Element)
+// 	for d, c := range coefs {
+// 		e := r.baseField.ElementFromSigned(c)
+// 		if e.Nonzero() {
+// 			m[d] = e
+// 		}
+// 	}
+// 	out := &Polynomial{baseRing: r, coefs: m}
+// 	out.reduce()
+// 	return out
+// }
 
 // PolynomialFromString defines a polynomial by parsing s.
 //

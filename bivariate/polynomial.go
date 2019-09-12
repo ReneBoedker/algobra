@@ -2,7 +2,7 @@ package bivariate
 
 import (
 	"algobra/errors"
-	"algobra/primefield"
+	"algobra/finitefield"
 	"fmt"
 	"sort"
 	"strings"
@@ -38,12 +38,12 @@ func subtractDegs(deg1, deg2 [2]uint) (deg [2]uint, ok bool) {
 // Polynomial denotes a bivariate polynomial.
 type Polynomial struct {
 	baseRing *QuotientRing
-	coefs    map[[2]uint]*primefield.Element
+	coefs    map[[2]uint]*finitefield.Element
 	err      error
 }
 
 // BaseField returns the field over which the coefficients of f are defined.
-func (f *Polynomial) BaseField() *primefield.Field {
+func (f *Polynomial) BaseField() *finitefield.Field {
 	return f.baseRing.baseField
 }
 
@@ -54,15 +54,15 @@ func (f *Polynomial) Err() error {
 
 // Coef returns the coefficient of the monomial with degree specified by the
 // input. The return value is a finite field element.
-func (f *Polynomial) Coef(deg [2]uint) *primefield.Element {
+func (f *Polynomial) Coef(deg [2]uint) *finitefield.Element {
 	if c, ok := f.coefs[deg]; ok {
 		return c
 	}
-	return f.BaseField().Element(0)
+	return f.BaseField().Zero()
 }
 
 // SetCoef sets the coefficient of the monomial with degree deg in f to val.
-func (f *Polynomial) SetCoef(deg [2]uint, val *primefield.Element) {
+func (f *Polynomial) SetCoef(deg [2]uint, val *finitefield.Element) {
 	f.coefs[deg] = val
 }
 
@@ -77,8 +77,8 @@ func (f *Polynomial) Copy() *Polynomial {
 }
 
 // Eval evaluates f at the given point.
-func (f *Polynomial) Eval(point [2]*primefield.Element) *primefield.Element {
-	out := f.baseRing.baseField.Element(0)
+func (f *Polynomial) Eval(point [2]*finitefield.Element) *finitefield.Element {
+	out := f.BaseField().Zero()
 	for deg, coef := range f.coefs {
 		out = out.Plus(coef.Mult(point[0].Pow(deg[0])).Mult(point[1].Pow(deg[1])))
 	}
@@ -231,7 +231,7 @@ func (f *Polynomial) Normalize() *Polynomial {
 
 // Scale scales all coefficients of f by the field element c and returns the
 // result as a new polynomial.
-func (f *Polynomial) Scale(c *primefield.Element) *Polynomial {
+func (f *Polynomial) Scale(c *finitefield.Element) *Polynomial {
 	g := f.Copy()
 	for d := range g.coefs {
 		g.coefs[d] = g.coefs[d].Mult(c)
@@ -287,7 +287,7 @@ func (f *Polynomial) Ld() [2]uint {
 }
 
 // Lc returns the leading coefficient of f.
-func (f *Polynomial) Lc() *primefield.Element {
+func (f *Polynomial) Lc() *finitefield.Element {
 	return f.Coef(f.Ld())
 }
 

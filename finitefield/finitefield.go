@@ -70,6 +70,28 @@ func (f *Field) Element(val interface{}) (*Element, error) {
 	}
 }
 
+func (f *Field) Zero() *Element {
+	switch {
+	case f.pf != nil:
+		return &Element{
+			pf: f.pf.Element(0),
+		}
+	default:
+		panic("Error")
+	}
+}
+
+func (f *Field) One() *Element {
+	switch {
+	case f.pf != nil:
+		return &Element{
+			pf: f.pf.Element(1),
+		}
+	default:
+		panic("Error")
+	}
+}
+
 func (a *Element) Copy() *Element {
 	switch a.kind() {
 	case primeKind:
@@ -148,11 +170,35 @@ func (a *Element) Minus(b *Element) *Element {
 	}
 }
 
+func (a *Element) Equal(b *Element) bool {
+	if a.kind() != b.kind() {
+		return false
+	}
+
+	switch a.kind() {
+	case primeKind:
+		return a.pf.Equal(b.pf)
+	default:
+		panic("Error")
+	}
+}
+
 func (a *Element) Inv() *Element {
 	switch a.kind() {
 	case primeKind:
 		return &Element{
 			pf: a.pf.Inv(),
+		}
+	default:
+		panic("Error")
+	}
+}
+
+func (a *Element) Neg() *Element {
+	switch a.kind() {
+	case primeKind:
+		return &Element{
+			pf: a.pf.Neg(),
 		}
 	default:
 		panic("Error")

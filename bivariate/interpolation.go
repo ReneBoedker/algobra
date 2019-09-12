@@ -2,7 +2,7 @@ package bivariate
 
 import (
 	"algobra/errors"
-	"algobra/primefield"
+	"algobra/finitefield"
 )
 
 // Interpolate computes an interpolation polynomial evaluating to values in the
@@ -11,8 +11,8 @@ import (
 // It returns an InputValue-error if the number of points and values differ, or
 // if points are not distinct.
 func (r *QuotientRing) Interpolate(
-	points [][2]*primefield.Element,
-	values []*primefield.Element,
+	points [][2]*finitefield.Element,
+	values []*finitefield.Element,
 ) (*Polynomial, error) {
 	const op = "Computing interpolation"
 
@@ -40,23 +40,23 @@ func (r *QuotientRing) Interpolate(
 }
 
 // allDistinct checks if given points are all distinct
-func allDistinct(points [][2]*primefield.Element) bool {
-	unique := make(map[[2]uint]struct{})
+func allDistinct(points [][2]*finitefield.Element) bool {
+	unique := make(map[[2]string]struct{})
 	for _, p := range points {
-		asUints := [2]uint{p[0].Uint(), p[1].Uint()}
-		if _, ok := unique[asUints]; ok {
+		asStrings := [2]string{p[0].String(), p[1].String()}
+		if _, ok := unique[asStrings]; ok {
 			return false
 		}
-		unique[asUints] = struct{}{}
+		unique[asStrings] = struct{}{}
 	}
 	return true
 }
 
 // lagrangeBasis computes a "lagrange-type" basis element. That is, it computes
 // a polynomial that evaluates to 1 in point and to 0 in any other point.
-func (r *QuotientRing) lagrangeBasis(point [2]*primefield.Element) *Polynomial {
-	f := r.Polynomial(map[[2]uint]uint{
-		{0, 0}: 1,
+func (r *QuotientRing) lagrangeBasis(point [2]*finitefield.Element) *Polynomial {
+	f := r.Polynomial(map[[2]uint]*finitefield.Element{
+		{0, 0}: r.baseField.One(),
 	})
 
 	for i := 0; i < 2; i++ {
@@ -67,10 +67,15 @@ func (r *QuotientRing) lagrangeBasis(point [2]*primefield.Element) *Polynomial {
 			ld := [2]uint{0, 0}
 			ld[i] = 1
 
+			jElem, err := r.baseField.Element(j)
+			if err != nil {
+				panic(err)
+			}
+
 			f = f.Mult(r.Polynomial(map[[2]uint]uint{
 				ld:     1,
 				{0, 0}: r.baseField.Char() - j,
-			})).Scale(point[i].Minus(r.baseField.Element(j)).Inv())
+			})).Scale(point[i].Minus(jElem).Inv())
 		}
 	}
 
