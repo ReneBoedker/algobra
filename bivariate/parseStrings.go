@@ -83,9 +83,8 @@ func (m *monomialMatch) degreesAndCoef(op errors.Op) (deg [2]uint, coef int, err
 		tmp, err := strconv.ParseInt(m.coef, 10, 0)
 		if err != nil {
 			return deg, coef, errors.Wrap(op, errors.Conversion, err)
-		} else {
-			coef = int(tmp)
 		}
+		coef = int(tmp)
 	}
 	if m.sign == "-" {
 		coef *= -1

@@ -25,6 +25,10 @@ func monomialLcm(f, g *Polynomial) (lcm *Polynomial, ok bool) {
 	return lcm, true
 }
 
+// SPolynomial computes the S-polynomial of f and g.
+//
+// It returns an ArithmeticIncompat-error if f and g are defined over different
+// rings.
 func SPolynomial(f, g *Polynomial) (*Polynomial, error) {
 	const op = "Computing S-polynomial"
 	if f.baseRing != g.baseRing {
@@ -39,6 +43,8 @@ func SPolynomial(f, g *Polynomial) (*Polynomial, error) {
 	return q1[0].Mult(f).Minus(q2[0].Mult(g)), nil
 }
 
+// GroebnerBasis computes a Gröbner basis for id. The result is returned as a
+// new ideal object.
 func (id *Ideal) GroebnerBasis() *Ideal {
 	gb := make([]*Polynomial, len(id.generators))
 	for i, g := range id.generators {
@@ -72,6 +78,10 @@ func (id *Ideal) GroebnerBasis() *Ideal {
 	}
 }
 
+// MinimizeBasis transforms the generators of id into a minimal Gröbner basis.
+//
+// If the generators of id do not form a Gröbner basis, the function returns an
+// InputValue-error.
 func (id *Ideal) MinimizeBasis() error {
 	const op = "Minimizing Gröbner basis"
 	if id.isGroebner != 1 {
@@ -97,6 +107,10 @@ func (id *Ideal) MinimizeBasis() error {
 	return nil
 }
 
+// ReduceBasis transforms the generators of id into a reduced Gröbner basis.
+//
+// If the generators of id do not form a Gröbner basis, the function returns an
+// InputValue-error.
 func (id *Ideal) ReduceBasis() error {
 	const op = "Reducing Gröbner basis"
 	if id.isGroebner != 1 {

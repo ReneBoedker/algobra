@@ -19,6 +19,7 @@ func init() {
 	}
 }
 
+// Field is the implementation of a finite field
 type Field struct {
 	char      uint
 	addTable  *table
@@ -94,6 +95,7 @@ func (f *Field) ComputeTables(add, mult bool) (err error) {
 	return nil
 }
 
+// Element is the implementation of an element in a finite field.
 type Element struct {
 	field *Field
 	val   uint
@@ -120,8 +122,9 @@ func (f *Field) ElementFromSigned(val int) *Element {
 	return f.Element(uint(val))
 }
 
-func (f *Element) Copy() *Element {
-	return f.field.Element(f.val)
+// Copy returns a copy of a
+func (a *Element) Copy() *Element {
+	return a.field.Element(a.val)
 }
 
 // Err returns the error status of a.

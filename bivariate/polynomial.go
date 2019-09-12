@@ -35,6 +35,7 @@ func subtractDegs(deg1, deg2 [2]uint) (deg [2]uint, ok bool) {
 	return deg, false
 }
 
+// Polynomial denotes a bivariate polynomial.
 type Polynomial struct {
 	baseRing *QuotientRing
 	degrees  map[[2]uint]*primefield.Element
@@ -236,7 +237,7 @@ func (f *Polynomial) Scale(c *primefield.Element) *Polynomial {
 // Pow raises f to the power of n.
 //
 // If the computation causes the degree of f to overflow, the returned
-// polynomial has adn Overflow-error as error status.
+// polynomial has an Overflow-error as error status.
 func (f *Polynomial) Pow(n uint) *Polynomial {
 	const op = "Computing polynomial power"
 

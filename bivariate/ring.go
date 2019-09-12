@@ -11,15 +11,19 @@ type ring struct {
 	ord       Order
 }
 
+// QuotientRing denotes a polynomial quotient ring. The quotient may be trivial,
+// in which case, the object acts as a ring.
 type QuotientRing struct {
 	*ring
 	id *Ideal
 }
 
+// String returns the string representation of r
 func (r *ring) String() string {
 	return fmt.Sprintf("Bivariate polynomial ring over %v", r.baseField)
 }
 
+// String returns the string representation of r
 func (r *QuotientRing) String() string {
 	if r.id == nil {
 		return r.ring.String()
@@ -64,7 +68,7 @@ func (r *QuotientRing) New(coefs map[[2]uint]uint) *Polynomial {
 	return out
 }
 
-// New defines a new polynomial with the given coefficients
+// NewFromSigned defines a new polynomial with the given coefficients
 func (r *QuotientRing) NewFromSigned(coefs map[[2]uint]int) *Polynomial {
 	m := make(map[[2]uint]*primefield.Element)
 	for d, c := range coefs {

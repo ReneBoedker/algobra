@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// Ideal is the implementation of a polynomial ideal.
 type Ideal struct {
 	*ring
 	generators []*Polynomial
@@ -47,6 +48,7 @@ func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 	return id, nil
 }
 
+// Copy creates a copy of id.
 func (id *Ideal) Copy() *Ideal {
 	generators := make([]*Polynomial, len(id.generators), len(id.generators))
 	for i, g := range id.generators {
@@ -79,7 +81,7 @@ func (f *Polynomial) quoRemWithIgnore(ignoreIndex int, list ...*Polynomial) (q [
 	p := f.Copy()
 
 	q = make([]*Polynomial, len(list), len(list))
-	for i, _ := range list {
+	for i := range list {
 		q[i] = f.baseRing.Zero()
 	}
 outer:

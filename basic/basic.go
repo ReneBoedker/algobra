@@ -5,6 +5,7 @@ import (
 	"math/bits"
 )
 
+// CeilLog returns the ceiling function applied to the base 2-logarithm of n.
 func CeilLog(n uint) uint {
 	if n == 0 {
 		return 0
@@ -12,11 +13,11 @@ func CeilLog(n uint) uint {
 	b := uint(bits.Len(n))
 	if bits.OnesCount(n) == 1 {
 		return b - 1
-	} else {
-		return b
 	}
+	return b
 }
 
+// Pow returns a to the power of n
 func Pow(a, n uint) uint {
 	res := uint(1)
 	for ; n > 0; n-- {
@@ -25,6 +26,9 @@ func Pow(a, n uint) uint {
 	return res
 }
 
+// FactorizePrimePower computes p and n such that q=p^n.
+//
+// If q is not a prime power, the function returns an InputValue-error.
 func FactorizePrimePower(q uint) (p uint, n uint, err error) {
 	const op = "Factorizing prime power"
 

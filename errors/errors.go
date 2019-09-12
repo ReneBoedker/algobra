@@ -5,11 +5,12 @@ import (
 	"strings"
 )
 
-// Operation type.
+// Op denotes an operation type.
 //
 // Indicates the operation performed when the error occurred.
 type Op string
 
+// Kind describes the kind of an error
 type Kind uint8
 
 // Defined error kinds.
@@ -26,6 +27,7 @@ const (
 	Internal                       // Internal error
 )
 
+// Error is the basic error object.
 type Error struct {
 	Op   Op    // The operation causing the error
 	Kind Kind  // The kind of error
