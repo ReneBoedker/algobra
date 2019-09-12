@@ -147,7 +147,7 @@ func (f *Polynomial) monomialDivideBy(g *Polynomial) (q *Polynomial, ok bool, er
 	ldf, ldg := f.Ld(), g.Ld()
 	if d, ok := subtractDegs(ldf, ldg); ok {
 		h := f.baseRing.Zero()
-		h.degrees[d] = f.Coef(ldf).Mult(g.Coef(ldg).Inv())
+		h.coefs[d] = f.Coef(ldf).Mult(g.Coef(ldg).Inv())
 		return h, true, nil
 	}
 	return nil, false, nil

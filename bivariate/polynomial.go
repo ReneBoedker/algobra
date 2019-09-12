@@ -38,7 +38,7 @@ func subtractDegs(deg1, deg2 [2]uint) (deg [2]uint, ok bool) {
 // Polynomial denotes a bivariate polynomial.
 type Polynomial struct {
 	baseRing *QuotientRing
-	degrees  map[[2]uint]*primefield.Element
+	coefs    map[[2]uint]*primefield.Element
 	err      error
 }
 
@@ -55,7 +55,7 @@ func (f *Polynomial) Err() error {
 // Coef returns the coefficient of the monomial with degree specified by the
 // input. The return value is a finite field element.
 func (f *Polynomial) Coef(deg [2]uint) *primefield.Element {
-	if c, ok := f.degrees[deg]; ok {
+	if c, ok := f.coefs[deg]; ok {
 		return c
 	}
 	return f.BaseField().Element(0)
@@ -65,8 +65,8 @@ func (f *Polynomial) Coef(deg [2]uint) *primefield.Element {
 // coefficients as f.
 func (f *Polynomial) Copy() *Polynomial {
 	h := f.baseRing.Zero()
-	for deg, c := range f.degrees {
-		h.degrees[deg] = c
+	for deg, c := range f.coefs {
+		h.coefs[deg] = c
 	}
 	return h
 }
@@ -74,7 +74,7 @@ func (f *Polynomial) Copy() *Polynomial {
 // Eval evaluates f at the given point.
 func (f *Polynomial) Eval(point [2]*primefield.Element) *primefield.Element {
 	out := f.baseRing.baseField.Element(0)
-	for deg, coef := range f.degrees {
+	for deg, coef := range f.coefs {
 		out = out.Plus(coef.Mult(point[0].Pow(deg[0])).Mult(point[1].Pow(deg[1])))
 	}
 	return out
@@ -99,16 +99,16 @@ func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
 	}
 
 	h := f.Copy()
-	for deg, c := range g.degrees {
-		if _, ok := h.degrees[deg]; !ok {
-			h.degrees[deg] = c
+	for deg, c := range g.coefs {
+		if _, ok := h.coefs[deg]; !ok {
+			h.coefs[deg] = c
 			continue
 		}
 		tmp := h.Coef(deg).Plus(c)
 		if tmp.Nonzero() {
-			h.degrees[deg] = tmp
+			h.coefs[deg] = tmp
 		} else {
-			delete(h.degrees, deg)
+			delete(h.coefs, deg)
 		}
 	}
 	return h
@@ -118,8 +118,8 @@ func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
 // characteristic).
 func (f *Polynomial) Neg() *Polynomial {
 	g := f.baseRing.Zero()
-	for deg, c := range f.degrees {
-		g.degrees[deg] = c.Neg()
+	for deg, c := range f.coefs {
+		g.coefs[deg] = c.Neg()
 	}
 	return g
 }
@@ -130,11 +130,11 @@ func (f *Polynomial) Equal(g *Polynomial) bool {
 	if f.baseRing != g.baseRing {
 		return false
 	}
-	if len(f.degrees) != len(g.degrees) {
+	if len(f.coefs) != len(g.coefs) {
 		return false
 	}
-	for d, cf := range f.degrees {
-		if cg, ok := g.degrees[d]; !ok || !cg.Equal(cf) {
+	for d, cf := range f.coefs {
+		if cg, ok := g.coefs[d]; !ok || !cg.Equal(cf) {
 			return false
 		}
 	}
@@ -176,8 +176,8 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 	}
 
 	h := f.baseRing.Zero()
-	for degf, cf := range f.degrees {
-		for degg, cg := range g.degrees {
+	for degf, cf := range f.coefs {
+		for degg, cg := range g.coefs {
 			tmp := cf.Mult(cg)
 			if tmp.Nonzero() {
 				degSum, err := addDegs(degf, degg)
@@ -185,14 +185,14 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 					h = f.baseRing.Zero()
 					h.err = errors.Wrap(op, errors.Inherit, err)
 				}
-				if c, ok := h.degrees[degSum]; ok {
+				if c, ok := h.coefs[degSum]; ok {
 					if c.Plus(tmp).Nonzero() {
-						h.degrees[degSum] = c.Plus(tmp)
+						h.coefs[degSum] = c.Plus(tmp)
 					} else {
-						delete(h.degrees, degSum)
+						delete(h.coefs, degSum)
 					}
 				} else {
-					h.degrees[degSum] = tmp
+					h.coefs[degSum] = tmp
 				}
 			}
 		}
@@ -228,8 +228,8 @@ func (f *Polynomial) Normalize() *Polynomial {
 // result as a new polynomial.
 func (f *Polynomial) Scale(c *primefield.Element) *Polynomial {
 	g := f.Copy()
-	for d := range g.degrees {
-		g.degrees[d] = g.degrees[d].Mult(c)
+	for d := range g.coefs {
+		g.coefs[d] = g.coefs[d].Mult(c)
 	}
 	return g
 }
@@ -266,8 +266,8 @@ func (f *Polynomial) Pow(n uint) *Polynomial {
 // The list is sorted according to the ring order with higher orders preceding
 // lower orders in the list.
 func (f *Polynomial) SortedDegrees() [][2]uint {
-	degs := make([][2]uint, 0, len(f.degrees))
-	for deg := range f.degrees {
+	degs := make([][2]uint, 0, len(f.coefs))
+	for deg := range f.coefs {
 		degs = append(degs, deg)
 	}
 	sort.Slice(degs, func(i, j int) bool {
@@ -290,13 +290,13 @@ func (f *Polynomial) Lc() *primefield.Element {
 func (f *Polynomial) Lt() *Polynomial {
 	h := f.baseRing.Zero()
 	ld := f.Ld()
-	h.degrees[ld] = f.Coef(ld)
+	h.coefs[ld] = f.Coef(ld)
 	return h
 }
 
 // Zero determines whether f is the zero polynomial.
 func (f *Polynomial) Zero() bool {
-	if len(f.degrees) == 0 {
+	if len(f.coefs) == 0 {
 		return true
 	}
 	return false
@@ -309,7 +309,7 @@ func (f *Polynomial) Nonzero() bool {
 
 // Monomial returns a bool describing whether f consists of a single monomial.
 func (f *Polynomial) Monomial() bool {
-	if len(f.degrees) == 1 {
+	if len(f.coefs) == 1 {
 		return true
 	}
 	return false

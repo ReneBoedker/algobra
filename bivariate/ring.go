@@ -50,7 +50,7 @@ func DefRing(field *primefield.Field, ord Order) *QuotientRing {
 func (r *QuotientRing) Zero() *Polynomial {
 	return &Polynomial{
 		baseRing: r,
-		degrees:  map[[2]uint]*primefield.Element{},
+		coefs:    map[[2]uint]*primefield.Element{},
 	}
 }
 
@@ -63,7 +63,7 @@ func (r *QuotientRing) Polynomial(coefs map[[2]uint]uint) *Polynomial {
 			m[d] = e
 		}
 	}
-	out := &Polynomial{baseRing: r, degrees: m}
+	out := &Polynomial{baseRing: r, coefs: m}
 	out.reduce()
 	return out
 }
@@ -77,7 +77,7 @@ func (r *QuotientRing) PolynomialFromSigned(coefs map[[2]uint]int) *Polynomial {
 			m[d] = e
 		}
 	}
-	out := &Polynomial{baseRing: r, degrees: m}
+	out := &Polynomial{baseRing: r, coefs: m}
 	out.reduce()
 	return out
 }
