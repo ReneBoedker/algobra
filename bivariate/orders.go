@@ -51,7 +51,11 @@ func Lex(xGtY bool) Order {
 	if xGtY {
 		return f
 	}
-	return func(deg1, deg2 [2]uint) int { return -1 * f(deg1, deg2) }
+	return func(deg1, deg2 [2]uint) int { return f(swap(deg1), swap(deg2)) }
+}
+
+func swap(deg [2]uint) [2]uint {
+	return [2]uint{deg[1], deg[0]}
 }
 
 /* Copyright 2019 René Bødker Christensen

@@ -11,13 +11,19 @@ func TestLagrangeBasis(t *testing.T) {
 	field := defineField(17, t)
 	ring := DefRing(field, Lex(true))
 
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 1; i++ {
 		point := [2]*finitefield.Element{
 			field.ElementFromUnsigned(uint(prg.Uint32())),
 			field.ElementFromUnsigned(uint(prg.Uint32())),
 		}
 
 		f := ring.lagrangeBasis(point)
+
+		if ld := f.Ld(); ld[0]+ld[1] > 2*(field.Card()-1) {
+			t.Errorf("f has too too large total degree (%d) with point %v",
+				ld[0]+ld[1], point,
+			)
+		}
 
 		for _, a := range field.Elements() {
 			for _, b := range field.Elements() {

@@ -101,11 +101,11 @@ func (f *Field) ComputeTables(add, mult bool) (err error) {
 }
 
 func (f *Field) MultGenerator() *Element {
-	if f.Char() == 2 {
+	if f.Card() == 2 {
 		return f.Element(1)
 	}
 	i := uint(2)
-	for basic.Gcd(i, f.Char()) != 1 {
+	for basic.Gcd(i, f.Card()-1) != 1 {
 		i++
 	}
 	return f.Element(i)

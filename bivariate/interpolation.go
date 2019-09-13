@@ -57,6 +57,8 @@ func allDistinct(points [][2]*finitefield.Element) bool {
 
 // lagrangeBasis computes a "lagrange-type" basis element. That is, it computes
 // a polynomial that evaluates to 1 in point and to 0 in any other point.
+//
+// TODO: This needs to be changed (only specify 0 in certain other points)
 func (r *QuotientRing) lagrangeBasis(point [2]*finitefield.Element) *Polynomial {
 	f := r.PolynomialFromUnsigned(map[[2]uint]uint{
 		{0, 0}: 1,
