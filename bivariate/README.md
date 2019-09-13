@@ -42,6 +42,7 @@ Internally, this is achieved by transforming the ideal such that its generators 
 ### Monomial orderings
 The following monomial orderings are defined by default.
 * Lexicographical
+* Degree lexicographical
 * Weighted degree lexicographical
 
 Additional orderings can be defined by writing a function with signature `func(deg1, deg2 [2]uint) int`. For more information, see the documentation for the `Order` type.

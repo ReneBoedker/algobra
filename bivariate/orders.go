@@ -11,42 +11,48 @@ type Order func(deg1, deg2 [2]uint) int
 // The resulting order will break ties using the lexicographical ordering. The
 // boolean xGtY indicates whether X is greater than Y.
 func WDegLex(xWeight, yWeight uint, xGtY bool) Order {
-	return func(deg1, deg2 [2]uint) int {
+	return func(deg1, deg2 [2]uint) (out int) {
 		switch {
 		case deg1 == deg2:
-			return 0
+			out = 0
 		case deg1[0]*xWeight+deg1[1]*yWeight > deg2[0]*xWeight+deg2[1]*yWeight:
-			return 1
+			out = 1
 		case deg1[0]*xWeight+deg1[1]*yWeight < deg2[0]*xWeight+deg2[1]*yWeight:
-			return -1
+			out = -1
 		case deg1[0]*xWeight+deg1[1]*yWeight == deg2[0]*xWeight+deg2[1]*yWeight:
 			// Fall back to lexicographical ordering
-			return Lex(xGtY)(deg1, deg2)
-		default:
-			panic("WDegLex: Comparison failed")
+			out = Lex(xGtY)(deg1, deg2)
 		}
+		return out
 	}
+}
+
+// TotalDeg returns the total degree ordering.
+//
+// The resulting order will break ties using the lexicographical ordering. The
+// boolean xGtY indicates whether X is greater than Y.
+func DegLex(xGtY bool) Order {
+	return WDegLex(1, 1, xGtY)
 }
 
 // Lex returns the lexicographical ordering.
 //
 // xGtY indicates whether X is greater than Y.
 func Lex(xGtY bool) Order {
-	f := func(deg1, deg2 [2]uint) int {
+	f := func(deg1, deg2 [2]uint) (out int) {
 		switch {
 		case deg1 == deg2:
-			return 0
+			out = 0
 		case deg1[0] > deg2[0]:
-			return 1
+			out = 1
 		case deg1[0] < deg2[0]:
-			return -1
+			out = -1
 		case deg1[0] == deg2[0] && deg1[1] > deg2[1]:
-			return 1
+			out = 1
 		case deg1[0] == deg2[0] && deg1[1] < deg2[1]:
-			return -1
-		default:
-			panic("Lex: Comparison failed")
+			out = -1
 		}
+		return out
 	}
 	if xGtY {
 		return f
