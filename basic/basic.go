@@ -26,6 +26,7 @@ func Pow(a, n uint) uint {
 	return res
 }
 
+// Gcd computes the greatest common divisor between a and b.
 func Gcd(a, b uint) uint {
 	for a > 0 {
 		q := b / a

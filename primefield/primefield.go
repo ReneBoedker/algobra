@@ -100,6 +100,7 @@ func (f *Field) ComputeTables(add, mult bool) (err error) {
 	return nil
 }
 
+// MultGenerator returns an element that generates the units of f.
 func (f *Field) MultGenerator() *Element {
 	if f.Card() == 2 {
 		return f.Element(1)
@@ -111,6 +112,7 @@ func (f *Field) MultGenerator() *Element {
 	return f.Element(i)
 }
 
+// Elements returns a slice containing all elements of f.
 func (f *Field) Elements() []*Element {
 	out := make([]*Element, f.Card(), f.Card())
 	out[0] = f.Element(0)
@@ -164,7 +166,7 @@ func (a *Element) Uint() uint {
 	return a.val
 }
 
-// Equal tests equality of elements a and b
+// Equal tests equality of elements a and b.
 func (a *Element) Equal(b *Element) bool {
 	if a.field == b.field && a.val == b.val {
 		return true
@@ -321,7 +323,7 @@ func (a *Element) One() bool {
 	return (a.val == 1)
 }
 
-// String returns the string representation of a
+// String returns the string representation of a.
 func (a *Element) String() string {
 	return strconv.FormatUint(uint64(a.val), 10)
 }
