@@ -26,6 +26,14 @@ func Pow(a, n uint) uint {
 	return res
 }
 
+func Gcd(a, b uint) uint {
+	for a > 0 {
+		q := b / a
+		b, a = a, b-q*a
+	}
+	return b
+}
+
 // FactorizePrimePower computes p and n such that q=p^n.
 //
 // If q is not a prime power, the function returns an InputValue-error.

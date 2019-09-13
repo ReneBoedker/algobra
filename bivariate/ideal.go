@@ -43,7 +43,17 @@ func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 				"Generators defined over different rings",
 			)
 		}
+		if g.Zero() {
+			// Skip zero polynomials
+			continue
+		}
 		id.generators[i] = g.Copy()
+	}
+	if len(id.generators) == 0 {
+		return nil, errors.New(
+			op, errors.InputValue,
+			"Generators %v define an empty ideal", generators,
+		)
 	}
 	return id, nil
 }

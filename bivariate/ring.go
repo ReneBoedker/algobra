@@ -68,18 +68,32 @@ func (r *QuotientRing) Polynomial(coefs map[[2]uint]*finitefield.Element) *Polyn
 }
 
 // PolynomialFromSigned defines a new polynomial with the given coefficients
-// func (r *QuotientRing) PolynomialFromSigned(coefs map[[2]uint]int) *Polynomial {
-// 	m := make(map[[2]uint]*finitefield.Element)
-// 	for d, c := range coefs {
-// 		e := r.baseField.ElementFromSigned(c)
-// 		if e.Nonzero() {
-// 			m[d] = e
-// 		}
-// 	}
-// 	out := &Polynomial{baseRing: r, coefs: m}
-// 	out.reduce()
-// 	return out
-// }
+func (r *QuotientRing) PolynomialFromUnsigned(coefs map[[2]uint]uint) *Polynomial {
+	m := make(map[[2]uint]*finitefield.Element)
+	for d, c := range coefs {
+		e := r.baseField.ElementFromUnsigned(c)
+		if e.Nonzero() {
+			m[d] = e
+		}
+	}
+	out := &Polynomial{baseRing: r, coefs: m}
+	out.reduce()
+	return out
+}
+
+// PolynomialFromSigned defines a new polynomial with the given coefficients
+func (r *QuotientRing) PolynomialFromSigned(coefs map[[2]uint]int) *Polynomial {
+	m := make(map[[2]uint]*finitefield.Element)
+	for d, c := range coefs {
+		e := r.baseField.ElementFromSigned(c)
+		if e.Nonzero() {
+			m[d] = e
+		}
+	}
+	out := &Polynomial{baseRing: r, coefs: m}
+	out.reduce()
+	return out
+}
 
 // PolynomialFromString defines a polynomial by parsing s.
 //

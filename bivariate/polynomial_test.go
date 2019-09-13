@@ -1,7 +1,7 @@
 package bivariate
 
 import (
-	"algobra/primefield"
+	"algobra/finitefield"
 	"math/rand"
 	"testing"
 	"time"
@@ -45,7 +45,7 @@ func TestPow(t *testing.T) {
 		{{0, 0}, {3, 0}, {3, 3}, {0, 6}},
 	}
 	for i, d1 := range inDegs {
-		f := r.Polynomial(map[[2]uint]uint{d1: 1})
+		f := r.PolynomialFromUnsigned(map[[2]uint]uint{d1: 1})
 		for n, exp := range expectedPows {
 			g := f.Pow(uint(n))
 			if g.Ld() != exp[i] {
@@ -62,19 +62,19 @@ func TestEval(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	evPoints := [][2]*primefield.Element{
-		{field.Element(0), field.Element(0)},
-		{field.Element(1), field.Element(0)},
-		{field.Element(1), field.Element(2)},
-		{field.Element(1), field.Element(10)},
-		{field.Element(2), field.Element(5)},
+	evPoints := [][2]*finitefield.Element{
+		{field.ElementFromUnsigned(0), field.ElementFromUnsigned(0)},
+		{field.ElementFromUnsigned(1), field.ElementFromUnsigned(0)},
+		{field.ElementFromUnsigned(1), field.ElementFromUnsigned(2)},
+		{field.ElementFromUnsigned(1), field.ElementFromUnsigned(10)},
+		{field.ElementFromUnsigned(2), field.ElementFromUnsigned(5)},
 	}
-	expected := []*primefield.Element{
+	expected := []*finitefield.Element{
 		field.ElementFromSigned(-1),
-		field.Element(0),
-		field.Element(0),
-		field.Element(0),
-		field.Element(3),
+		field.ElementFromUnsigned(0),
+		field.ElementFromUnsigned(0),
+		field.ElementFromUnsigned(0),
+		field.ElementFromUnsigned(3),
 	}
 
 	for i, p := range evPoints {

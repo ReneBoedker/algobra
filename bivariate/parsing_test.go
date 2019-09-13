@@ -25,7 +25,7 @@ func TestParsingWellFormed(t *testing.T) {
 				err)
 		}
 	}
-	testPolys = append(testPolys, ring.Polynomial(map[[2]uint]uint{
+	testPolys = append(testPolys, ring.PolynomialFromUnsigned(map[[2]uint]uint{
 		{3, 2}: 2,
 		{3, 0}: 1,
 		{0, 1}: 5,
@@ -83,7 +83,7 @@ func TestParseOutput(t *testing.T) {
 			coef := uint(prg.Uint32()) % char
 			coefMap[deg] = coef
 		}
-		f := ring.Polynomial(coefMap)
+		f := ring.PolynomialFromUnsigned(coefMap)
 
 		if g, err := ring.PolynomialFromString(f.String()); err != nil {
 			t.Errorf("Parsing formatted output of %v returns error %q", f, err)

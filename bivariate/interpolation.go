@@ -35,6 +35,9 @@ func (r *QuotientRing) Interpolate(
 	for i, p := range points {
 		f = f.Plus(r.lagrangeBasis(p).Scale(values[i]))
 	}
+	if f.Err() != nil {
+		panic(f.Err())
+	}
 
 	return f, nil
 }
@@ -55,27 +58,22 @@ func allDistinct(points [][2]*finitefield.Element) bool {
 // lagrangeBasis computes a "lagrange-type" basis element. That is, it computes
 // a polynomial that evaluates to 1 in point and to 0 in any other point.
 func (r *QuotientRing) lagrangeBasis(point [2]*finitefield.Element) *Polynomial {
-	f := r.Polynomial(map[[2]uint]*finitefield.Element{
-		{0, 0}: r.baseField.One(),
+	f := r.PolynomialFromUnsigned(map[[2]uint]uint{
+		{0, 0}: 1,
 	})
 
 	for i := 0; i < 2; i++ {
-		for j := uint(0); j < r.baseField.Char(); j++ {
-			if j == point[i].Uint() {
+		for _, j := range r.baseField.Elements() {
+			if j.Equal(point[i]) {
 				continue
 			}
 			ld := [2]uint{0, 0}
 			ld[i] = 1
 
-			jElem, err := r.baseField.Element(j)
-			if err != nil {
-				panic(err)
-			}
-
-			f = f.Mult(r.Polynomial(map[[2]uint]uint{
-				ld:     1,
-				{0, 0}: r.baseField.Char() - j,
-			})).Scale(point[i].Minus(jElem).Inv())
+			f = f.Mult(r.Polynomial(map[[2]uint]*finitefield.Element{
+				ld:     r.baseField.One(),
+				{0, 0}: j.Neg(),
+			})).Scale(point[i].Minus(j).Inv())
 		}
 	}
 

@@ -105,10 +105,10 @@ func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
 
 	h := f.Copy()
 	for deg, c := range g.coefs {
-		if _, ok := h.coefs[deg]; !ok {
-			h.coefs[deg] = c
-			continue
-		}
+		// if _, ok := h.coefs[deg]; !ok {
+		// 	h.coefs[deg] = c.Copy()
+		// 	continue
+		// }
 		tmp := h.Coef(deg).Plus(c)
 		if tmp.Nonzero() {
 			h.coefs[deg] = tmp
@@ -214,6 +214,9 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 // polynomial is returned.
 func (f *Polynomial) Mult(g *Polynomial) *Polynomial {
 	h := f.multNoReduce(g)
+	if h.Err() != nil {
+		return h
+	}
 	h.reduce()
 	return h
 }
@@ -246,8 +249,8 @@ func (f *Polynomial) Scale(c *finitefield.Element) *Polynomial {
 func (f *Polynomial) Pow(n uint) *Polynomial {
 	const op = "Computing polynomial power"
 
-	out := f.baseRing.Polynomial(map[[2]uint]uint{
-		{0, 0}: 1,
+	out := f.baseRing.Polynomial(map[[2]uint]*finitefield.Element{
+		{0, 0}: f.BaseField().One(),
 	})
 	g := f.Copy()
 

@@ -33,6 +33,21 @@ func TestCeilLog(t *testing.T) {
 	}
 }
 
+func TestGcd(t *testing.T) {
+	testTriples := [][3]uint{
+		{1, 1, 1},
+		{1, 2, 1},
+		{4, 2, 2},
+		{2, 4, 2},
+		{24, 18, 6},
+	}
+	for _, triple := range testTriples {
+		if tmp := Gcd(triple[0], triple[1]); tmp != triple[2] {
+			t.Errorf("Gcd(%d, %d)=%d (Expected %d)", triple[0], triple[1], tmp, triple[2])
+		}
+	}
+}
+
 /* Copyright 2019 René Bødker Christensen
  *
  * Redistribution and use in source and binary forms, with or without

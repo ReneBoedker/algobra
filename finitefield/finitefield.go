@@ -23,6 +23,15 @@ const (
 	nonPrimeKind
 )
 
+func (f *Field) kind() kind {
+	switch {
+	case f.pf != nil:
+		return primeKind
+	default:
+		panic("Error")
+	}
+}
+
 func (a *Element) kind() kind {
 	switch {
 	case a.pf != nil:
@@ -32,23 +41,34 @@ func (a *Element) kind() kind {
 	}
 }
 
-func (f *Field) ElementFromUnsigned(val uint) (*Element, error) {
+func Define(char uint) (*Field, error) {
+	// Must be changed when non-prime is implemented
+	pf, err := primefield.Define(char)
+	if err != nil {
+		return nil, err
+	}
+	return &Field{
+		pf: pf,
+	}, nil
+}
+
+func (f *Field) ElementFromUnsigned(val uint) *Element {
 	switch {
 	case f.pf != nil:
 		return &Element{
 			pf: f.pf.Element(val),
-		}, nil
+		}
 	default:
 		panic("Error")
 	}
 }
 
-func (f *Field) ElementFromSigned(val int) (*Element, error) {
+func (f *Field) ElementFromSigned(val int) *Element {
 	switch {
 	case f.pf != nil:
 		return &Element{
 			pf: f.pf.ElementFromSigned(val),
-		}, nil
+		}
 	default:
 		panic("Error")
 	}
@@ -59,15 +79,30 @@ func (f *Field) Element(val interface{}) (*Element, error) {
 
 	switch v := val.(type) {
 	case uint:
-		return f.ElementFromUnsigned(v)
+		return f.ElementFromUnsigned(v), nil
 	case int:
-		return f.ElementFromSigned(v)
+		return f.ElementFromSigned(v), nil
 	default:
 		return nil, errors.New(
 			op, errors.Input,
 			"Cannot create element from type %T", v,
 		)
 	}
+}
+
+func (f *Field) Elements() []*Element {
+	out := make([]*Element, f.Card(), f.Card())
+	switch f.kind() {
+	case primeKind:
+		for i, e := range f.pf.Elements() {
+			out[i] = &Element{
+				pf: e,
+			}
+		}
+	default:
+		panic("Error")
+	}
+	return out
 }
 
 func (f *Field) Zero() *Element {
@@ -87,6 +122,15 @@ func (f *Field) One() *Element {
 		return &Element{
 			pf: f.pf.Element(1),
 		}
+	default:
+		panic("Error")
+	}
+}
+
+func (f *Field) Card() uint {
+	switch f.kind() {
+	case primeKind:
+		return f.pf.Card()
 	default:
 		panic("Error")
 	}
@@ -228,7 +272,7 @@ func (a *Element) Zero() bool {
 func (a *Element) Nonzero() bool {
 	switch a.kind() {
 	case primeKind:
-		return a.pf.Zero()
+		return a.pf.Nonzero()
 	default:
 		panic("Error")
 	}
@@ -237,7 +281,19 @@ func (a *Element) Nonzero() bool {
 func (a *Element) One() bool {
 	switch a.kind() {
 	case primeKind:
-		return a.pf.Zero()
+		return a.pf.One()
+	default:
+		panic("Error")
+	}
+}
+
+func (a *Element) Err() error {
+	if a.err != nil {
+		return a.err
+	}
+	switch a.kind() {
+	case primeKind:
+		return a.pf.Err()
 	default:
 		panic("Error")
 	}

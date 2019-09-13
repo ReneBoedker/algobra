@@ -70,6 +70,11 @@ func (f *Field) Char() uint {
 	return f.char
 }
 
+// Card returns the cardinality of f
+func (f *Field) Card() uint {
+	return f.char
+}
+
 // ComputeTables will precompute either the addition or multiplication tables
 // (or both) for the field f.
 //
@@ -93,6 +98,28 @@ func (f *Field) ComputeTables(add, mult bool) (err error) {
 	}
 
 	return nil
+}
+
+func (f *Field) MultGenerator() *Element {
+	if f.Char() == 2 {
+		return f.Element(1)
+	}
+	i := uint(2)
+	for basic.Gcd(i, f.Char()) != 1 {
+		i++
+	}
+	return f.Element(i)
+}
+
+func (f *Field) Elements() []*Element {
+	out := make([]*Element, f.Card(), f.Card())
+	out[0] = f.Element(0)
+
+	gen := f.MultGenerator()
+	for i, e := uint(1), gen.Copy(); i < f.Char(); i, e = i+1, e.Mult(gen) {
+		out[i] = e.Copy()
+	}
+	return out
 }
 
 // Element is the implementation of an element in a finite field.
@@ -223,9 +250,16 @@ func (a *Element) Mult(b *Element) *Element {
 
 // Pow returns a raised to the power of n
 func (a *Element) Pow(n uint) *Element {
-	for n >= a.field.Char() {
-		// Use that a^p=a
-		n = (n % a.field.Char()) + (n / a.field.Char())
+	if a.Zero() {
+		if n == 0 {
+			return a.field.Element(1)
+		}
+		return a.field.Element(0)
+	}
+
+	if n >= a.field.Char() {
+		// Use that a^(p-1)=1 for units
+		n = n % (a.field.Char() - 1)
 	}
 
 	out := a.field.Element(1)

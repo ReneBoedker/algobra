@@ -1,12 +1,12 @@
 package bivariate
 
 import (
-	"algobra/primefield"
+	"algobra/finitefield"
 	"testing"
 )
 
-func defineField(char uint, t *testing.T) *primefield.Field {
-	field, err := primefield.Define(char)
+func defineField(char uint, t *testing.T) *finitefield.Field {
+	field, err := finitefield.Define(char)
 	if err != nil {
 		t.Fatalf("Failed to define finite field of %d elements", char)
 	}
@@ -16,13 +16,16 @@ func defineField(char uint, t *testing.T) *primefield.Field {
 func TestReduce(t *testing.T) {
 	field := defineField(3, t)
 	r := DefRing(field, WDegLex(3, 4, false))
-	mod := r.Polynomial(map[[2]uint]uint{{9, 0}: 1, {1, 0}: 2})
-	id, _ := r.NewIdeal(mod)
+	mod := r.PolynomialFromUnsigned(map[[2]uint]uint{{9, 0}: 1, {1, 0}: 2})
+	id, err := r.NewIdeal(mod)
+	if err != nil {
+		t.Errorf("Failed to construct ideal. Error message %q", err.Error())
+	}
 	qr, err := r.Quotient(id)
 	if err != nil {
 		t.Errorf("Failed to construct quotient ring")
 	}
-	f := qr.Polynomial(map[[2]uint]uint{
+	f := qr.PolynomialFromUnsigned(map[[2]uint]uint{
 		{12, 3}: 1,
 	})
 	// mod.QuoRem(id)
@@ -39,21 +42,21 @@ func TestGroebner1(t *testing.T) {
 	field := defineField(7, t)
 	r := DefRing(field, Lex(true))
 	id, _ := r.NewIdeal(
-		r.Polynomial(map[[2]uint]uint{
+		r.PolynomialFromUnsigned(map[[2]uint]uint{
 			{1, 2}: 1,
 			{0, 3}: 6,
 		}),
-		r.Polynomial(map[[2]uint]uint{
+		r.PolynomialFromUnsigned(map[[2]uint]uint{
 			{0, 3}: 1,
 			{0, 2}: 6,
 		}),
 	)
 	expectedGens := []*Polynomial{
-		r.Polynomial(map[[2]uint]uint{
+		r.PolynomialFromUnsigned(map[[2]uint]uint{
 			{1, 2}: 1,
 			{0, 2}: 6,
 		}),
-		r.Polynomial(map[[2]uint]uint{
+		r.PolynomialFromUnsigned(map[[2]uint]uint{
 			{0, 3}: 1,
 			{0, 2}: 6,
 		}),
