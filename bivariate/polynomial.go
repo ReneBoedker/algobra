@@ -189,6 +189,7 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 				if err != nil {
 					h = f.baseRing.Zero()
 					h.err = errors.Wrap(op, errors.Inherit, err)
+					return h
 				}
 				if c, ok := h.coefs[degSum]; ok {
 					if c.Plus(tmp).Nonzero() {

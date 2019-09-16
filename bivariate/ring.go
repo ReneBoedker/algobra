@@ -34,7 +34,7 @@ func (r *QuotientRing) String() string {
 	)
 }
 
-// DefRing defines a new polynomial ring with the given characteristic, using
+// DefRing defines a new polynomial ring over the given field, using
 // the order function ord. It returns a new ring-object
 func DefRing(field *finitefield.Field, ord Order) *QuotientRing {
 	return &QuotientRing{
