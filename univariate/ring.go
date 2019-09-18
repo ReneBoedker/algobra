@@ -10,6 +10,8 @@ type ring struct {
 	baseField *finitefield.Field
 }
 
+// QuotientRing denotes a polynomial quotient ring. The quotient may be trivial,
+// in which case, the object acts as a ring.
 type QuotientRing struct {
 	*ring
 	id *Ideal
@@ -89,6 +91,9 @@ func (r *QuotientRing) PolynomialFromSigned(coefs []int) *Polynomial {
 	return out
 }
 
+// Quotient defines the quotient of the given ring modulo the input ideal.
+//
+// The return type is a new ring-object
 func (r *QuotientRing) Quotient(id *Ideal) (*QuotientRing, error) {
 	const op = "Define quotient ring"
 	if r.id != nil {

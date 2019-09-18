@@ -27,7 +27,7 @@ func WDegLex(xWeight, yWeight uint, xGtY bool) Order {
 	}
 }
 
-// TotalDeg returns the total degree ordering.
+// DegLex returns the total degree ordering.
 //
 // The resulting order will break ties using the lexicographical ordering. The
 // boolean xGtY indicates whether X is greater than Y.

@@ -35,6 +35,10 @@ func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 	return id, nil
 }
 
+// Gcd returns the greatest common divisor of the given polynomials.
+//
+// An InputIncompatible-error is returned if the polynomials are not defined
+// over the same ring.
 func Gcd(f *Polynomial, g ...*Polynomial) (*Polynomial, error) {
 	const op = "Computing polynomial GCD"
 
