@@ -67,9 +67,10 @@ func (r *QuotientRing) Polynomial(coefs []*finitefield.Element) *Polynomial {
 // PolynomialFromUnsigned defines a new polynomial with the given coefficients
 func (r *QuotientRing) PolynomialFromUnsigned(coefs []uint) *Polynomial {
 	out := r.Zero()
-	for d, e := range coefs {
-		if e > 0 {
-			out.SetCoef(d, r.baseField.ElementFromUnsigned(e))
+	for d, c := range coefs {
+		e := r.baseField.ElementFromUnsigned(c)
+		if e.Nonzero() {
+			out.SetCoef(d, e)
 		}
 	}
 	out.reduce()
@@ -114,13 +115,6 @@ func (r *QuotientRing) Quotient(id *Ideal) (*QuotientRing, error) {
 	return qr, nil
 }
 
-// Reduce sets f to f modulo id
-func (id *Ideal) Reduce(f *Polynomial) {
-	// TODO: Ought id to be a Gröbner basis here?
-	_, r := f.QuoRem(id.generator)
-	*f = *r // For some reason using pointers alone is not enough
-}
-
 // QuoRem return the polynomial quotient and remainder under division by the
 // given list of polynomials.
 //
@@ -136,14 +130,14 @@ func (f *Polynomial) QuoRem(list ...*Polynomial) (q []*Polynomial, r *Polynomial
 outer:
 	for p.Nonzero() {
 		for i, g := range list {
-			if p.Ld() > g.Ld() {
+			if p.Ld() >= g.Ld() {
 				tmp := f.baseRing.Zero()
 				tmp.SetCoef(
 					p.Ld()-g.Ld(),
 					p.Lc().Mult(g.Lc().Inv()),
 				)
 				q[i] = q[i].Plus(tmp)
-				p = p.Minus(tmp.Mult(g))
+				p = p.Minus(tmp.multNoReduce(g))
 				continue outer
 			}
 		}

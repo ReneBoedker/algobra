@@ -35,7 +35,7 @@ func (f *Polynomial) Coef(deg int) *finitefield.Element {
 
 // SetCoef sets the coefficient of the monomial with degree deg in f to val.
 func (f *Polynomial) SetCoef(deg int, val *finitefield.Element) {
-	if deg < len(f.coefs) {
+	if deg <= f.Ld() {
 		f.coefs[deg] = val
 		if val.Zero() {
 			f.reslice()
@@ -124,7 +124,7 @@ func (f *Polynomial) Equal(g *Polynomial) bool {
 	if f.baseRing != g.baseRing {
 		return false
 	}
-	if len(f.coefs) != len(g.coefs) { // TODO: Relies on bookkeeping
+	if len(f.coefs) != len(g.coefs) {
 		return false
 	}
 	for deg, cf := range f.coefs {
@@ -269,7 +269,7 @@ func (f *Polynomial) Degrees() []int {
 
 // Ld returns the leading degree of f.
 func (f *Polynomial) Ld() int {
-	return len(f.coefs) - 1 // TODO: requires bookkeeping
+	return len(f.coefs) - 1
 }
 
 // Lc returns the leading coefficient of f.
@@ -287,7 +287,7 @@ func (f *Polynomial) Lt() *Polynomial {
 
 // Zero determines whether f is the zero polynomial.
 func (f *Polynomial) Zero() bool {
-	if len(f.coefs) == 0 {
+	if len(f.coefs) == 1 && f.Coef(0).Zero() {
 		return true
 	}
 	return false

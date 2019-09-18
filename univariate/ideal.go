@@ -78,3 +78,10 @@ func (id *Ideal) Copy() *Ideal {
 		generator: id.generator.Copy(),
 	}
 }
+
+// Reduce sets f to f modulo id
+func (id *Ideal) Reduce(f *Polynomial) {
+	// TODO: Ought id to be a Gröbner basis here?
+	_, r := f.QuoRem(id.generator)
+	*f = *r // For some reason using pointers alone is not enough
+}
