@@ -57,7 +57,7 @@ func (r *QuotientRing) Polynomial(coefs []*finitefield.Element) *Polynomial {
 	out := r.Zero()
 	for d, e := range coefs {
 		if e.Nonzero() {
-			out.SetCoef(uint(d), e.Copy())
+			out.SetCoef(d, e.Copy())
 		}
 	}
 	out.reduce()
@@ -69,7 +69,7 @@ func (r *QuotientRing) PolynomialFromUnsigned(coefs []uint) *Polynomial {
 	out := r.Zero()
 	for d, e := range coefs {
 		if e > 0 {
-			out.SetCoef(uint(d), r.baseField.ElementFromUnsigned(e))
+			out.SetCoef(d, r.baseField.ElementFromUnsigned(e))
 		}
 	}
 	out.reduce()
@@ -81,7 +81,7 @@ func (r *QuotientRing) PolynomialFromSigned(coefs []int) *Polynomial {
 	out := r.Zero()
 	for d, e := range coefs {
 		if e != 0 {
-			out.SetCoef(uint(d), r.baseField.ElementFromSigned(e))
+			out.SetCoef(d, r.baseField.ElementFromSigned(e))
 		}
 	}
 	out.reduce()

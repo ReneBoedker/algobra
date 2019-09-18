@@ -26,17 +26,20 @@ func (f *Polynomial) Err() error {
 
 // Coef returns the coefficient of the monomial with degree specified by the
 // input. The return value is a finite field element.
-func (f *Polynomial) Coef(deg uint) *finitefield.Element {
-	if deg < uint(len(f.coefs)) {
+func (f *Polynomial) Coef(deg int) *finitefield.Element {
+	if deg < len(f.coefs) {
 		return f.coefs[deg]
 	}
 	return f.BaseField().Zero()
 }
 
 // SetCoef sets the coefficient of the monomial with degree deg in f to val.
-func (f *Polynomial) SetCoef(deg uint, val *finitefield.Element) {
-	if deg < uint(len(f.coefs)) {
+func (f *Polynomial) SetCoef(deg int, val *finitefield.Element) {
+	if deg < len(f.coefs) {
 		f.coefs[deg] = val
+		if val.Zero() {
+			f.reslice()
+		}
 		return
 	}
 	// Otherwise, grow the slice to needed length
@@ -46,6 +49,18 @@ func (f *Polynomial) SetCoef(deg uint, val *finitefield.Element) {
 	}
 	f.coefs = append(f.coefs, grow...)
 	f.coefs[deg] = val
+}
+
+// reslice ensures that the coefficients of f do not contain leading zeros
+func (f *Polynomial) reslice() {
+	for i := len(f.coefs) - 1; i >= 0; i-- {
+		if f.Coef(i).Nonzero() {
+			f.coefs = f.coefs[:i+1]
+			return
+		}
+	}
+	// No non-zero entries were found
+	f.coefs = f.coefs[:1]
 }
 
 // Copy returns a new polynomial object over the same ring and with the same
@@ -87,8 +102,7 @@ func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
 	}
 
 	h := f.Copy()
-	for d, c := range g.coefs {
-		deg := uint(d)
+	for deg, c := range g.coefs {
 		h.SetCoef(deg, h.Coef(deg).Plus(c))
 	}
 	return h
@@ -99,7 +113,7 @@ func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
 func (f *Polynomial) Neg() *Polynomial {
 	g := f.baseRing.Zero()
 	for deg, c := range f.coefs {
-		g.SetCoef(uint(deg), c.Neg())
+		g.SetCoef(deg, c.Neg())
 	}
 	return g
 }
@@ -113,8 +127,8 @@ func (f *Polynomial) Equal(g *Polynomial) bool {
 	if len(f.coefs) != len(g.coefs) { // TODO: Relies on bookkeeping
 		return false
 	}
-	for d, cf := range f.coefs {
-		if !g.Coef(uint(d)).Equal(cf) {
+	for deg, cf := range f.coefs {
+		if !g.Coef(deg).Equal(cf) {
 			return false
 		}
 	}
@@ -158,9 +172,9 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 	h := f.baseRing.Zero()
 	for degf, cf := range f.coefs {
 		for degg, cg := range g.coefs {
-			degSum := uint(degf) + uint(degg)
+			degSum := degf + degg
 			// Check if overflow
-			if degSum < uint(degf) {
+			if degSum < degf {
 				h = f.baseRing.Zero()
 				h.err = errors.New(
 					op, errors.Overflow,
@@ -205,8 +219,7 @@ func (f *Polynomial) Normalize() *Polynomial {
 // result as a new polynomial.
 func (f *Polynomial) Scale(c *finitefield.Element) *Polynomial {
 	g := f.Copy()
-	for d := range g.coefs {
-		deg := uint(d)
+	for deg := range g.coefs {
 		g.SetCoef(deg, g.Coef(deg).Mult(c))
 	}
 	return g
@@ -243,20 +256,20 @@ func (f *Polynomial) Pow(n uint) *Polynomial {
 //
 // The list is sorted according to the ring order with higher orders preceding
 // lower orders in the list.
-func (f *Polynomial) Degrees() []uint {
-	degs := make([]uint, 0, len(f.coefs))
+func (f *Polynomial) Degrees() []int {
+	degs := make([]int, 0, len(f.coefs))
 	for deg := len(f.coefs) - 1; deg >= 0; deg-- {
-		if f.Coef(uint(deg)).Zero() {
+		if f.Coef(deg).Zero() {
 			continue
 		}
-		degs = append(degs, uint(deg))
+		degs = append(degs, deg)
 	}
 	return degs
 }
 
 // Ld returns the leading degree of f.
-func (f *Polynomial) Ld() uint {
-	return uint(len(f.coefs)) - 1 // TODO: requires bookkeeping
+func (f *Polynomial) Ld() int {
+	return len(f.coefs) - 1 // TODO: requires bookkeeping
 }
 
 // Lc returns the leading coefficient of f.
@@ -343,6 +356,10 @@ func checkCompatible(op errors.Op, f, g *Polynomial) *Polynomial {
 // String returns the string representation of f. Variables are named 'X' and
 // 'Y'.
 func (f *Polynomial) String() string {
+	if f.Zero() {
+		return "0"
+	}
+
 	var b strings.Builder
 	for i, d := range f.Degrees() {
 		if i > 0 {
