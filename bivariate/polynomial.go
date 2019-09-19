@@ -66,7 +66,7 @@ func (f *Polynomial) SetCoef(deg [2]uint, val *finitefield.Element) {
 	if val.Zero() {
 		delete(f.coefs, deg)
 	} else {
-		f.coefs[deg] = val
+		f.coefs[deg] = val.Copy()
 	}
 }
 
@@ -109,16 +109,7 @@ func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
 
 	h := f.Copy()
 	for deg, c := range g.coefs {
-		// if _, ok := h.coefs[deg]; !ok {
-		// 	h.coefs[deg] = c.Copy()
-		// 	continue
-		// }
-		tmp := h.Coef(deg).Plus(c)
-		if tmp.Nonzero() {
-			h.coefs[deg] = tmp
-		} else {
-			delete(h.coefs, deg)
-		}
+		h.SetCoef(deg, h.Coef(deg).Plus(c))
 	}
 	return h
 }
@@ -195,15 +186,7 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 					h.err = errors.Wrap(op, errors.Inherit, err)
 					return h
 				}
-				if c, ok := h.coefs[degSum]; ok {
-					if c.Plus(tmp).Nonzero() {
-						h.coefs[degSum] = c.Plus(tmp)
-					} else {
-						delete(h.coefs, degSum)
-					}
-				} else {
-					h.coefs[degSum] = tmp
-				}
+				h.SetCoef(degSum, h.Coef(degSum).Plus(tmp))
 			}
 		}
 	}
