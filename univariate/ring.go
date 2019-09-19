@@ -91,6 +91,34 @@ func (r *QuotientRing) PolynomialFromSigned(coefs []int) *Polynomial {
 	return out
 }
 
+// PolynomialFromString defines a polynomial by parsing s.
+//
+// The string s must use 'X' of 'x' as variable names. Multiplication symbol '*'
+// is allowed, but not necessary. Additionally, Singular-style exponents are
+// allowed, meaning that "X2" is interpreted as "X^2".
+//
+// If the string cannot be parsed, the function returns the zero polynomial and
+// a Parsing-error.
+func (r *QuotientRing) PolynomialFromString(s string) (*Polynomial, error) {
+	const op = "Defining polynomial from string"
+
+	m, err := polynomialStringToSignedMap(s)
+	f := r.Zero()
+	if err != nil {
+		return f, errors.Wrap(op, errors.Inherit, err)
+	}
+	for deg, coef := range m {
+		if deg < 0 {
+			return r.Zero(), errors.New(
+				op, errors.InputValue,
+				"Input %q contains negative degree %d", s, deg,
+			)
+		}
+		f.SetCoef(deg, f.Coef(deg).Plus(r.baseField.ElementFromSigned(coef)))
+	}
+	return f, nil
+}
+
 // Quotient defines the quotient of the given ring modulo the input ideal.
 //
 // The return type is a new ring-object
