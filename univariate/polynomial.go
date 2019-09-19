@@ -93,11 +93,7 @@ func (f *Polynomial) Eval(point *finitefield.Element) *finitefield.Element {
 func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
 	const op = "Adding polynomials"
 
-	if tmp := hasErr(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	if tmp := checkCompatible(op, f, g); tmp != nil {
+	if tmp := checkErrAndCompatible(op, f, g); tmp != nil {
 		return tmp
 	}
 
@@ -145,11 +141,7 @@ func (f *Polynomial) Equal(g *Polynomial) bool {
 func (f *Polynomial) Minus(g *Polynomial) *Polynomial {
 	const op = "Subtracting polynomials"
 
-	if tmp := hasErr(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	if tmp := checkCompatible(op, f, g); tmp != nil {
+	if tmp := checkErrAndCompatible(op, f, g); tmp != nil {
 		return tmp
 	}
 
@@ -161,11 +153,7 @@ func (f *Polynomial) Minus(g *Polynomial) *Polynomial {
 func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 	const op = "Multiplying polynomials"
 
-	if tmp := hasErr(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	if tmp := checkCompatible(op, f, g); tmp != nil {
+	if tmp := checkErrAndCompatible(op, f, g); tmp != nil {
 		return tmp
 	}
 
@@ -311,6 +299,21 @@ func (f *Polynomial) reduce() {
 	if f.baseRing.id != nil {
 		f.baseRing.id.Reduce(f)
 	}
+}
+
+// checkErrAndCompatible is a wrapper for the two functions hasErr and
+// checkCompatible. It is used in arithmetic functions to check that the inputs
+// are 'good' to use.
+func checkErrAndCompatible(op errors.Op, f, g *Polynomial) *Polynomial {
+	if tmp := hasErr(op, f, g); tmp != nil {
+		return tmp
+	}
+
+	if tmp := checkCompatible(op, f, g); tmp != nil {
+		return tmp
+	}
+
+	return nil
 }
 
 // hasErr is an internal method for checking if f or g has a non-nil error

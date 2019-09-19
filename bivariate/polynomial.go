@@ -75,7 +75,7 @@ func (f *Polynomial) SetCoef(deg [2]uint, val *finitefield.Element) {
 func (f *Polynomial) Copy() *Polynomial {
 	h := f.baseRing.Zero()
 	for deg, c := range f.coefs {
-		h.coefs[deg] = c
+		h.coefs[deg] = c.Copy()
 	}
 	return h
 }
@@ -317,35 +317,6 @@ func (f *Polynomial) reduce() {
 		f.baseRing.id.Reduce(f)
 	}
 }
-
-// // Embed f in another ring
-// func embedInCommonRing(f, g *Polynomial) (fOut, gOut *Polynomial, err error) {
-// 	const op = "Embedding in common ring"
-// 	fOut = f.Copy()
-// 	gOut = g.Copy()
-// 	if f.baseRing.ring != g.baseRing.ring {
-// 		err = errors.New(
-// 			op, errors.InputIncompatible,
-// 			"Rings '%v' and '%v' are not compatible",
-// 			f.baseRing.ring, g.baseRing.ring,
-// 		)
-// 	}
-// 	switch {
-// 	case f.baseRing.id == nil && g.baseRing.id == nil:
-// 		err = nil
-// 	case f.baseRing.id == nil && g.baseRing.id != nil:
-// 		fOut.baseRing = g.baseRing
-// 		err = nil
-// 	case f.baseRing != nil && g.baseRing.id == nil:
-// 		gOut.baseRing = f.baseRing
-// 	case f.baseRing != nil && g.baseRing.id != nil:
-// 		err = errors.New(
-// 			op, errors.InputIncompatible,
-// 			"Polynomials defined over different quotient rings.",
-// 		)
-// 	}
-// 	return
-// }
 
 // String returns the string representation of f. Variables are named 'X' and
 // 'Y'.

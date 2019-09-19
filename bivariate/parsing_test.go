@@ -14,6 +14,7 @@ func TestParsingWellFormed(t *testing.T) {
 		"2X^3Y^2+X^3-2Y+2",
 		"2 x3y2 + x^3 - 2Y+ 2",
 		"2 X^3 Y^2 + x3 - 2 Y + 2",
+		"X^3Y^2 + x^3*y^2 +X3    - 2  y  +2",
 	}
 	testPolys := make([]*Polynomial, len(testStrings), len(testStrings)+1)
 	testErrs := make([]error, len(testStrings))

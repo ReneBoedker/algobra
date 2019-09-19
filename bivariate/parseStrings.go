@@ -140,6 +140,8 @@ func polynomialStringToSignedMap(s string) (map[[2]uint]int, error) {
 		}
 		if _, ok := out[deg]; !ok {
 			out[deg] = coef
+		} else {
+			out[deg] += coef
 		}
 	}
 	return out, nil
