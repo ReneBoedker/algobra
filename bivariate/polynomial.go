@@ -63,7 +63,11 @@ func (f *Polynomial) Coef(deg [2]uint) *finitefield.Element {
 
 // SetCoef sets the coefficient of the monomial with degree deg in f to val.
 func (f *Polynomial) SetCoef(deg [2]uint, val *finitefield.Element) {
-	f.coefs[deg] = val
+	if val.Zero() {
+		delete(f.coefs, deg)
+	} else {
+		f.coefs[deg] = val
+	}
 }
 
 // Copy returns a new polynomial object over the same ring and with the same

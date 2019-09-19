@@ -1,6 +1,7 @@
 package bivariate
 
 import (
+	"algobra/errors"
 	"algobra/finitefield"
 	"testing"
 )
@@ -12,7 +13,7 @@ func TestLagrangeBasis(t *testing.T) {
 	ring := DefRing(field, Lex(true))
 
 	for rep := 0; rep < 100; rep++ {
-		const nPoints = 2
+		const nPoints = 4
 		points := make([][2]*finitefield.Element, nPoints, nPoints)
 
 		nRuns := 0
@@ -99,5 +100,35 @@ func TestInterpolation(t *testing.T) {
 				)
 			}
 		}
+	}
+}
+
+func TestInterpolationErrors(t *testing.T) {
+	field := defineField(13, t)
+	ring := DefRing(field, DegLex(true))
+
+	a := [2]*finitefield.Element{field.Zero(), field.Zero()}
+	b := [2]*finitefield.Element{field.Zero(), field.ElementFromUnsigned(5)}
+
+	_, err := ring.Interpolate(
+		[][2]*finitefield.Element{a, b},
+		[]*finitefield.Element{field.Zero()})
+	if err == nil {
+		t.Errorf("Interpolation did not return an error even though there " +
+			"were more points than values")
+	} else if !errors.Is(errors.InputValue, err) {
+		t.Errorf("Interpolation returned an error on different length inputs, "+
+			"but it was of unexpected kind (err = %v)", err)
+	}
+
+	_, err = ring.Interpolate(
+		[][2]*finitefield.Element{a, a},
+		[]*finitefield.Element{field.Zero(), field.Zero()})
+	if err == nil {
+		t.Errorf("Interpolation did not return an error even though input " +
+			"contains duplicate points")
+	} else if !errors.Is(errors.InputValue, err) {
+		t.Errorf("Interpolation returned an error when input contains duplicate"+
+			" points, but it was of unexpected kind (err = %v)", err)
 	}
 }

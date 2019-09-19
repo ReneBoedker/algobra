@@ -114,6 +114,7 @@ func (id *Ideal) MinimizeBasis() error {
 // InputValue-error.
 func (id *Ideal) ReduceBasis() error {
 	const op = "Reducing Gröbner basis"
+
 	if id.isGroebner != 1 {
 		return errors.New(
 			op, errors.InputValue,
@@ -133,6 +134,7 @@ func (id *Ideal) ReduceBasis() error {
 // Write f=qg if possible; otherwise set ok=false
 func (f *Polynomial) monomialDivideBy(g *Polynomial) (q *Polynomial, ok bool, err error) {
 	const op = "Dividing monomials"
+
 	if !f.Monomial() {
 		return nil, false, errors.New(
 			op, errors.InputValue,

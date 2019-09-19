@@ -31,12 +31,12 @@ func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 	const op = "Defining ideal"
 	id := &Ideal{
 		ring:       r.ring,
-		generators: make([]*Polynomial, len(generators)),
+		generators: make([]*Polynomial, 0, len(generators)),
 		isGroebner: 0,
 		isMinimal:  0,
 		isReduced:  0,
 	}
-	for i, g := range generators {
+	for _, g := range generators {
 		if g.baseRing != r {
 			return nil, errors.New(
 				op, errors.InputIncompatible,
@@ -47,7 +47,7 @@ func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 			// Skip zero polynomials
 			continue
 		}
-		id.generators[i] = g.Copy()
+		id.generators = append(id.generators, g.Copy())
 	}
 	if len(id.generators) == 0 {
 		return nil, errors.New(
@@ -100,10 +100,10 @@ outer:
 			if i == ignoreIndex {
 				continue
 			}
-			if mquo, ok, err := p.Lt().monomialDivideBy(g.Lt()); err != nil {
-				// Should not occur
-				panic(err)
-			} else if ok {
+			// Below, err is ignored since both p and g are nonzero (so both
+			// leading terms are well defined, and monomialDivideBy will not
+			// return an error)
+			if mquo, ok, _ := p.Lt().monomialDivideBy(g.Lt()); ok {
 				// Lt(g) divides p.Lt()
 				q[i] = q[i].Plus(mquo)
 				p = p.Minus(g.multNoReduce(mquo))

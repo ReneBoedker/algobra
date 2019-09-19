@@ -2,6 +2,8 @@ package bivariate
 
 import (
 	"algobra/errors"
+	"fmt"
+	"math"
 	"testing"
 )
 
@@ -45,17 +47,21 @@ func TestParsingWellFormed(t *testing.T) {
 func TestParsingIllFormed(t *testing.T) {
 	field := defineField(7, t)
 	ring := DefRing(field, Lex(true))
+
 	testStrings := []string{
 		"2^2 X",
 		"X^2-+Y^3",
 		"X^^4Y^5",
 		"a^3y^4",
 	}
-	testPolys := make([]*Polynomial, len(testStrings), len(testStrings)+1)
+
+	testPolys := make([]*Polynomial, len(testStrings), len(testStrings))
 	testErrs := make([]error, len(testStrings))
+
 	for i, s := range testStrings {
 		testPolys[i], testErrs[i] = ring.PolynomialFromString(s)
 	}
+
 	for i, err := range testErrs {
 		if err == nil {
 			t.Errorf("Parsing %q returned polynomial %v instead of an error",
@@ -67,15 +73,43 @@ func TestParsingIllFormed(t *testing.T) {
 	}
 }
 
+func TestConversionErrors(t *testing.T) {
+	field := defineField(13, t)
+	ring := DefRing(field, Lex(true))
+
+	testStrings := []string{
+		fmt.Sprintf("%d0X", math.MaxInt64),
+		fmt.Sprintf("Y^%d0", uint(math.MaxUint64)),
+	}
+
+	testPolys := make([]*Polynomial, len(testStrings), len(testStrings))
+	testErrs := make([]error, len(testStrings))
+
+	for i, s := range testStrings {
+		testPolys[i], testErrs[i] = ring.PolynomialFromString(s)
+	}
+
+	for i, err := range testErrs {
+		if err == nil {
+			t.Errorf("Parsing %q returned polynomial %v instead of an error",
+				testStrings[i], testPolys[i])
+		} else if !errors.Is(errors.Conversion, err) {
+			t.Errorf("Expected errors.Conversion while parsing %q, but received error %q",
+				testStrings[i], err.Error())
+		}
+	}
+}
+
 func TestParseOutput(t *testing.T) {
 	char := uint(13)
 	field := defineField(char, t)
 	ring := DefRing(field, Lex(false))
-	for i := 0; i < 1000; i++ {
-		// Create random polynomial up to 50 different degrees
+	for rep := 0; rep < 1000; rep++ {
+		// Create random polynomial with up to 50 different terms
 		nDegs := (uint(prg.Uint32()) % 50) + 1
 		coefMap := make(map[[2]uint]uint)
-		for j := uint(0); j < nDegs; j++ {
+		coefMap[[2]uint{1, 1}] = 1 // Cover printing cases with degrees 1
+		for i := uint(0); i < nDegs; i++ {
 			deg := [2]uint{
 				uint(prg.Uint32()),
 				uint(prg.Uint32()),
