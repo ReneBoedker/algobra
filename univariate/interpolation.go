@@ -36,11 +36,7 @@ func (r *QuotientRing) Interpolate(
 	for i := range points {
 		f = f.Plus(r.lagrangeBasis(points, i).Scale(values[i]))
 	}
-	if f.Err() != nil {
-		panic(f.Err())
-	}
-
-	return f, nil
+	return f, f.Err()
 }
 
 // allDistinct checks if given points are all distinct

@@ -10,10 +10,10 @@ import (
 
 var prg = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 
-func defineField(char uint, t *testing.T) *finitefield.Field {
-	field, err := finitefield.Define(char)
+func defineField(card uint, t *testing.T) *finitefield.Field {
+	field, err := finitefield.Define(card)
 	if err != nil {
-		t.Fatalf("Failed to define finite field of %d elements", char)
+		t.Fatalf("Failed to define finite field of %d elements", card)
 	}
 	return field
 }
