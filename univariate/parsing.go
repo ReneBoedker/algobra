@@ -17,7 +17,7 @@ type monomialMatch struct {
 func newMonomialMatch(match []string, op errors.Op) (*monomialMatch, error) {
 	if len(match) != 5 {
 		return nil, errors.New(
-			op, errors.Parsing,
+			op, errors.Internal,
 			"Regexp-match has unexpected form (%v)", match,
 		)
 	}
@@ -36,13 +36,6 @@ func newMonomialMatch(match []string, op errors.Op) (*monomialMatch, error) {
 		)
 	}
 
-	// Check that all exponents correspond to a variable (e.g. preventing 2^4)
-	if out.name == "" && out.deg != "" {
-		return nil, errors.New(
-			op, errors.Parsing,
-			"Found empty variable, but non-empty exponent %q", out.deg,
-		)
-	}
 	return out, nil
 }
 
@@ -81,7 +74,7 @@ func polynomialStringToSignedMap(s string) (map[int]int, error) {
 	matches := regexp.MustCompile(
 		`\s*(?P<sign>^|\+|-)\s*`+
 			`(?P<coef>[0-9]*)\s*\*?\s*`+
-			`(?P<name>(?i:x))?\^?(?P<deg1>[0-9]*)\s*`).FindAllStringSubmatch(s, -1)
+			`(?:(?P<name>(?i:x))\^?(?P<deg1>[0-9]*))?\s*`).FindAllStringSubmatch(s, -1)
 
 	// Check that total match length is the full input string
 	matchLen := 0
