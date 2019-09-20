@@ -181,6 +181,58 @@ func TestMult(t *testing.T) {
 	}
 }
 
+func TestEquality(t *testing.T) {
+	field := defineField(5, t)
+	ring1 := DefRing(field)
+	ring2 := DefRing(field)
+
+	f := ring1.PolynomialFromUnsigned([]uint{1, 2, 3})
+	g := ring1.PolynomialFromUnsigned([]uint{1, 2, 2})
+	h := ring1.Zero()
+	k := ring2.Zero()
+
+	tests := [][2]*Polynomial{
+		{f, f},
+		{f, g},
+		{f, h},
+		{f, k},
+		{g, g},
+		{g, h},
+		{g, k},
+		{h, h},
+		{h, k},
+		{k, k},
+	}
+	expected := []bool{
+		true,
+		false,
+		false,
+		false,
+		true,
+		false,
+		false,
+		true,
+		false,
+		true,
+	}
+
+	for i, test := range tests {
+		e1 := test[0].Equal(test[1])
+		e2 := test[1].Equal(test[0])
+		if e1 != e2 {
+			t.Errorf(
+				"f.Equal(g) is different from g.Equal(f) for f=%v and g=%v",
+				f, g,
+			)
+		} else if e1 != expected[i] {
+			t.Errorf(
+				"(%v).Equal(%v) gives %t even though %t is expected",
+				f, g, e1, expected[i],
+			)
+		}
+	}
+}
+
 func TestNormalize(t *testing.T) {
 	field := defineField(11, t)
 	ring := DefRing(field)
