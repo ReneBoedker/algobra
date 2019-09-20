@@ -78,6 +78,66 @@ func FactorizePrimePower(q uint) (p uint, n uint, err error) {
 	return p, n, nil
 }
 
+func Factorize(n uint) (factors, exponents []uint, err error) {
+	const op = "Factorizing integer"
+	factors = make([]uint, 0)
+	exponents = make([]uint, 0)
+
+	switch n {
+	case 0:
+		return nil, nil, errors.New(
+			op, errors.InputValue,
+			"Cannot factorize 0",
+		)
+	case 1:
+		// Factorization is the empty sum
+		return
+	}
+
+	for p := uint(2); p <= 3; p++ {
+		exp := uint(0)
+		for n%p == 0 {
+			exp++
+			n /= p
+		}
+		if exp > 0 {
+			factors = append(factors, p)
+			exponents = append(exponents, p)
+
+			rFact, rExp, _ := Factorize(n)
+			factors = append(factors, rFact...)
+			exponents = append(exponents, rExp...)
+
+			return
+		}
+	}
+
+	maxFactor := CeilLog(n)
+	for k := uint(6); k-1 <= maxFactor; k += 6 {
+		for _, p := range []uint{k - 1, k + 1} {
+			exp := uint(0)
+			for n%p == 0 {
+				exp++
+				n /= p
+			}
+			if exp > 0 {
+				factors = append(factors, p)
+				exponents = append(exponents, p)
+
+				rFact, rExp, _ := Factorize(n)
+				factors = append(factors, rFact...)
+				exponents = append(exponents, rExp...)
+
+				return
+			}
+		}
+	}
+
+	// If no divisor was found so far, p is prime
+	factors = append(factors, n)
+	return
+}
+
 /* Copyright 2019 René Bødker Christensen
  *
  * Redistribution and use in source and binary forms, with or without

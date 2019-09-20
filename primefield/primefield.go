@@ -105,14 +105,29 @@ func (f *Field) MultGenerator() *Element {
 	if f.Card() == 2 {
 		return f.Element(1)
 	}
-	i := uint(2)
-	for basic.Gcd(i, f.Card()-1) != 1 {
-		i++
+
+	// The possible orders of elements divide p-1 (we can ignore errors since
+	// input is non-zero)
+	factors, _, _ := basic.Factorize(f.Card() - 1)
+
+	var e *Element
+outer:
+	for i := uint(2); true; i++ {
+		e = f.Element(i)
+		for _, p := range factors {
+			// We need to check if p is a non-trivial factor
+			if p != f.Card()-1 && e.Pow(p).One() {
+				// Not a generator
+				continue outer
+			}
+		}
+		break
 	}
-	return f.Element(i)
+	return e
 }
 
 // Elements returns a slice containing all elements of f.
+// TODO: This can be done much easier since card is prime
 func (f *Field) Elements() []*Element {
 	out := make([]*Element, f.Card(), f.Card())
 	out[0] = f.Element(0)

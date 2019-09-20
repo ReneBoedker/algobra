@@ -180,6 +180,26 @@ func TestPow(t *testing.T) {
 	}
 }
 
+func TestGenerator(t *testing.T) {
+	for _, p := range []uint{2, 3, 5, 7, 11} {
+		unique := make(map[uint]struct{})
+
+		field, err := Define(p)
+		if err != nil {
+			panic(err)
+		}
+
+		g := field.MultGenerator()
+		for i, e := uint(0), g.Copy(); i < p-1; i, e = i+1, e.Mult(g) {
+			if _, ok := unique[e.Uint()]; ok {
+				t.Errorf("Found element %v twice for p=%v (generator = %v)", e, p, g)
+			} else {
+				unique[e.Uint()] = struct{}{}
+			}
+		}
+	}
+}
+
 func TestGf2(t *testing.T) {
 	field := DefineField(2)
 	test := func(field *Field) {

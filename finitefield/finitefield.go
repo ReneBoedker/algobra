@@ -112,6 +112,18 @@ func (f *Field) Element(val interface{}) (*Element, error) {
 }
 
 // Elements returns a slice containing all elements of f.
+func (f *Field) MultGenerator() *Element {
+	switch f.kind() {
+	case primeKind:
+		return &Element{
+			pf: f.pf.MultGenerator(),
+		}
+	default:
+		panic("Error")
+	}
+}
+
+// Elements returns a slice containing all elements of f.
 func (f *Field) Elements() []*Element {
 	out := make([]*Element, f.Card(), f.Card())
 	switch f.kind() {
