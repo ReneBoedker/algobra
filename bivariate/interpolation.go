@@ -63,6 +63,7 @@ func (r *QuotientRing) lagrangeBasis(points [][2]*finitefield.Element, index int
 		{0, 0}: 1,
 	})
 
+	denominator := r.baseField.ElementFromUnsigned(1)
 	for i := 0; i < 2; i++ {
 		ld := [2]uint{0, 0}
 		ld[i] = 1
@@ -74,9 +75,12 @@ func (r *QuotientRing) lagrangeBasis(points [][2]*finitefield.Element, index int
 			f = f.Mult(r.Polynomial(map[[2]uint]*finitefield.Element{
 				ld:     r.baseField.One(),
 				{0, 0}: p[i].Neg(),
-			})).Scale(points[index][i].Minus(p[i]).Inv())
+			}))
+			denominator = denominator.Mult(points[index][i].Minus(p[i]))
 		}
 	}
+
+	f = f.Scale(denominator.Inv())
 
 	return f
 }
