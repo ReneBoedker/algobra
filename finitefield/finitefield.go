@@ -183,6 +183,15 @@ func (f *Field) Char() uint {
 	}
 }
 
+func (f *Field) ComputeTables(add, mult bool) (err error) {
+	switch f.kind() {
+	case primeKind:
+		return f.pf.ComputeTables(add, mult)
+	default:
+		panic("Error")
+	}
+}
+
 // Copy return a new element with the same field and value as a.
 func (a *Element) Copy() *Element {
 	switch a.kind() {
@@ -204,25 +213,33 @@ func (a *Element) Copy() *Element {
 // When a or b has a non-nil error status, its error is wrapped and the same
 // element is returned.
 func (a *Element) Plus(b *Element) *Element {
+	return a.Copy().Add(b)
+}
+
+// Add set a to the sum of elements a and b and returns a
+//
+// If a and b are defined over different fields, a new element is returned with
+// an ArithmeticIncompat-error as error status.
+//
+// When a or b has a non-nil error status, its error is wrapped and the same
+// element is returned.
+func (a *Element) Add(b *Element) *Element {
 	const op = "Adding elements"
 
 	if a.kind() != b.kind() {
-		return &Element{
-			err: errors.New(
-				op, errors.ArithmeticIncompat,
-				"Cannot add elements from different fields",
-			),
-		}
+		a.err = errors.New(
+			op, errors.ArithmeticIncompat,
+			"Cannot add elements from different fields",
+		)
 	}
 
 	switch a.kind() {
 	case primeKind:
-		return &Element{
-			pf: a.pf.Plus(b.pf),
-		}
+		a.pf.Add(b.pf)
 	default:
 		panic("Error")
 	}
+	return a
 }
 
 // Minus returns the sum of elements a and b
@@ -233,6 +250,17 @@ func (a *Element) Plus(b *Element) *Element {
 // When a or b has a non-nil error status, its error is wrapped and the same
 // element is returned.
 func (a *Element) Minus(b *Element) *Element {
+	return a.Copy().Sub(b)
+}
+
+// Sub sets a to the sum of elements a and b and returns a
+//
+// If a and b are defined over different fields, a new element is returned with
+// an ArithmeticIncompat-error as error status.
+//
+// When a or b has a non-nil error status, its error is wrapped and the same
+// element is returned.
+func (a *Element) Sub(b *Element) *Element {
 	const op = "Subtracting elements"
 
 	if a.kind() != b.kind() {
@@ -246,15 +274,25 @@ func (a *Element) Minus(b *Element) *Element {
 
 	switch a.kind() {
 	case primeKind:
-		return &Element{
-			pf: a.pf.Minus(b.pf),
-		}
+		a.pf.Sub(b.pf)
 	default:
 		panic("Error")
 	}
+	return a
 }
 
-// Mult returns the sum of elements a and b
+// Times returns the sum of elements a and b
+//
+// If a and b are defined over different fields, a new element is returned with
+// an ArithmeticIncompat-error as error status.
+//
+// When a or b has a non-nil error status, its error is wrapped and the same
+// element is returned.
+func (a *Element) Times(b *Element) *Element {
+	return a.Copy().Mult(b)
+}
+
+// Mult set a to the sum of elements a and b and returns a.
 //
 // If a and b are defined over different fields, a new element is returned with
 // an ArithmeticIncompat-error as error status.
@@ -275,9 +313,26 @@ func (a *Element) Mult(b *Element) *Element {
 
 	switch a.kind() {
 	case primeKind:
-		return &Element{
-			pf: a.pf.Mult(b.pf),
-		}
+		a.pf.Mult(b.pf)
+	default:
+		panic("Error")
+	}
+	return a
+}
+
+func (a *Element) Prod(b, c *Element) {
+	const op = "Multiplying elements"
+
+	if a.kind() != b.kind() && a.kind() != c.kind() {
+		a.err = errors.New(
+			op, errors.ArithmeticIncompat,
+			"Cannot multiply elements from different fields",
+		)
+	}
+
+	switch a.kind() {
+	case primeKind:
+		a.pf.Prod(b.pf, c.pf)
 	default:
 		panic("Error")
 	}

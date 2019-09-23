@@ -167,7 +167,7 @@ outer:
 				tmp := f.baseRing.Zero()
 				tmp.SetCoef(
 					p.Ld()-g.Ld(),
-					p.Lc().Mult(g.Lc().Inv()),
+					p.Lc().Times(g.Lc().Inv()),
 				)
 				q[i] = q[i].Plus(tmp)
 				p = p.Minus(tmp.multNoReduce(g))

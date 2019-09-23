@@ -78,7 +78,7 @@ func (f *Polynomial) Copy() *Polynomial {
 func (f *Polynomial) Eval(point *finitefield.Element) *finitefield.Element {
 	out := f.BaseField().Zero()
 	for deg, c := range f.coefs {
-		out = out.Plus(c.Mult(point.Pow(uint(deg))))
+		out = out.Plus(c.Times(point.Pow(uint(deg))))
 	}
 	return out
 }
@@ -170,7 +170,7 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 				)
 				return h
 			}
-			h.SetCoef(degSum, h.Coef(degSum).Plus(cf.Mult(cg)))
+			h.SetCoef(degSum, h.Coef(degSum).Plus(cf.Times(cg)))
 		}
 	}
 	return h
@@ -208,7 +208,7 @@ func (f *Polynomial) Normalize() *Polynomial {
 func (f *Polynomial) Scale(c *finitefield.Element) *Polynomial {
 	g := f.Copy()
 	for deg := range g.coefs {
-		g.SetCoef(deg, g.Coef(deg).Mult(c))
+		g.SetCoef(deg, g.Coef(deg).Times(c))
 	}
 	return g
 }

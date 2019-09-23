@@ -108,8 +108,8 @@ func TestArithmeticErrors(t *testing.T) {
 	if e := a.Plus(b); e.Err() == nil {
 		t.Errorf("Adding elements from different fields did not set error status")
 	}
-	if e := a.Mult(b); e.Err() == nil {
-		t.Errorf("Multiplying elements from different fields did not set error status")
+	if e := a.Times(b); e.Err() == nil {
+		t.Errorf("Timesiplying elements from different fields did not set error status")
 	}
 	if e := a.Minus(b); e.Err() == nil {
 		t.Errorf("Subtracting elements from different fields did not set error status")
@@ -117,13 +117,13 @@ func TestArithmeticErrors(t *testing.T) {
 
 	// Error is passed on to last result
 	if e := b.Plus(b.Minus(a.Inv())); e.Err() == nil {
-		t.Errorf("Last result did not have error status")
+		t.Errorf("Last result in b+b-a^(-1) did not have error status")
 	} else if !errors.Is(errors.InputValue, e.Err()) {
 		// Inverting gives InputValue-error. This should be the last kind as well
 		t.Errorf("Last result did not retain the original error status")
 	}
-	if e := b.Minus(b).Inv().Mult(b); e.Err() == nil {
-		t.Errorf("Last result did not have error status")
+	if e := b.Minus(b).Inv().Times(b); e.Err() == nil {
+		t.Errorf("Last result in b-b^(-1)*b did not have error status")
 	} else if !errors.Is(errors.InputValue, e.Err()) {
 		// Inverting gives InputValue-error. This should be the last kind as well
 		t.Errorf("Last result did not retain the original error status")
@@ -190,7 +190,7 @@ func TestGenerator(t *testing.T) {
 		}
 
 		g := field.MultGenerator()
-		for i, e := uint(0), g.Copy(); i < p-1; i, e = i+1, e.Mult(g) {
+		for i, e := uint(0), g.Copy(); i < p-1; i, e = i+1, e.Times(g) {
 			if _, ok := unique[e.Uint()]; ok {
 				t.Errorf("Found element %v twice for p=%v (generator = %v)", e, p, g)
 			} else {
@@ -222,7 +222,7 @@ func TestGf2(t *testing.T) {
 					t.Errorf("GF(7) failed: %d-%d=%d (Expected %d)",
 						elems[i].val, elems[j].val, t1, t2)
 				}
-				if t1, t2 := elems[i].Mult(elems[j]), prodTable[i][j]; !t1.Equal(t2) {
+				if t1, t2 := elems[i].Times(elems[j]), prodTable[i][j]; !t1.Equal(t2) {
 					t.Errorf("GF(2) failed: %v*%v=%v (Expected %v)",
 						elems[i], elems[j], t1, t2)
 				}
@@ -268,7 +268,7 @@ func TestGf3(t *testing.T) {
 					t.Errorf("GF(7) failed: %d-%d=%d (Expected %d)",
 						elems[i].val, elems[j].val, t1, t2)
 				}
-				if t1, t2 := elems[i].Mult(elems[j]).val, prodTable[i][j].val; t1 != t2 {
+				if t1, t2 := elems[i].Times(elems[j]).val, prodTable[i][j].val; t1 != t2 {
 					t.Errorf("GF(3) failed: %d*%d=%d (Expected %d)",
 						elems[i].val, elems[j].val, t1, t2)
 				}
@@ -332,7 +332,7 @@ func TestGf7(t *testing.T) {
 					t.Errorf("GF(7) failed: %d-%d=%d (Expected %d)",
 						elems[i].val, elems[j].val, t1, t2)
 				}
-				if t1, t2 := elems[i].Mult(elems[j]).val, prodTable[i][j].val; t1 != t2 {
+				if t1, t2 := elems[i].Times(elems[j]).val, prodTable[i][j].val; t1 != t2 {
 					t.Errorf("GF(7) failed: %d*%d=%d (Expected %d)",
 						elems[i].val, elems[j].val, t1, t2)
 				}

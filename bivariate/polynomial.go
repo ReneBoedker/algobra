@@ -61,7 +61,8 @@ func (f *Polynomial) Coef(deg [2]uint) *finitefield.Element {
 	return f.BaseField().Zero()
 }
 
-// SetCoef sets the coefficient of the monomial with degree deg in f to val.
+// SetCoef sets the coefficient of the monomial with degree deg in f to val by
+// copying. See also SetCoefPtr.
 func (f *Polynomial) SetCoef(deg [2]uint, val *finitefield.Element) {
 	if val.Zero() {
 		delete(f.coefs, deg)
@@ -70,21 +71,69 @@ func (f *Polynomial) SetCoef(deg [2]uint, val *finitefield.Element) {
 	}
 }
 
+// SetCoefPtr sets the coefficient of the monomial with degree deg in f to ptr
+// as a pointer. To set coefficient as a value, use SetCoef instead.
+func (f *Polynomial) SetCoefPtr(deg [2]uint, ptr *finitefield.Element) {
+	if ptr.Zero() {
+		delete(f.coefs, deg)
+	} else {
+		f.coefs[deg] = ptr
+	}
+}
+
+// IncrementCoef sets the coefficient of the monomial with degree deg in f to val.
+func (f *Polynomial) IncrementCoef(deg [2]uint, val *finitefield.Element) {
+	if val.Zero() {
+		return
+	}
+	if c, ok := f.coefs[deg]; ok {
+		c.Add(val)
+		if c.Zero() {
+			delete(f.coefs, deg)
+		}
+	} else {
+		f.coefs[deg] = val.Copy()
+	}
+}
+
+// SetCoef sets the coefficient of the monomial with degree deg in f to ptr.
+// func (f *Polynomial) IncrementCoefPtr(deg [2]uint, val *finitefield.Element) {
+// 	if val.Zero() {
+// 		return
+// 	}
+// 	if c, ok := f.coefs[deg]; ok {
+// 		c.Add(val)
+// 		if c.Zero() {
+// 			delete(f.coefs, deg)
+// 		}
+// 	} else {
+// 		f.coefs[deg] = val
+// 	}
+// }
+
 // Copy returns a new polynomial object over the same ring and with the same
 // coefficients as f.
 func (f *Polynomial) Copy() *Polynomial {
-	h := f.baseRing.Zero()
+	h := f.baseRing.zeroWithCap(len(f.coefs))
 	for deg, c := range f.coefs {
 		h.coefs[deg] = c.Copy()
 	}
 	return h
 }
 
+func (f *Polynomial) clean() {
+	for d, c := range f.coefs {
+		if c.Zero() {
+			delete(f.coefs, d)
+		}
+	}
+}
+
 // Eval evaluates f at the given point.
 func (f *Polynomial) Eval(point [2]*finitefield.Element) *finitefield.Element {
 	out := f.BaseField().Zero()
 	for deg, coef := range f.coefs {
-		out = out.Plus(coef.Mult(point[0].Pow(deg[0])).Mult(point[1].Pow(deg[1])))
+		out = out.Plus(coef.Times(point[0].Pow(deg[0])).Times(point[1].Pow(deg[1])))
 	}
 	return out
 }
@@ -109,15 +158,39 @@ func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
 
 	h := f.Copy()
 	for deg, c := range g.coefs {
-		h.SetCoef(deg, h.Coef(deg).Plus(c))
+		h.IncrementCoef(deg, c)
 	}
 	return h
+}
+
+// Add sets f to the sum of the two polynomials f and g and returns f.
+//
+// If f and g are defined over different rings, a new polynomial is returned
+// with an ArithmeticIncompat-error as error status.
+//
+// When f or g has a non-nil error status, its error is wrapped and the same
+// polynomial is returned.
+func (f *Polynomial) Add(g *Polynomial) *Polynomial {
+	const op = "Adding polynomials"
+
+	if tmp := hasErr(op, f, g); tmp != nil {
+		return tmp
+	}
+
+	if tmp := checkCompatible(op, f, g); tmp != nil {
+		return tmp
+	}
+
+	for deg, c := range g.coefs {
+		f.IncrementCoef(deg, c)
+	}
+	return f
 }
 
 // Neg returns the polynomial obtained by scaling f by -1 (modulo the
 // characteristic).
 func (f *Polynomial) Neg() *Polynomial {
-	g := f.baseRing.Zero()
+	g := f.baseRing.zeroWithCap(len(f.coefs))
 	for deg, c := range f.coefs {
 		g.coefs[deg] = c.Neg()
 	}
@@ -175,25 +248,40 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 		return tmp
 	}
 
-	h := f.baseRing.Zero()
+	h := f.baseRing.zeroWithCap(len(f.coefs) * len(g.coefs))
+	tmp := f.BaseField().One()
 	for degf, cf := range f.coefs {
 		for degg, cg := range g.coefs {
-			tmp := cf.Mult(cg)
-			if tmp.Nonzero() {
-				degSum, err := addDegs(degf, degg)
-				if err != nil {
-					h = f.baseRing.Zero()
-					h.err = errors.Wrap(op, errors.Inherit, err)
-					return h
-				}
-				h.SetCoef(degSum, h.Coef(degSum).Plus(tmp))
+			degSum, err := addDegs(degf, degg)
+			if err != nil {
+				h = f.baseRing.Zero()
+				h.err = errors.Wrap(op, errors.Inherit, err)
+				return h
 			}
+			tmp.Prod(cf, cg)
+			h.IncrementCoef(degSum, tmp)
 		}
 	}
 	return h
 }
 
-// Mult returns the product of the polynomials f and g
+// Times returns the product of the polynomials f and g
+//
+// If f and g are defined over different rings, a new polynomial is returned
+// with an ArithmeticIncompat-error as error status.
+//
+// When f or g has a non-nil error status, its error is wrapped and the same
+// polynomial is returned.
+func (f *Polynomial) Times(g *Polynomial) *Polynomial {
+	h := f.multNoReduce(g)
+	if h.Err() != nil {
+		return h
+	}
+	h.reduce()
+	return h
+}
+
+// Mult sets f to the product of the polynomials f and g and returns f.
 //
 // If f and g are defined over different rings, a new polynomial is returned
 // with an ArithmeticIncompat-error as error status.
@@ -201,12 +289,12 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 // When f or g has a non-nil error status, its error is wrapped and the same
 // polynomial is returned.
 func (f *Polynomial) Mult(g *Polynomial) *Polynomial {
-	h := f.multNoReduce(g)
-	if h.Err() != nil {
-		return h
+	*f = *f.multNoReduce(g)
+	if f.Err() != nil {
+		return f
 	}
-	h.reduce()
-	return h
+	f.reduce()
+	return f
 }
 
 // Normalize creates a new polynomial obtained by normalizing f. That is,
@@ -225,9 +313,18 @@ func (f *Polynomial) Normalize() *Polynomial {
 func (f *Polynomial) Scale(c *finitefield.Element) *Polynomial {
 	g := f.Copy()
 	for d := range g.coefs {
-		g.coefs[d] = g.coefs[d].Mult(c)
+		g.coefs[d] = g.coefs[d].Times(c)
 	}
 	return g
+}
+
+// ScaleInPlace scales all coefficients of f by the field element c and returns
+// f.
+func (f *Polynomial) ScaleInPlace(c *finitefield.Element) *Polynomial {
+	for d := range f.coefs {
+		f.coefs[d].Mult(c)
+	}
+	return f
 }
 
 // Pow raises f to the power of n.
@@ -244,7 +341,7 @@ func (f *Polynomial) Pow(n uint) *Polynomial {
 
 	for n > 0 {
 		if n%2 == 1 {
-			out = out.Mult(g)
+			out.Mult(g)
 			if out.Err() != nil {
 				out = f.baseRing.Zero()
 				out.err = errors.Wrap(op, errors.Inherit, out.Err())
@@ -252,7 +349,7 @@ func (f *Polynomial) Pow(n uint) *Polynomial {
 			}
 		}
 		n /= 2
-		g = g.Mult(g)
+		g.Mult(g)
 	}
 	return out
 }

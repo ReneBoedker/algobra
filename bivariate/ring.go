@@ -54,9 +54,18 @@ func (r *QuotientRing) Zero() *Polynomial {
 	}
 }
 
+// zeroWithCap returns a zero polynomial over the specified ring where the
+// underlying map has given capacity.
+func (r *QuotientRing) zeroWithCap(cap int) *Polynomial {
+	return &Polynomial{
+		baseRing: r,
+		coefs:    map[[2]uint]*finitefield.Element{},
+	}
+}
+
 // Polynomial defines a new polynomial with the given coefficients
 func (r *QuotientRing) Polynomial(coefs map[[2]uint]*finitefield.Element) *Polynomial {
-	m := make(map[[2]uint]*finitefield.Element)
+	m := make(map[[2]uint]*finitefield.Element, len(coefs))
 	for d, e := range coefs {
 		if e.Nonzero() {
 			m[d] = e
@@ -69,7 +78,7 @@ func (r *QuotientRing) Polynomial(coefs map[[2]uint]*finitefield.Element) *Polyn
 
 // PolynomialFromUnsigned defines a new polynomial with the given coefficients
 func (r *QuotientRing) PolynomialFromUnsigned(coefs map[[2]uint]uint) *Polynomial {
-	m := make(map[[2]uint]*finitefield.Element)
+	m := make(map[[2]uint]*finitefield.Element, len(coefs))
 	for d, c := range coefs {
 		e := r.baseField.ElementFromUnsigned(c)
 		if e.Nonzero() {
@@ -83,7 +92,7 @@ func (r *QuotientRing) PolynomialFromUnsigned(coefs map[[2]uint]uint) *Polynomia
 
 // PolynomialFromSigned defines a new polynomial with the given coefficients
 func (r *QuotientRing) PolynomialFromSigned(coefs map[[2]uint]int) *Polynomial {
-	m := make(map[[2]uint]*finitefield.Element)
+	m := make(map[[2]uint]*finitefield.Element, len(coefs))
 	for d, c := range coefs {
 		e := r.baseField.ElementFromSigned(c)
 		if e.Nonzero() {

@@ -31,9 +31,9 @@ func (r *QuotientRing) Interpolate(
 		)
 	}
 
-	f := r.Zero()
+	f := r.zeroWithCap(2 * len(points))
 	for i := range points {
-		f = f.Plus(r.lagrangeBasis(points, i).Scale(values[i]))
+		f.Add(r.lagrangeBasis(points, i).ScaleInPlace(values[i]))
 	}
 	if f.Err() != nil {
 		panic(f.Err())
@@ -44,7 +44,7 @@ func (r *QuotientRing) Interpolate(
 
 // allDistinct checks if given points are all distinct
 func allDistinct(points [][2]*finitefield.Element) bool {
-	unique := make(map[[2]string]struct{})
+	unique := make(map[[2]string]struct{}, len(points))
 	for _, p := range points {
 		asStrings := [2]string{p[0].String(), p[1].String()}
 		if _, ok := unique[asStrings]; ok {
@@ -59,28 +59,26 @@ func allDistinct(points [][2]*finitefield.Element) bool {
 // a polynomial that evaluates to 1 in point at index and to 0 in any other
 // point of points.
 func (r *QuotientRing) lagrangeBasis(points [][2]*finitefield.Element, index int) *Polynomial {
-	f := r.PolynomialFromUnsigned(map[[2]uint]uint{
-		{0, 0}: 1,
-	})
+	f := r.zeroWithCap(2 * len(points))
+	f.SetCoefPtr([2]uint{0, 0}, r.baseField.One())
 
 	denominator := r.baseField.ElementFromUnsigned(1)
 	for i := 0; i < 2; i++ {
 		ld := [2]uint{0, 0}
 		ld[i] = 1
+		tmp := r.Zero()
+		tmp.SetCoefPtr(ld, r.baseField.One())
 		for _, p := range points {
 			if p[i].Equal(points[index][i]) {
 				continue
 			}
-
-			f = f.Mult(r.Polynomial(map[[2]uint]*finitefield.Element{
-				ld:     r.baseField.One(),
-				{0, 0}: p[i].Neg(),
-			}))
-			denominator = denominator.Mult(points[index][i].Minus(p[i]))
+			tmp.SetCoefPtr([2]uint{0, 0}, p[i].Neg())
+			f.Mult(tmp)
+			denominator.Mult(points[index][i].Minus(p[i]))
 		}
 	}
 
-	f = f.Scale(denominator.Inv())
+	f.ScaleInPlace(denominator.Inv())
 
 	return f
 }

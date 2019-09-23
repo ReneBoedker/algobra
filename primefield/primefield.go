@@ -168,7 +168,11 @@ func (f *Field) ElementFromSigned(val int) *Element {
 
 // Copy returns a copy of a
 func (a *Element) Copy() *Element {
-	return a.field.Element(a.val)
+	return &Element{
+		field: a.field,
+		val:   a.val,
+		err:   a.err,
+	}
 }
 
 // Err returns the error status of a.
@@ -197,21 +201,36 @@ func (a *Element) Equal(b *Element) bool {
 // When a or b has a non-nil error status, its error is wrapped and the same
 // element is returned.
 func (a *Element) Plus(b *Element) *Element {
+	return a.Copy().Add(b)
+}
+
+// Add sets a to the sum of a and b and returns a
+//
+// If a and b are defined over different fields, a new element is returned with
+// an ArithmeticIncompat-error as error status.
+//
+// When a or b has a non-nil error status, its error is wrapped and the same
+// element is returned.
+func (a *Element) Add(b *Element) *Element {
 	const op = "Adding elements"
 
 	if tmp := hasErr(op, a, b); tmp != nil {
-		return tmp
+		a = tmp
+		return a
 	}
 
 	if tmp := checkCompatible(op, a, b); tmp != nil {
-		return tmp
+		a = tmp
+		return a
 	}
 
 	if a.field.addTable != nil {
-		return a.field.Element(a.field.addTable.lookup(a.val, b.val))
+		a.val = a.field.addTable.lookup(a.val, b.val)
+	} else {
+		a.val = (a.val + b.val) % a.field.Char()
 	}
 
-	return a.field.Element(a.val + b.val)
+	return a
 }
 
 // Neg returns -a (modulo the characteristic)
@@ -219,7 +238,7 @@ func (a *Element) Neg() *Element {
 	return a.field.Element(a.field.char - a.val)
 }
 
-// Minus returns the sum of elements a and b
+// Minus returns the difference of elements a and b
 //
 // If a and b are defined over different fields, a new element is returned with
 // an ArithmeticIncompat-error as error status.
@@ -227,20 +246,47 @@ func (a *Element) Neg() *Element {
 // When a or b has a non-nil error status, its error is wrapped and the same
 // element is returned.
 func (a *Element) Minus(b *Element) *Element {
+	return a.Copy().Sub(b)
+}
+
+// Sub sets a to the difference of elements a and b and returns a.
+//
+// If a and b are defined over different fields, a new element is returned with
+// an ArithmeticIncompat-error as error status.
+//
+// When a or b has a non-nil error status, its error is wrapped and the same
+// element is returned.
+func (a *Element) Sub(b *Element) *Element {
 	const op = "Subtracting elements"
 
 	if tmp := hasErr(op, a, b); tmp != nil {
-		return tmp
+		a = tmp
+		return a
 	}
 
 	if tmp := checkCompatible(op, a, b); tmp != nil {
-		return tmp
+		a = tmp
+		return a
 	}
 
-	return a.Plus(b.Neg())
+	a.val = (a.field.Char() - a.val) % a.field.Char()
+	a.Add(b)
+	a.val = (a.field.Char() - a.val) % a.field.Char()
+	return a
 }
 
-// Mult returns the sum of elements a and b
+// Times returns the product of elements a and b
+//
+// If a and b are defined over different fields, a new element is returned with
+// an ArithmeticIncompat-error as error status.
+//
+// When a or b has a non-nil error status, its error is wrapped and the same
+// element is returned.
+func (a *Element) Times(b *Element) *Element {
+	return a.Copy().Mult(b)
+}
+
+// Mult sets a to the product of elements a and b and returns a.
 //
 // If a and b are defined over different fields, a new element is returned with
 // an ArithmeticIncompat-error as error status.
@@ -251,18 +297,43 @@ func (a *Element) Mult(b *Element) *Element {
 	const op = "Multiplying elements"
 
 	if tmp := hasErr(op, a, b); tmp != nil {
-		return tmp
+		a = tmp
+		return a
 	}
 
 	if tmp := checkCompatible(op, a, b); tmp != nil {
-		return tmp
+		a = tmp
+		return a
 	}
 
 	if a.field.multTable != nil {
-		return a.field.Element(a.field.multTable.lookup(a.val, b.val))
+		a.val = a.field.multTable.lookup(a.val, b.val)
+	} else {
+		a.val = (a.val * b.val) % a.field.Char()
 	}
 
-	return a.field.Element(a.val * b.val)
+	return a
+}
+
+func (a *Element) Prod(b, c *Element) {
+	const op = "Multiplying elements"
+
+	if tmp := hasErr(op, b, c); tmp != nil {
+		a = tmp
+	}
+
+	if tmp := checkCompatible(op, b, c); tmp != nil {
+		a = tmp
+	}
+
+	// Set the correct field of a
+	a.field = b.field
+
+	if a.field.multTable != nil {
+		a.val = a.field.multTable.lookup(b.val, c.val)
+	} else {
+		a.val = (b.val * c.val) % a.field.Char()
+	}
 }
 
 // Pow returns a raised to the power of n
@@ -283,10 +354,10 @@ func (a *Element) Pow(n uint) *Element {
 	b := a.Copy()
 	for n > 0 {
 		if n%2 == 1 {
-			out = out.Mult(b)
+			out.Mult(b)
 		}
 		n /= 2
-		b = b.Mult(b)
+		b.Mult(b)
 	}
 	return out
 }
