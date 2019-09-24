@@ -326,6 +326,10 @@ func (a *Element) Mult(b *Element) *Element {
 	return a
 }
 
+// Prod sets a to the product of b and c, and returns a.
+//
+// The function returns an ArithmeticIncompat-error if b, and c are not defined
+// over the same field.
 func (a *Element) Prod(b, c *Element) {
 	const op = "Multiplying elements"
 

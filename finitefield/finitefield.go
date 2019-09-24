@@ -111,7 +111,7 @@ func (f *Field) Element(val interface{}) (*Element, error) {
 	}
 }
 
-// Elements returns a slice containing all elements of f.
+// MultGenerator returns a multiplicative generator of f.
 func (f *Field) MultGenerator() *Element {
 	switch f.kind() {
 	case primeKind:
@@ -183,6 +183,11 @@ func (f *Field) Char() uint {
 	}
 }
 
+// ComputeTables will precompute either the addition or multiplication tables
+// (or both) for the field f.
+//
+// Returns an InputTooLarge-error if the estimated memory usage exceeds the
+// maximal value.
 func (f *Field) ComputeTables(add, mult bool) (err error) {
 	switch f.kind() {
 	case primeKind:
@@ -331,7 +336,11 @@ func (a *Element) Mult(b *Element) *Element {
 	return a
 }
 
-func (a *Element) Prod(b, c *Element) {
+// Prod sets a to the product of b and c, and returns a.
+//
+// The function returns an ArithmeticIncompat-error if a, b, and c are not
+// defined over the same field.
+func (a *Element) Prod(b, c *Element) *Element {
 	const op = "Multiplying elements"
 
 	if a.kind() != b.kind() && a.kind() != c.kind() {
@@ -347,6 +356,7 @@ func (a *Element) Prod(b, c *Element) {
 	default:
 		panic("Error")
 	}
+	return a
 }
 
 // Equal tests equality of elements a and b.

@@ -78,6 +78,7 @@ func FactorizePrimePower(q uint) (p uint, n uint, err error) {
 	return p, n, nil
 }
 
+// Factorize computes the prime factorization of n.
 func Factorize(n uint) (factors, exponents []uint, err error) {
 	const op = "Factorizing integer"
 	factors = make([]uint, 0)
