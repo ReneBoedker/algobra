@@ -205,6 +205,17 @@ func (a *Element) Copy() *Element {
 	}
 }
 
+// SetUnsigned sets the value of a to the element corresponding to val.
+func (a *Element) SetUnsigned(val uint) {
+	switch a.kind() {
+	case primeKind:
+		a.pf.SetUnsigned(val)
+		a.err = nil
+	default:
+		panic("Error")
+	}
+}
+
 // Plus returns the sum of elements a and b
 //
 // If a and b are defined over different fields, a new element is returned with
@@ -377,6 +388,17 @@ func (a *Element) Neg() *Element {
 	default:
 		panic("Error")
 	}
+}
+
+// NegInPlace sets a to -a (modulo the characteristic) and returns a
+func (a *Element) NegInPlace() *Element {
+	switch a.kind() {
+	case primeKind:
+		a.pf.NegInPlace()
+	default:
+		panic("Error")
+	}
+	return a
 }
 
 // Pow returns a raised to the power of n

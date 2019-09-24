@@ -29,25 +29,30 @@ func TestLagrangeBasis(t *testing.T) {
 			}
 		}
 
-		for j := range points {
-			// f evaluates to 1 in points[j] and 0 in other components of 0
-			f := ring.lagrangeBasis(points, j)
+		dist := distinct(points)
+
+		for i := range points {
+			f := ring.PolynomialFromUnsigned(map[[2]uint]uint{{0, 0}: 1})
+			for j := 0; j < 2; j++ {
+				f.Mult(ring.lagrangeBasis(dist, points[i][j], j))
+			}
+			// f now evaluates to 1 in points[j] and 0 in other points
 
 			if f.Zero() {
 				t.Errorf("Lagrange basis is zero with points %v and index %d",
-					points, j)
+					points, i)
 			} else if ld := f.Ld(); ld[0]+ld[1] > 2*(nPoints-1) {
 				t.Errorf("Lagrange basis has too large total degree (%d) with point %v",
-					ld[0]+ld[1], points[j],
+					ld[0]+ld[1], points[i],
 				)
 			}
 
 			for k, p := range points {
 				ev := f.Eval(p)
 				switch {
-				case j == k && !ev.One():
+				case i == k && !ev.One():
 					t.Errorf("f(%v)=%v instead of 1 with f = %v", p, ev, f)
-				case j != k && ev.Nonzero():
+				case i != k && ev.Nonzero():
 					t.Errorf("f(%v)=%v instead of 0 with f = %v", p, ev, f)
 				}
 			}
@@ -132,3 +137,9 @@ func TestInterpolationErrors(t *testing.T) {
 			" points, but it was of unexpected kind (err = %v)", err)
 	}
 }
+
+// func TestIter(t *testing.T) {
+// 	for ci := newCombinIter(5, 3); ci.Active(); ci.Next() {
+// 		fmt.Println(ci.slice)
+// 	}
+// }

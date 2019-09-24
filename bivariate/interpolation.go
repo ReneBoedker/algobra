@@ -3,7 +3,6 @@ package bivariate
 import (
 	"algobra/errors"
 	"algobra/finitefield"
-	"fmt"
 )
 
 // Interpolate computes an interpolation polynomial evaluating to values in the
@@ -31,22 +30,15 @@ func (r *QuotientRing) Interpolate(
 			"Interpolation points must me distinct",
 		)
 	}
-	distinct := distinct(points)
+	dist := distinct(points)
 
 	f := r.zeroWithCap(2 * len(points))
 	for i, p := range points {
 		tmp := r.zeroWithCap(2 * len(points))
 		tmp.SetCoefPtr([2]uint{0, 0}, r.baseField.One())
 		for j := 0; j < 2; j++ {
-			tmp.Mult(r.lagrangeBasis2(distinct, p[j], j))
-			if tmp.Zero() {
-				panic(fmt.Sprintf("Distinct: %v\np[j]: %v\nj: %v", distinct, p[j], j))
-			}
+			tmp.Mult(r.lagrangeBasis(dist, p[j], j))
 		}
-		// fmt.Printf("\n\nIndex %v,\tf = %v\n", i, tmp)
-		// for _, j := range points {
-		// 	fmt.Printf("f(%v) = %v\n", j, tmp.Eval(j))
-		// }
 		f.Add(tmp.ScaleInPlace(values[i]))
 
 	}
@@ -89,11 +81,15 @@ func distinct(points [][2]*finitefield.Element) (out [2][]*finitefield.Element) 
 	return out
 }
 
-func (r *QuotientRing) lagrangeBasis2(
+// lagrangeBasis computes a "lagrange-type" basis element in one-variable. That
+// is, it computes a polynomial that evaluates to 1 in ignore and to 0 in all
+// elements other of points corresponding to given variable.
+func (r *QuotientRing) lagrangeBasis(
 	points [2][]*finitefield.Element,
 	ignore *finitefield.Element,
 	variable int,
 ) *Polynomial {
+	// deg gives the monomial with given univariate degree
 	var deg func(int, int) [2]uint
 	if variable == 0 {
 		deg = func(variable, i int) [2]uint {
@@ -104,17 +100,26 @@ func (r *QuotientRing) lagrangeBasis2(
 			return [2]uint{0, uint(i)}
 		}
 	}
+
 	f := r.zeroWithCap(len(points))
 	denom := r.baseField.One()
+
+	// Find the index of ignore-element
 	ignoreIndex := 0
 	for i, p := range points[variable] {
 		if p.Equal(ignore) {
 			ignoreIndex = i
 		}
 	}
+
+	// Compute the coefficients directly
 	for k := 0; k < len(points[variable]); k++ {
-		f.SetCoefPtr(deg(variable, k), r.CoefK(points[variable], ignoreIndex, len(points[variable])-1-k))
+		f.SetCoefPtr(
+			deg(variable, k),
+			r.coefK(points[variable], ignoreIndex, len(points[variable])-1-k),
+		)
 	}
+
 	// Compute the denominator
 	for i, p := range points[variable] {
 		if i == ignoreIndex {
@@ -123,43 +128,15 @@ func (r *QuotientRing) lagrangeBasis2(
 		denom.Mult(ignore.Minus(p))
 	}
 
-	if denom.Zero() {
-		panic(fmt.Sprint(points))
-	}
-
 	f.ScaleInPlace(denom.Inv())
 	return f
 }
 
-// lagrangeBasis computes a "lagrange-type" basis element. That is, it computes
-// a polynomial that evaluates to 1 in point at index and to 0 in any other
-// point of points.
-func (r *QuotientRing) lagrangeBasis(points [][2]*finitefield.Element, index int) *Polynomial {
-	f := r.zeroWithCap(2 * len(points))
-	f.SetCoefPtr([2]uint{0, 0}, r.baseField.One())
-
-	denominator := r.baseField.ElementFromUnsigned(1)
-	for i := 0; i < 2; i++ {
-		ld := [2]uint{0, 0}
-		ld[i] = 1
-		tmp := r.Zero()
-		tmp.SetCoefPtr(ld, r.baseField.One())
-		for _, p := range points {
-			if p[i].Equal(points[index][i]) {
-				continue
-			}
-			tmp.SetCoefPtr([2]uint{0, 0}, p[i].Neg())
-			f.Mult(tmp)
-			denominator.Mult(points[index][i].Minus(p[i]))
-		}
-	}
-
-	f.ScaleInPlace(denominator.Inv())
-
-	return f
-}
-
-// combinIter is an iterator for combinations
+// combinIter is an iterator for combinations.
+//
+// It will iterate over all possible ways to choose a given number of elements
+// from n elements. For instance, it will generate the sequence [0,1,2],
+// [0,1,3],..., [3,4,5] if defined with n=5 and k=3.
 type combinIter struct {
 	n     int
 	slice []int
@@ -199,12 +176,16 @@ func (ci *combinIter) next() {
 	ci.atEnd = true
 }
 
-func (r *QuotientRing) CoefK(points []*finitefield.Element, ignore, k int) *finitefield.Element {
+// coefK computes the coefficient of X^k or Y^k in the numerator of a Lagrange
+// basis polynomial. Such polynomials have the form (X-p_1)(X-p_2)...(X-p_n),
+// where we skip the p_i corresponding to ignore.
+func (r *QuotientRing) coefK(points []*finitefield.Element, ignore, k int) *finitefield.Element {
 	out := r.baseField.Zero()
+	tmp := r.baseField.Zero()
 
 outer:
 	for ci := newCombinIter(len(points)-1, k); ci.active(); ci.next() {
-		tmp := r.baseField.One()
+		tmp.SetUnsigned(1)
 
 		for _, i := range ci.current() {
 			if i == ignore {
@@ -216,7 +197,8 @@ outer:
 		out.Add(tmp)
 	}
 	if k%2 != 0 {
-		return out.Neg()
+		// (-1)^k == -1
+		out.NegInPlace()
 	}
 	return out
 }

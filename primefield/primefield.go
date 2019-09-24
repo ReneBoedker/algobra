@@ -185,6 +185,11 @@ func (a *Element) Uint() uint {
 	return a.val
 }
 
+// SetUnsigned sets the value of a to the element corresponding to val.
+func (a *Element) SetUnsigned(val uint) {
+	a.val = val % a.field.Char()
+}
+
 // Equal tests equality of elements a and b.
 func (a *Element) Equal(b *Element) bool {
 	if a.field == b.field && a.val == b.val {
@@ -236,6 +241,12 @@ func (a *Element) Add(b *Element) *Element {
 // Neg returns -a (modulo the characteristic)
 func (a *Element) Neg() *Element {
 	return a.field.Element(a.field.char - a.val)
+}
+
+// NegInPlace sets a to -a (modulo the characteristic), and returns a
+func (a *Element) NegInPlace() *Element {
+	a.val = a.field.char - a.val
+	return a
 }
 
 // Minus returns the difference of elements a and b
