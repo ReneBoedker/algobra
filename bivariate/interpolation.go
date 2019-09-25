@@ -34,6 +34,11 @@ func (r *QuotientRing) Interpolate(
 
 	f := r.zeroWithCap(2 * len(points))
 	for i, p := range points {
+		if values[i].Zero() {
+			// No need to compute the Lagrange basis polynomial since we will
+			// scale it by zero anyway
+			continue
+		}
 		tmp := r.zeroWithCap(2 * len(points))
 		tmp.SetCoefPtr([2]uint{0, 0}, r.baseField.One())
 		for j := 0; j < 2; j++ {
