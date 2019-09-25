@@ -1,6 +1,6 @@
 # Errors
-## License
-Parts of the error package are inspired by the corresponging package in [Upspin](https://github.com/upspin/upspin), which is published under the following license:
+## Third party licenses
+Parts of the error package are heavily inspired by the corresponding package in [Upspin](https://github.com/upspin/upspin), which is published under the following license:
 ```
 Copyright (c) 2016 The Upspin Authors. All rights reserved.
 
