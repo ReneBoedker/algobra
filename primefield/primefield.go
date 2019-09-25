@@ -4,20 +4,9 @@ import (
 	"algobra/basic"
 	"algobra/errors"
 	"fmt"
+	"math/bits"
 	"strconv"
 )
-
-// Number of bits in a uint type
-var uintBitSize uint
-
-func init() {
-	// Determine bit-size of uint type
-	i := ^uint(0)
-	for i > 0 {
-		uintBitSize++
-		i >>= 1
-	}
-}
 
 // Field is the implementation of a finite field
 type Field struct {
@@ -41,10 +30,10 @@ func Define(char uint) (*Field, error) {
 		)
 	}
 
-	if char-1 >= 1<<(uintBitSize/2) {
+	if char-1 >= 1<<(bits.UintSize/2) {
 		return nil, errors.New(
 			op, errors.InputTooLarge,
-			"%d exceeds maximal field size (2^%d)", char, uintBitSize/2,
+			"%d exceeds maximal field size (2^%d)", char, bits.UintSize/2,
 		)
 	}
 
@@ -78,9 +67,13 @@ func (f *Field) Card() uint {
 // ComputeTables will precompute either the addition or multiplication tables
 // (or both) for the field f.
 //
+// The optional argument maxMem specifies the maximal table size in KiB. If no
+// value is given, a default value is used. If more than one value is given,
+// only the first is used.
+//
 // Returns an InputTooLarge-error if the estimated memory usage exceeds the
-// maximal value.
-func (f *Field) ComputeTables(add, mult bool) (err error) {
+// maximal value specified by maxMem.
+func (f *Field) ComputeTables(add, mult bool, maxMem ...uint) (err error) {
 	if add && f.addTable == nil {
 		f.addTable, err = newTable(f, func(i, j uint) uint {
 			return (i + j) % f.char
@@ -219,12 +212,7 @@ func (a *Element) Plus(b *Element) *Element {
 func (a *Element) Add(b *Element) *Element {
 	const op = "Adding elements"
 
-	if tmp := hasErr(op, a, b); tmp != nil {
-		a = tmp
-		return a
-	}
-
-	if tmp := checkCompatible(op, a, b); tmp != nil {
+	if tmp := checkErrAndCompatible(op, a, b); tmp != nil {
 		a = tmp
 		return a
 	}
@@ -240,7 +228,7 @@ func (a *Element) Add(b *Element) *Element {
 
 // Neg returns -a (modulo the characteristic)
 func (a *Element) Neg() *Element {
-	return a.field.Element(a.field.char - a.val)
+	return a.Copy().NegInPlace()
 }
 
 // NegInPlace sets a to -a (modulo the characteristic), and returns a
@@ -270,12 +258,7 @@ func (a *Element) Minus(b *Element) *Element {
 func (a *Element) Sub(b *Element) *Element {
 	const op = "Subtracting elements"
 
-	if tmp := hasErr(op, a, b); tmp != nil {
-		a = tmp
-		return a
-	}
-
-	if tmp := checkCompatible(op, a, b); tmp != nil {
+	if tmp := checkErrAndCompatible(op, a, b); tmp != nil {
 		a = tmp
 		return a
 	}
@@ -305,39 +288,17 @@ func (a *Element) Times(b *Element) *Element {
 // When a or b has a non-nil error status, its error is wrapped and the same
 // element is returned.
 func (a *Element) Mult(b *Element) *Element {
-	const op = "Multiplying elements"
-
-	if tmp := hasErr(op, a, b); tmp != nil {
-		a = tmp
-		return a
-	}
-
-	if tmp := checkCompatible(op, a, b); tmp != nil {
-		a = tmp
-		return a
-	}
-
-	if a.field.multTable != nil {
-		a.val = a.field.multTable.lookup(a.val, b.val)
-	} else {
-		a.val = (a.val * b.val) % a.field.Char()
-	}
-
-	return a
+	return a.Prod(a, b)
 }
 
 // Prod sets a to the product of b and c, and returns a.
 //
 // The function returns an ArithmeticIncompat-error if b, and c are not defined
 // over the same field.
-func (a *Element) Prod(b, c *Element) {
+func (a *Element) Prod(b, c *Element) *Element {
 	const op = "Multiplying elements"
 
-	if tmp := hasErr(op, b, c); tmp != nil {
-		a = tmp
-	}
-
-	if tmp := checkCompatible(op, b, c); tmp != nil {
+	if tmp := checkErrAndCompatible(op, b, c); tmp != nil {
 		a = tmp
 	}
 
@@ -349,6 +310,7 @@ func (a *Element) Prod(b, c *Element) {
 	} else {
 		a.val = (b.val * c.val) % a.field.Char()
 	}
+	return a
 }
 
 // Pow returns a raised to the power of n
@@ -427,6 +389,21 @@ func (a *Element) One() bool {
 // String returns the string representation of a.
 func (a *Element) String() string {
 	return strconv.FormatUint(uint64(a.val), 10)
+}
+
+// checkErrAndCompatible is a wrapper for the two functions hasErr and
+// checkCompatible. It is used in arithmetic functions to check that the inputs
+// are 'good' to use.
+func checkErrAndCompatible(op errors.Op, a, b *Element) *Element {
+	if tmp := hasErr(op, a, b); tmp != nil {
+		return tmp
+	}
+
+	if tmp := checkCompatible(op, a, b); tmp != nil {
+		return tmp
+	}
+
+	return nil
 }
 
 // hasErr is an internal method for checking if a or b has a non-nil error

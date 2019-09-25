@@ -2,6 +2,7 @@ package primefield
 
 import (
 	"algobra/errors"
+	"math/bits"
 	"math/rand"
 	"testing"
 	"time"
@@ -18,32 +19,21 @@ func DefineField(char uint) *Field {
 	return f
 }
 
-func TestInit(t *testing.T) {
-	if uintBitSize != 32 && uintBitSize != 64 {
-		t.Error("init() failed to detect size of uint")
-	}
-}
-
 func TestOverflowDetection(t *testing.T) {
-	origSize := uintBitSize
-	defer func() { uintBitSize = origSize }()
-	for _, size := range [2]uint{32, 64} {
-		uintBitSize = size
-		var bigPrime uint
-		if uintBitSize == 32 {
-			bigPrime = uint(65537)
-		} else {
-			bigPrime = uint(4294967311)
-		}
-		_, err := Define(bigPrime)
-		if err == nil {
-			t.Errorf(
-				"Define succeeded for bit size %d even though p=%d",
-				uintBitSize, bigPrime,
-			)
-		} else if !errors.Is(errors.InputTooLarge, err) {
-			t.Errorf("Define failed, but the error kind was unexpected")
-		}
+	var bigPrime uint
+	if bits.UintSize == 32 {
+		bigPrime = uint(65537)
+	} else {
+		bigPrime = uint(4294967311)
+	}
+	_, err := Define(bigPrime)
+	if err == nil {
+		t.Errorf(
+			"Define succeeded for bit size %d even though p=%d",
+			bits.UintSize, bigPrime,
+		)
+	} else if !errors.Is(errors.InputTooLarge, err) {
+		t.Errorf("Define failed, but the error kind was unexpected")
 	}
 }
 
@@ -77,7 +67,7 @@ func TestEqual(t *testing.T) {
 
 func TestTableMemory(t *testing.T) {
 	var bigPrime uint
-	if uintBitSize == 32 {
+	if bits.UintSize == 32 {
 		bigPrime = uint(16411)
 	} else {
 		bigPrime = uint(11587)
@@ -109,7 +99,7 @@ func TestArithmeticErrors(t *testing.T) {
 		t.Errorf("Adding elements from different fields did not set error status")
 	}
 	if e := a.Times(b); e.Err() == nil {
-		t.Errorf("Timesiplying elements from different fields did not set error status")
+		t.Errorf("Multiplying elements from different fields did not set error status")
 	}
 	if e := a.Minus(b); e.Err() == nil {
 		t.Errorf("Subtracting elements from different fields did not set error status")
@@ -148,12 +138,22 @@ func TestBools(t *testing.T) {
 
 func TestConversion(t *testing.T) {
 	field := DefineField(71)
+
 	for i := 0; i < 1000; i++ {
 		val := uint(prg.Uint32())
+
 		a := field.Element(val)
 		if a.Uint() != val%71 {
 			t.Errorf("Conversion to uint failed for a = %d. Received %d",
 				val, a.Uint(),
+			)
+		}
+
+		b := field.Element(0)
+		b.SetUnsigned(val)
+		if b.Uint() != val%71 {
+			t.Errorf("Conversion to uint failed for b = %d. Received %d",
+				val, b.Uint(),
 			)
 		}
 	}
@@ -198,6 +198,56 @@ func TestGenerator(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestNeg(t *testing.T) {
+	for _, card := range []uint{3, 7, 13, 31} {
+		field := DefineField(card)
+		for _, e := range field.Elements() {
+			if tmp := e.Plus(e.Neg()); tmp.Nonzero() {
+				t.Errorf("%[1]v + (-%[1]v) returned %[2]v rather than 0", e, tmp)
+			}
+		}
+	}
+}
+
+func TestProd(t *testing.T) {
+	field := DefineField(11)
+
+	test := func(field *Field) {
+		a := field.Element(0)
+
+		prods := [][2]uint{
+			{2, 2},
+			{2, 5},
+			{2, 7},
+			{7, 2},
+			{3, 3},
+			{6, 7},
+			{10, 10},
+		}
+		expected := []uint{
+			4,
+			10,
+			3,
+			3,
+			9,
+			9,
+			1,
+		}
+		for i, p := range prods {
+			if a.Prod(field.Element(p[0]), field.Element(p[1])); !a.Equal(field.Element(expected[i])) {
+				t.Errorf("Prod failed: a was set to %v for %v * %v (Expected %v)",
+					a, p[0], p[1], expected[i])
+			}
+		}
+
+	}
+
+	test(field)
+	// With tables
+	field.ComputeTables(false, true)
+	test(field)
 }
 
 func TestGf2(t *testing.T) {

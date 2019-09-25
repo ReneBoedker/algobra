@@ -2,22 +2,20 @@ package primefield
 
 import (
 	"algobra/errors"
+	"math/bits"
 )
 
-var maxMem uint = 1 << 19 // Maximal memory allowed per table in KiB (default: 512 MiB)
-
-// SetMaxMemory redefines the maximal amount of memory an addition or
-// multiplication table is allowed to use. The value is in KiB.
-func SetMaxMemory(max uint) {
-	maxMem = max
-}
+const defaultMaxMem uint = 1 << 19 // Maximal memory allowed per table in KiB (default: 512 MiB)
 
 type table struct {
 	t [][]uint
 }
 
-func newTable(f *Field, op func(i, j uint) uint) (*table, error) {
-	if m := estimateMemory(f); m > maxMem {
+func newTable(f *Field, op func(i, j uint) uint, maxMem ...uint) (*table, error) {
+	if len(maxMem) == 0 {
+		maxMem = append(maxMem, defaultMaxMem)
+	}
+	if m := estimateMemory(f); m > maxMem[0] {
 		return nil, errors.New(
 			"Creating arithmetic table", errors.InputTooLarge,
 			"Requires %d KiB, which exceeds maxMem (%d)", m, maxMem,
@@ -43,7 +41,7 @@ func (t *table) lookup(i, j uint) uint {
 // estimateMemory gives a lower bound on the memory required to store a table.
 // This estimate ignores overhead from the slices. Return value is in KiB
 func estimateMemory(f *Field) uint {
-	b := f.char * (f.char + 1) * (uintBitSize / 16)
+	b := f.char * (f.char + 1) * (bits.UintSize / 16)
 	return b >> 10
 }
 
