@@ -1,4 +1,4 @@
-<a href='https://github.com/jpoles1/gopherbadger' target='_blank'>![gopherbadger-tag-do-not-edit](https://img.shields.io/badge/Coverage-99%25-brightgreen.svg?longCache=true&style=flat)</a>
+![coverage-badge](https://img.shields.io/badge/coverage-99.3%25-brightgreen?cacheSeconds=3600&style=flat)
 # Algobra: Prime Fields
 This package implements arithmetic in finite fields of prime characteristic.
 

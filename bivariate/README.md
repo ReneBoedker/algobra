@@ -1,4 +1,4 @@
-<a href='https://github.com/jpoles1/gopherbadger' target='_blank'>![gopherbadger-tag-do-not-edit](https://img.shields.io/badge/Coverage-90%25-brightgreen.svg?longCache=true&style=flat)</a>
+![coverage-badge](https://img.shields.io/badge/coverage-90.1%25-brightgreen?cacheSeconds=3600&style=flat)
 # Algobra: Bivariate polynomials
 This package implements bivariate polynomials over prime fields.
 

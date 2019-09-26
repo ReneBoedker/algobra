@@ -1,4 +1,4 @@
-<a href='https://github.com/jpoles1/gopherbadger' target='_blank'>![gopherbadger-tag-do-not-edit](https://img.shields.io/badge/Coverage-100%25-brightgreen.svg?longCache=true&style=flat)</a>
+![coverage-badge](https://img.shields.io/badge/coverage-100.0%25-brightgreen?cacheSeconds=3600&style=flat)
 # Errors
 ## Third party licenses
 Parts of the error package are heavily inspired by the corresponding package in [Upspin](https://github.com/upspin/upspin), which is published under the following license:
