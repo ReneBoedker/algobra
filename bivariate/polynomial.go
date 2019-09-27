@@ -81,7 +81,8 @@ func (f *Polynomial) SetCoefPtr(deg [2]uint, ptr *finitefield.Element) {
 	}
 }
 
-// IncrementCoef sets the coefficient of the monomial with degree deg in f to val.
+// IncrementCoef increments the coefficient of the monomial with degree deg in f
+// by val.
 func (f *Polynomial) IncrementCoef(deg [2]uint, val *finitefield.Element) {
 	if val.Zero() {
 		return

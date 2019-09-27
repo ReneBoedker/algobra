@@ -150,7 +150,7 @@ func TestMinus(t *testing.T) {
 	}
 }
 
-func TestMult(t *testing.T) {
+func TestTimes(t *testing.T) {
 	field := defineField(7, t)
 	ring := DefRing(field)
 
@@ -171,7 +171,7 @@ func TestMult(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		res := test[0].Mult(test[1])
+		res := test[0].Times(test[1])
 		if !res.Equal(test[2]) {
 			t.Errorf(
 				"(%v) * (%v) = %v, but expected %v",

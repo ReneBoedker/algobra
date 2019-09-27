@@ -36,7 +36,7 @@ func (f *Polynomial) Coef(deg int) *finitefield.Element {
 // SetCoef sets the coefficient of the monomial with degree deg in f to val.
 func (f *Polynomial) SetCoef(deg int, val *finitefield.Element) {
 	if deg <= f.Ld() {
-		f.coefs[deg] = val
+		f.coefs[deg] = val.Copy()
 		if val.Zero() {
 			f.reslice()
 		}
@@ -48,7 +48,28 @@ func (f *Polynomial) SetCoef(deg int, val *finitefield.Element) {
 		grow[i] = f.BaseField().Zero()
 	}
 	f.coefs = append(f.coefs, grow...)
-	f.coefs[deg] = val
+	f.coefs[deg] = val.Copy()
+}
+
+// IncrementCoef increments the coefficient of the monomial with degree deg in f
+// by val.
+func (f *Polynomial) IncrementCoef(deg int, val *finitefield.Element) {
+	if val.Zero() {
+		return
+	}
+	if deg <= f.Ld() {
+		f.coefs[deg].Add(val)
+		f.reslice()
+		return
+	}
+	// Otherwise, grow the slice to needed length
+	grow := make([]*finitefield.Element, deg-f.Ld())
+	for i := range grow {
+		grow[i] = f.BaseField().Zero()
+	}
+	f.coefs = append(f.coefs, grow...)
+	f.coefs[deg].Add(val)
+
 }
 
 // reslice ensures that the coefficients of f do not contain leading zeros
@@ -69,7 +90,7 @@ func (f *Polynomial) Copy() *Polynomial {
 	h := f.baseRing.Zero()
 	h.coefs = make([]*finitefield.Element, len(f.coefs))
 	for deg, c := range f.coefs {
-		h.coefs[deg] = c
+		h.coefs[deg] = c.Copy()
 	}
 	return h
 }
@@ -83,6 +104,27 @@ func (f *Polynomial) Eval(point *finitefield.Element) *finitefield.Element {
 	return out
 }
 
+// Add sets f to the sum of the two polynomials f and g and returns f.
+//
+// If f and g are defined over different rings, a new polynomial is returned
+// with an ArithmeticIncompat-error as error status.
+//
+// When f or g has a non-nil error status, its error is wrapped and the same
+// polynomial is returned.
+func (f *Polynomial) Add(g *Polynomial) *Polynomial {
+	const op = "Adding polynomials"
+
+	if tmp := checkErrAndCompatible(op, f, g); tmp != nil {
+		f = tmp
+		return f
+	}
+
+	for deg, c := range g.coefs {
+		f.IncrementCoef(deg, c)
+	}
+	return f
+}
+
 // Plus returns the sum of the two polynomials f and g.
 //
 // If f and g are defined over different rings, a new polynomial is returned
@@ -91,17 +133,7 @@ func (f *Polynomial) Eval(point *finitefield.Element) *finitefield.Element {
 // When f or g has a non-nil error status, its error is wrapped and the same
 // polynomial is returned.
 func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
-	const op = "Adding polynomials"
-
-	if tmp := checkErrAndCompatible(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	h := f.Copy()
-	for deg, c := range g.coefs {
-		h.SetCoef(deg, h.Coef(deg).Plus(c))
-	}
-	return h
+	return f.Copy().Add(g)
 }
 
 // Neg returns the polynomial obtained by scaling f by -1 (modulo the
@@ -131,6 +163,24 @@ func (f *Polynomial) Equal(g *Polynomial) bool {
 	return true
 }
 
+// Sub sets f to the polynomial difference f-g and returns f.
+//
+// If f and g are defined over different rings, the error status of f is set to
+// ArithmeticIncompat.
+//
+// When f or g has a non-nil error status, its error is wrapped and the same
+// polynomial is returned.
+func (f *Polynomial) Sub(g *Polynomial) *Polynomial {
+	const op = "Subtracting polynomials"
+
+	if tmp := checkErrAndCompatible(op, f, g); tmp != nil {
+		f = tmp
+		return f
+	}
+
+	return f.Plus(g.Neg())
+}
+
 // Minus returns polynomial difference f-g.
 //
 // If f and g are defined over different rings, a new polynomial is returned
@@ -139,13 +189,7 @@ func (f *Polynomial) Equal(g *Polynomial) bool {
 // When f or g has a non-nil error status, its error is wrapped and the same
 // polynomial is returned.
 func (f *Polynomial) Minus(g *Polynomial) *Polynomial {
-	const op = "Subtracting polynomials"
-
-	if tmp := checkErrAndCompatible(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	return f.Plus(g.Neg())
+	return f.Copy().Sub(g)
 }
 
 // Internal method. Multiplies the two polynomials f and g, but does not reduce
@@ -176,7 +220,23 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 	return h
 }
 
-// Mult returns the product of the polynomials f and g
+// Times returns the product of the polynomials f and g
+//
+// If f and g are defined over different rings, a new polynomial is returned
+// with an ArithmeticIncompat-error as error status.
+//
+// When f or g has a non-nil error status, its error is wrapped and the same
+// polynomial is returned.
+func (f *Polynomial) Times(g *Polynomial) *Polynomial {
+	h := f.multNoReduce(g)
+	if h.Err() != nil {
+		return h
+	}
+	h.reduce()
+	return h
+}
+
+// Mult sets f to the product of the polynomials f and g and returns f.
 //
 // If f and g are defined over different rings, a new polynomial is returned
 // with an ArithmeticIncompat-error as error status.
@@ -184,12 +244,12 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 // When f or g has a non-nil error status, its error is wrapped and the same
 // polynomial is returned.
 func (f *Polynomial) Mult(g *Polynomial) *Polynomial {
-	h := f.multNoReduce(g)
-	if h.Err() != nil {
-		return h
+	*f = *f.multNoReduce(g)
+	if f.Err() != nil {
+		return f
 	}
-	h.reduce()
-	return h
+	f.reduce()
+	return f
 }
 
 // Normalize creates a new polynomial obtained by normalizing f. That is,
@@ -284,6 +344,14 @@ func (f *Polynomial) Zero() bool {
 // Nonzero determines whether f contains some monomial with nonzero coefficient.
 func (f *Polynomial) Nonzero() bool {
 	return !f.Zero()
+}
+
+// One determines whether f is the constant 1.
+func (f *Polynomial) One() bool {
+	if len(f.coefs) == 1 && f.Coef(0).One() {
+		return true
+	}
+	return false
 }
 
 // Monomial returns a bool describing whether f consists of a single monomial.
