@@ -14,7 +14,6 @@ type Field struct {
 	baseField *finitefield.Field
 	extDeg    uint
 	polyRing  *univariate.QuotientRing
-	generator *Element
 	addTable  *table
 	multTable *table
 }
@@ -47,13 +46,14 @@ func Define(card uint) (*Field, error) {
 	polyRing := univariate.DefRing(baseField)
 	conwayCoefs, err := conway.Lookup(char, extDeg)
 	if err != nil {
-		errors.Wrap(op, errors.Inherit, err)
+		return nil, errors.Wrap(op, errors.Inherit, err)
 	}
 
 	id, err := polyRing.NewIdeal(polyRing.PolynomialFromUnsigned(conwayCoefs))
 	if err != nil {
 		return nil, err
 	}
+
 	polyRing, err = polyRing.Quotient(id)
 	if err != nil {
 		return nil, err
@@ -62,6 +62,7 @@ func Define(card uint) (*Field, error) {
 	return &Field{
 		baseField: baseField,
 		extDeg:    extDeg,
+		polyRing:  polyRing,
 		addTable:  nil,
 		multTable: nil,
 	}, nil
@@ -84,7 +85,8 @@ func (f *Field) Card() uint {
 
 // MultGenerator returns an element that generates the units of f.
 func (f *Field) MultGenerator() *Element {
-	return f.generator.Copy()
+	// The field is defined from a Conway polynomial, so alpha is a generator
+	return f.Element([]uint{0, 1})
 }
 
 // Elements returns a slice containing all elements of f.
@@ -140,7 +142,7 @@ func (f *Field) ElementFromSigned(val []int) *Element {
 func (a *Element) Copy() *Element {
 	return &Element{
 		field: a.field,
-		val:   a.val,
+		val:   a.val.Copy(),
 		err:   a.err,
 	}
 }

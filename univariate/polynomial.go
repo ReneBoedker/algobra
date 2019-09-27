@@ -69,7 +69,6 @@ func (f *Polynomial) IncrementCoef(deg int, val *finitefield.Element) {
 	}
 	f.coefs = append(f.coefs, grow...)
 	f.coefs[deg].Add(val)
-
 }
 
 // reslice ensures that the coefficients of f do not contain leading zeros
@@ -178,7 +177,7 @@ func (f *Polynomial) Sub(g *Polynomial) *Polynomial {
 		return f
 	}
 
-	return f.Plus(g.Neg())
+	return f.Add(g.Neg())
 }
 
 // Minus returns polynomial difference f-g.
@@ -201,7 +200,10 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 		return tmp
 	}
 
-	h := f.baseRing.Zero()
+	if f.Zero() || g.Zero() {
+		return f.baseRing.Zero()
+	}
+	h := f.baseRing.zeroWithCap(f.Ld() + g.Ld() + 1)
 	for degf, cf := range f.coefs {
 		for degg, cg := range g.coefs {
 			degSum := degf + degg
