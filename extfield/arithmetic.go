@@ -1,5 +1,9 @@
 package extfield
 
+import (
+//"fmt"
+)
+
 // Add sets a to the sum of a and b and returns a
 //
 // If a and b are defined over different fields, a new element is returned with

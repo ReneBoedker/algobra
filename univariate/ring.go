@@ -44,6 +44,18 @@ func DefRing(field *finitefield.Field) *QuotientRing {
 	}
 }
 
+// zeroWithCap returns a zero polynomial over the specified ring, where the
+// underlying representation has given capacity.
+// TODO: Check cap and write into Zero
+func (r *QuotientRing) zeroWithCap(cap int) *Polynomial {
+	coefs := make([]*finitefield.Element, 1, cap)
+	coefs[0] = r.baseField.Zero()
+	return &Polynomial{
+		baseRing: r,
+		coefs:    coefs,
+	}
+}
+
 // Zero returns a zero polynomial over the specified ring.
 func (r *QuotientRing) Zero() *Polynomial {
 	coefs := make([]*finitefield.Element, 1)
