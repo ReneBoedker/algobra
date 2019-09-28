@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for subpkg in basic bivariate errors primefield univariate
+for subpkg in basic bivariate errors extfield extfield/conway primefield univariate
 do
 	## Run the coverage test
 	cover=$(go test -cover algobra/$subpkg | sed "s/.*coverage: \([0-9\.]\+\)%.*/\1/")
