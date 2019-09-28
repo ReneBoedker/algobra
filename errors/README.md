@@ -1,4 +1,4 @@
-![coverage-badge](https://img.shields.io/badge/coverage-100.0%25-brightgreen?cacheSeconds=3600&style=flat)
+![coverage-badge](https://img.shields.io/badge/coverage-100.0%25-brightgreen?cacheSeconds=86400&style=flat)
 # Errors
 ## Third party licenses
 Parts of the error package are heavily inspired by the corresponding package in [Upspin](https://github.com/upspin/upspin), which is published under the following license:

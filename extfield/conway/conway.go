@@ -13,6 +13,11 @@ import (
 //
 // If no such polynomial is in the database, an InputValue-error is returned.
 func Lookup(char, extDeg uint) (coefs []uint, err error) {
+	return lookupInternal(char, extDeg, cpimport)
+}
+
+// lookupInternal has an additional input parameter which allows testing
+func lookupInternal(char, extDeg uint, conwayList string) (coefs []uint, err error) {
 	const op = "Searching for Conway polynomial"
 
 	pattern, err := regexp.Compile(fmt.Sprintf(`\[%d,%d,\[([^]]*)\]\]`, char, extDeg))
@@ -24,7 +29,7 @@ func Lookup(char, extDeg uint) (coefs []uint, err error) {
 		)
 	}
 
-	match := pattern.FindStringSubmatch(cpimport)
+	match := pattern.FindStringSubmatch(conwayList)
 	if match == nil {
 		return nil, errors.New(
 			op, errors.InputValue,
@@ -56,6 +61,7 @@ func Lookup(char, extDeg uint) (coefs []uint, err error) {
 	return coefs, nil
 }
 
+// cpimport is the list of Conway polynomials provided by Frank Lübeck
 const cpimport = `allConwayPolynomials := [
 [2,1,[1,1]],
 [2,2,[1,1,1]],
