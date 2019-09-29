@@ -11,11 +11,12 @@ import (
 
 // Field is the implementation of a finite field
 type Field struct {
-	baseField *finitefield.Field
-	extDeg    uint
-	polyRing  *univariate.QuotientRing
-	addTable  *table
-	multTable *table
+	baseField  *finitefield.Field
+	extDeg     uint
+	conwayPoly *univariate.Polynomial
+	polyRing   *univariate.QuotientRing
+	addTable   *table
+	multTable  *table
 }
 
 // Define creates a new finite field with given cardinality.
@@ -49,7 +50,8 @@ func Define(card uint) (*Field, error) {
 		return nil, errors.Wrap(op, errors.Inherit, err)
 	}
 
-	id, err := polyRing.NewIdeal(polyRing.PolynomialFromUnsigned(conwayCoefs))
+	conwayPoly := polyRing.PolynomialFromUnsigned(conwayCoefs)
+	id, err := polyRing.NewIdeal(conwayPoly)
 	if err != nil {
 		return nil, err
 	}
@@ -60,11 +62,12 @@ func Define(card uint) (*Field, error) {
 	}
 
 	return &Field{
-		baseField: baseField,
-		extDeg:    extDeg,
-		polyRing:  polyRing,
-		addTable:  nil,
-		multTable: nil,
+		baseField:  baseField,
+		extDeg:     extDeg,
+		conwayPoly: conwayPoly,
+		polyRing:   polyRing,
+		addTable:   nil,
+		multTable:  nil,
 	}, nil
 }
 

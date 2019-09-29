@@ -50,9 +50,9 @@ func TestGf4(t *testing.T) {
 				}
 			}
 		}
-		// if t1 := elems[1].Inv(); !t1.Equal(elems[1]) {
-		// 	t.Errorf("GF(2) failed: inv(1)=%d (Expected 1)", t1.val)
-		// }
+		if t1 := elems[1].Inv(); !t1.Equal(elems[1]) {
+			t.Errorf("GF(4) failed: inv(1) = %v (Expected 1)", t1.val)
+		}
 	}
 	// Without tables
 	test(field)
@@ -86,6 +86,17 @@ func TestGf9(t *testing.T) {
 			{elems[7], elems[8], elems[4], elems[1], elems[5], elems[2], elems[0], elems[6], elems[3]},
 			{elems[8], elems[4], elems[7], elems[2], elems[6], elems[0], elems[1], elems[3], elems[5]},
 		}
+		diffTable := [][]*Element{
+			{elems[0], elems[2], elems[1], elems[4], elems[3], elems[8], elems[7], elems[6], elems[5]},
+			{elems[1], elems[0], elems[2], elems[7], elems[5], elems[4], elems[8], elems[3], elems[6]},
+			{elems[2], elems[1], elems[0], elems[8], elems[6], elems[7], elems[4], elems[5], elems[3]},
+			{elems[3], elems[6], elems[5], elems[0], elems[4], elems[2], elems[1], elems[8], elems[7]},
+			{elems[4], elems[8], elems[7], elems[3], elems[0], elems[6], elems[5], elems[2], elems[1]},
+			{elems[5], elems[3], elems[6], elems[1], elems[7], elems[0], elems[2], elems[4], elems[8]},
+			{elems[6], elems[5], elems[3], elems[2], elems[8], elems[1], elems[0], elems[7], elems[4]},
+			{elems[7], elems[4], elems[8], elems[5], elems[1], elems[3], elems[6], elems[0], elems[2]},
+			{elems[8], elems[7], elems[4], elems[6], elems[2], elems[5], elems[3], elems[1], elems[0]},
+		}
 		prodTable := [][]*Element{
 			{elems[0], elems[0], elems[0], elems[0], elems[0], elems[0], elems[0], elems[0], elems[0]},
 			{elems[0], elems[1], elems[2], elems[3], elems[4], elems[5], elems[6], elems[7], elems[8]},
@@ -103,19 +114,19 @@ func TestGf9(t *testing.T) {
 					t.Errorf("GF(4) failed: (%v) + (%v) = %v (Expected %v)",
 						elems[i], elems[j], t1, t2)
 				}
-				// if t1, t2 := elems[i].Minus(elems[j]), sumTable[i][j]; !t1.Equal(t2) { // Note that Plus=Minus
-				// 	t.Errorf("GF(4) failed: (%v) - (%v) = %v (Expected %v)",
-				// 		elems[i].val, elems[j].val, t1, t2)
-				// }
+				if t1, t2 := elems[i].Minus(elems[j]), diffTable[i][j]; !t1.Equal(t2) {
+					t.Errorf("GF(4) failed: (%v) - (%v) = %v (Expected %v)",
+						elems[i].val, elems[j].val, t1, t2)
+				}
 				if t1, t2 := elems[i].Times(elems[j]), prodTable[i][j]; !t1.Equal(t2) {
 					t.Errorf("GF(4) failed: %v*%v=%v (Expected %v)",
 						elems[i], elems[j], t1, t2)
 				}
 			}
 		}
-		// if t1 := elems[1].Inv(); !t1.Equal(elems[1]) {
-		// 	t.Errorf("GF(2) failed: inv(1)=%d (Expected 1)", t1.val)
-		// }
+		if t1 := elems[1].Inv(); !t1.Equal(elems[1]) {
+			t.Errorf("GF(9) failed: inv(1) = %v (Expected 1)", t1.val)
+		}
 	}
 	// Without tables
 	test(field)
