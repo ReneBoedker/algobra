@@ -100,19 +100,48 @@ func TestParseOutput(t *testing.T) {
 	char := uint(13)
 	field := defineField(char, t)
 	ring := DefRing(field)
-	for rep := 0; rep < 1000; rep++ {
-		// Create random polynomial with up to 50 different terms
-		nDegs := (uint(prg.Uint32()) % 50) + 1
-		coefs := make([]uint, nDegs, nDegs)
-		for i := uint(0); i < nDegs; i++ {
-			coefs[i] = uint(prg.Uint32())
-		}
-		f := ring.PolynomialFromUnsigned(coefs)
+	for _, varName := range []string{"X", "Y", "α", "\\beta", "e^i", "", "\t"} {
+		for rep := 0; rep < 200; rep++ {
+			ring.SetVarName(varName)
+			// Create random polynomial with up to 50 different terms
+			nDegs := (uint(prg.Uint32()) % 50) + 1
+			coefs := make([]uint, nDegs, nDegs)
+			for i := uint(0); i < nDegs; i++ {
+				coefs[i] = uint(prg.Uint32())
+			}
+			f := ring.PolynomialFromUnsigned(coefs)
 
-		if g, err := ring.PolynomialFromString(f.String()); err != nil {
-			t.Errorf("Parsing formatted output of %v returns error %q", f, err)
-		} else if !f.Equal(g) {
-			t.Errorf("Formatted output of %v is parsed as %v", f, g)
+			if g, err := ring.PolynomialFromString(f.String()); err != nil {
+				t.Errorf("Parsing formatted output of %v returns error %q", f, err)
+			} else if !f.Equal(g) {
+				t.Errorf("Formatted output of %v is parsed as %v", f, g)
+			}
+		}
+	}
+}
+
+func TestSetVarName(t *testing.T) {
+	char := uint(31)
+	field := defineField(char, t)
+	ring := DefRing(field)
+	f := ring.PolynomialFromUnsigned([]uint{0, 1})
+	// Check that the printed variable is correct
+	for _, varName := range []string{"X", "y", "(ω^2)", "", "c\td"} {
+		if err := ring.SetVarName(varName); err != nil {
+			t.Errorf("An error was returned for varName = %q", varName)
+		}
+		if f.String() != varName {
+			t.Errorf("Variable name was not printed as expected")
+		}
+	}
+
+	// Check that errors are returned if appropriate
+	for _, varName := range []string{"\t", "  \n\t", "	", ""} {
+		if err := ring.SetVarName(varName); err == nil {
+			t.Errorf("No error was returned for varName = %q", varName)
+		} else if !errors.Is(errors.InputValue, err) {
+			t.Errorf("An error was returned for varName = %q, but it was of "+
+				"unexpected type.", varName)
 		}
 	}
 }

@@ -426,8 +426,8 @@ func checkCompatible(op errors.Op, f, g *Polynomial) *Polynomial {
 	return nil
 }
 
-// String returns the string representation of f. Variables are named 'X' and
-// 'Y'.
+// String returns the string representation of f. The variable is named
+// according to the ring used.
 func (f *Polynomial) String() string {
 	if f.Zero() {
 		return "0"
@@ -442,10 +442,10 @@ func (f *Polynomial) String() string {
 			fmt.Fprintf(&b, "%v", tmp)
 		}
 		if d == 1 {
-			fmt.Fprint(&b, "X")
+			fmt.Fprint(&b, f.baseRing.varName)
 		}
 		if d > 1 {
-			fmt.Fprintf(&b, "X^%d", d)
+			fmt.Fprintf(&b, "%s^%d", f.baseRing.varName, d)
 		}
 	}
 	return b.String()

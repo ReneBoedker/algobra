@@ -68,13 +68,22 @@ func (m *monomialMatch) degreeAndCoef(op errors.Op) (deg int, coef int, err erro
 	return
 }
 
-func polynomialStringToSignedMap(s string) (map[int]int, error) {
+func polynomialStringToSignedMap(s string, varName *string) (map[int]int, error) {
 	const op = "Parsing polynomial from string"
 
-	matches := regexp.MustCompile(
-		`\s*(?P<sign>^|\+|-)\s*`+
-			`(?P<coef>[0-9]*)\s*\*?\s*`+
-			`(?:(?P<name>(?i:x))\^?(?P<deg1>[0-9]*))?\s*`).FindAllStringSubmatch(s, -1)
+	pattern, err := regexp.Compile(
+		`\s*(?P<sign>^|\+|-)\s*` +
+			`(?P<coef>[0-9]*)\s*\*?\s*` +
+			`(?:(?P<name>(?i:` + regexp.QuoteMeta(*varName) + `))\^?(?P<deg1>[0-9]*))?\s*`,
+	)
+	if err != nil {
+		return nil, errors.New(
+			op, errors.Internal,
+			"Failed to compile regular expression using variable name %q", *varName,
+		)
+	}
+
+	matches := pattern.FindAllStringSubmatch(s, -1)
 
 	// Check that total match length is the full input string
 	matchLen := 0

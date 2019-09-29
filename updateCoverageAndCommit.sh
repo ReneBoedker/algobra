@@ -1,9 +1,15 @@
 #!/bin/bash
 
-for subpkg in basic bivariate errors extfield extfield/conway primefield univariate
-do
+for subpkg in $(go list ./... | sed "s/algobra/./g")
+do	
 	## Run the coverage test
-	cover=$(go test -cover algobra/$subpkg | sed "s/.*coverage: \([0-9\.]\+\)%.*/\1/")
+	cover=$(go test -cover $subpkg | sed "s/.*coverage: \([0-9\.]\+\)%.*/\1/")
+
+	if [[ $cover == "?"* ]]
+	then
+		## If no tests are defined, skip
+		continue
+	fi
 
 	## Determine badge colour based on the result
 	if (( $(echo "${cover} > 90" | bc -l)))

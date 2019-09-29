@@ -4,10 +4,12 @@ import (
 	"algobra/errors"
 	"algobra/finitefield"
 	"fmt"
+	"strings"
 )
 
 type ring struct {
 	baseField *finitefield.Field
+	varName   string
 }
 
 // QuotientRing denotes a polynomial quotient ring. The quotient may be trivial,
@@ -19,7 +21,8 @@ type QuotientRing struct {
 
 // String returns the strings representation of r.
 func (r *ring) String() string {
-	return fmt.Sprintf("Univariate polynomial ring over %v", r.baseField)
+	return fmt.Sprintf(
+		"Univariate polynomial ring in %s over %v", r.varName, r.baseField)
 }
 
 // String returns the string representation of r.
@@ -28,8 +31,8 @@ func (r *QuotientRing) String() string {
 		return r.ring.String()
 	}
 	return fmt.Sprintf(
-		"Quotient ring of univariate polynomials over %v modulo %v",
-		r.ring, r.id,
+		"Quotient ring of univariate polynomials in %s over %v modulo %v",
+		r.varName, r.baseField, r.id,
 	)
 }
 
@@ -39,9 +42,29 @@ func DefRing(field *finitefield.Field) *QuotientRing {
 	return &QuotientRing{
 		ring: &ring{
 			baseField: field,
+			varName:   "X",
 		},
 		id: nil,
 	}
+}
+
+// SetVarName sets the variable name to be used in the given quotient ring.
+//
+// Leading and trailing whitespace characters are removed before setting the
+// variable name. If the string consists solely of whitespace characters, an
+// InputValue-error is returned.
+// TODO: Do more strings have to be disallowed (eg. +, -)?
+func (r *QuotientRing) SetVarName(varName string) error {
+	const op = "Setting variable name"
+	varName = strings.TrimSpace(varName)
+	if len(varName) == 0 {
+		return errors.New(
+			op, errors.InputValue,
+			"Cannot use whitespace characters as variable name",
+		)
+	}
+	r.varName = varName
+	return nil
 }
 
 // zeroWithCap returns a zero polynomial over the specified ring, where the
@@ -114,7 +137,7 @@ func (r *QuotientRing) PolynomialFromSigned(coefs []int) *Polynomial {
 func (r *QuotientRing) PolynomialFromString(s string) (*Polynomial, error) {
 	const op = "Defining polynomial from string"
 
-	m, err := polynomialStringToSignedMap(s)
+	m, err := polynomialStringToSignedMap(s, &r.varName)
 	f := r.Zero()
 	if err != nil {
 		return f, errors.Wrap(op, errors.Inherit, err)
