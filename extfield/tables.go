@@ -8,12 +8,12 @@ import (
 const defaultMaxMem uint = 1 << 19 // Maximal memory allowed per table in KiB (default: 512 MiB)
 
 type table struct {
-	log    []*Element
-	invLog map[string]int
-	card   int
+	invLog []*Element
+	log    map[string]uint
+	zero   *Element
 }
 
-func newMultTable(f *Field, maxMem ...uint) (*table, error) {
+func newLogTable(f *Field, maxMem ...uint) (*table, error) {
 	if len(maxMem) == 0 {
 		maxMem = append(maxMem, defaultMaxMem)
 	}
@@ -24,22 +24,22 @@ func newMultTable(f *Field, maxMem ...uint) (*table, error) {
 		)
 	}
 
-	log := f.Elements()[1:]
+	invLog := f.Elements()[1:]
 
-	invLog := make(map[string]int, len(log))
-	for i, e := range log {
-		invLog[e.String()] = i
+	log := make(map[string]uint, len(invLog))
+	for i, e := range invLog {
+		log[e.String()] = uint(i)
 	}
 
-	return &table{log: log, invLog: invLog, card: int(f.Card())}, nil
+	return &table{log: log, invLog: invLog, zero: f.Zero()}, nil
 }
 
-func (t *table) lookup(i, j *Element) *Element {
-	if i.Zero() || j.Zero() {
-		return i.field.Zero()
-	}
-	a, b := t.invLog[i.String()], t.invLog[j.String()]
-	return t.log[(a+b)%(t.card-1)].Copy()
+func (t *table) lookup(a *Element) uint {
+	return t.log[a.String()]
+}
+
+func (t *table) lookupReverse(i uint) *Element {
+	return t.invLog[i].Copy()
 }
 
 // estimateMemory gives an estimate on the memory required to store a table.

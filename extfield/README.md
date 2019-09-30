@@ -2,6 +2,8 @@
 # Algobra: Extension fields
 This package implements arithmetic in finite fields of any prime power cardinality.
 
+If you need finite fields of extension degree one &ndash; that is, prime fields &ndash; [algobra/primefield](https://github.com/ReneBoedker/algobra/tree/master/primefield) provides a more efficient implementation. If both prime fields and extension fields are needed, consider using [algobra/finitefields](https://github.com/ReneBoedker/algobra/tree/master/finitefield) instead.
+
 ## Basic usage
 ### Arithmetic operations
 The Element objects have methods `Add`, `Sub`, `Mult`, and `Inv` for the basic field operations. Of these four, only `Inv` allocates a new object. The other methods store the result in the receiving element object. For instance, `a.Add(b)` would evaluate the sum `a+b`, and then set `a` to this value. If the result is to be stored in a new object, the package provides the methods `Plus`, `Minus`, and `Times`, which evaluate the arithmetic operation and returns the result in a new object.

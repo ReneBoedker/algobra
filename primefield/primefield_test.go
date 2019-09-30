@@ -393,7 +393,9 @@ func TestGf7(t *testing.T) {
 		}
 		for i := 1; i < len(elems); i++ {
 			if t1 := elems[i].Inv(); !t1.Equal(invList[i-1]) {
-				t.Errorf("GF(7) failed: inv(%d)=%d (Expected %d)", elems[i].val, t1.val, invList[i].val)
+				t.Errorf("GF(7) failed: inv(%d)=%d (Expected %d)",
+					elems[i].val, t1.val, invList[i-1].val,
+				)
 			}
 		}
 	}

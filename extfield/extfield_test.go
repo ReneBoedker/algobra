@@ -189,8 +189,14 @@ func TestGf4(t *testing.T) {
 				}
 			}
 		}
-		if t1 := elems[1].Inv(); !t1.Equal(elems[1]) {
-			t.Errorf("GF(4) failed: inv(1) = %v (Expected 1)", t1.val)
+
+		invList := []*Element{elems[1], elems[3], elems[2]}
+		for i := 1; i < len(elems); i++ {
+			if t1 := elems[i].Inv(); !t1.Equal(invList[i-1]) {
+				t.Errorf("GF(4) failed: inv(%v) = %v (Expected %v)",
+					elems[i], t1, invList[i-1],
+				)
+			}
 		}
 	}
 	// Without tables
@@ -263,8 +269,15 @@ func TestGf9(t *testing.T) {
 				}
 			}
 		}
-		if t1 := elems[1].Inv(); !t1.Equal(elems[1]) {
-			t.Errorf("GF(9) failed: inv(1) = %v (Expected 1)", t1.val)
+		invList := []*Element{
+			elems[1], elems[2], elems[6], elems[7], elems[8], elems[3], elems[4], elems[5],
+		}
+		for i := 1; i < len(elems); i++ {
+			if t1 := elems[i].Inv(); !t1.Equal(invList[i-1]) {
+				t.Errorf("GF(4) failed: inv(%v) = %v (Expected %v)",
+					elems[i], t1, invList[i-1],
+				)
+			}
 		}
 	}
 	// Without tables

@@ -135,9 +135,9 @@ func (a *Element) Pow(n uint) *Element {
 		return a.field.Element(0)
 	}
 
-	if n >= a.field.Char() {
+	if n >= a.field.Card() {
 		// Use that a^(p-1)=1 for units
-		n = n % (a.field.Char() - 1)
+		n = n % (a.field.Card() - 1)
 	}
 
 	out := a.field.Element(1)

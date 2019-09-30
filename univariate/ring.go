@@ -204,14 +204,14 @@ outer:
 					p.Ld()-g.Ld(),
 					p.Lc().Times(g.Lc().Inv()),
 				)
-				q[i] = q[i].Plus(tmp)
-				p = p.Minus(tmp.multNoReduce(g))
+				q[i].Add(tmp)
+				p.Sub(tmp.multNoReduce(g))
 				continue outer
 			}
 		}
 		// No polynomials divide the leading term of f
-		r = r.Plus(p.Lt())
-		p = p.Minus(p.Lt())
+		r.Add(p.Lt())
+		p.Sub(p.Lt())
 	}
 	return q, r
 }

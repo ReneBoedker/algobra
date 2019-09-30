@@ -2,6 +2,7 @@ package univariate
 
 import (
 	"algobra/errors"
+	"algobra/finitefield"
 )
 
 // Add sets f to the sum of the two polynomials f and g and returns f.
@@ -153,6 +154,33 @@ func (f *Polynomial) Mult(g *Polynomial) *Polynomial {
 	}
 	f.reduce()
 	return f
+}
+
+// Pow raises f to the power of n.
+//
+// If the computation causes the degree of f to overflow, the returned
+// polynomial has an Overflow-error as error status.
+func (f *Polynomial) Pow(n uint) *Polynomial {
+	const op = "Computing polynomial power"
+
+	out := f.baseRing.Polynomial([]*finitefield.Element{
+		f.BaseField().One(),
+	})
+	g := f.Copy()
+
+	for n > 0 {
+		if n%2 == 1 {
+			out = out.Mult(g)
+			if out.Err() != nil {
+				out = f.baseRing.Zero()
+				out.err = errors.Wrap(op, errors.Inherit, out.Err())
+				return out
+			}
+		}
+		n /= 2
+		g = g.Mult(g)
+	}
+	return out
 }
 
 /* Copyright 2019 René Bødker Christensen

@@ -96,7 +96,7 @@ func (f *Field) Card() uint {
 // maximal value specified by maxMem.
 func (f *Field) ComputeMultTable(maxMem ...uint) (err error) {
 	if f.multTable == nil {
-		f.multTable, err = newMultTable(f, maxMem...)
+		f.multTable, err = newLogTable(f, maxMem...)
 	}
 
 	if err != nil {

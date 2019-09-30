@@ -1,9 +1,9 @@
 package extfield
 
 import (
-	//"fmt"
 	"algobra/errors"
 	"algobra/finitefield"
+	"fmt"
 )
 
 // Add sets a to the sum of a and b and returns a
@@ -83,7 +83,14 @@ func (a *Element) Prod(b, c *Element) *Element {
 	a.field = b.field
 
 	if a.field.multTable != nil {
-		a = a.field.multTable.lookup(b, c)
+		if b.Zero() || c.Zero() {
+			return a.field.Zero()
+		}
+
+		s := a.field.multTable.lookup(b)
+		t := a.field.multTable.lookup(c)
+
+		a = a.field.multTable.lookupReverse((s + t) % (a.field.Card() - 1))
 	} else {
 		a.val = (b.val.Times(c.val))
 	}
@@ -112,6 +119,32 @@ func (a *Element) Mult(b *Element) *Element {
 	return a.Prod(a, b)
 }
 
+// Pow returns a raised to the power of n.
+func (a *Element) Pow(n uint) *Element {
+	if a.Zero() {
+		if n == 0 {
+			return a.field.Element([]uint{1})
+		}
+		return a.field.Zero()
+	}
+
+	if n >= a.field.Card() {
+		// Use that a^(q-1)=1 for units
+		n = n % (a.field.Char() - 1)
+	}
+
+	out := a.field.Element([]uint{1})
+	b := a.Copy()
+	for n > 0 {
+		if n%2 == 1 {
+			out.Mult(b)
+		}
+		n /= 2
+		b.Mult(b)
+	}
+	return out
+}
+
 // Inv returns the inverse of a
 //
 // If a is the zero element, the return value is an element with
@@ -128,6 +161,15 @@ func (a *Element) Inv() *Element {
 		return out
 	}
 
+	if a.One() {
+		return a.Copy()
+	}
+
+	if a.field.multTable != nil {
+		s := a.field.multTable.lookup(a)
+		return a.field.multTable.lookupReverse(a.field.Card() - 1 - s)
+	}
+
 	// Implemented using the extended euclidean algorithm (see for instance
 	// [GG13; Algorithm 3.14])
 	r0 := a.field.conwayPoly.Copy()
@@ -135,10 +177,11 @@ func (a *Element) Inv() *Element {
 	i0 := a.field.polyRing.Zero()
 	i1 := a.field.polyRing.Polynomial([]*finitefield.Element{a.val.Lc().Inv()})
 	for r1.Nonzero() {
+		fmt.Println(r0, r1)
 		quo, rem := r0.QuoRem(r1)
-		luInv := rem.Lc().Inv()
-		r0, r1 = r1, rem.Scale(luInv)
-		i0, i1 = i1, i0.Minus(quo[0].Mult(i1)).Scale(luInv)
+		lcInv := rem.Lc().Inv()
+		r0, r1 = r1, rem.Scale(lcInv)
+		i0, i1 = i1, i0.Minus(quo[0].Mult(i1)).Scale(lcInv)
 	}
 	return &Element{
 		field: a.field,

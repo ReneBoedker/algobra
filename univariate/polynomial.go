@@ -124,33 +124,6 @@ func (f *Polynomial) Scale(c *finitefield.Element) *Polynomial {
 	return g
 }
 
-// Pow raises f to the power of n.
-//
-// If the computation causes the degree of f to overflow, the returned
-// polynomial has an Overflow-error as error status.
-func (f *Polynomial) Pow(n uint) *Polynomial {
-	const op = "Computing polynomial power"
-
-	out := f.baseRing.Polynomial([]*finitefield.Element{
-		f.BaseField().One(),
-	})
-	g := f.Copy()
-
-	for n > 0 {
-		if n%2 == 1 {
-			out = out.Mult(g)
-			if out.Err() != nil {
-				out = f.baseRing.Zero()
-				out.err = errors.Wrap(op, errors.Inherit, out.Err())
-				return out
-			}
-		}
-		n /= 2
-		g = g.Mult(g)
-	}
-	return out
-}
-
 // Degrees returns a list containing the degrees is the support of f.
 //
 // The list is sorted according to the ring order with higher orders preceding
