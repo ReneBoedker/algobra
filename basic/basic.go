@@ -5,16 +5,18 @@ import (
 	"math/bits"
 )
 
-// CeilLog returns the ceiling function applied to the base 2-logarithm of n.
-func CeilLog(n uint) uint {
+// BoundSqrt returns an upper bound on the square root of n.
+func BoundSqrt(n uint) uint {
 	if n == 0 {
 		return 0
 	}
 	b := uint(bits.Len(n))
-	if bits.OnesCount(n) == 1 {
-		return b - 1
+	if b%2 == 0 {
+		b = b >> 1
+	} else {
+		b = (b >> 1) + 1
 	}
-	return b
+	return 1 << b
 }
 
 // Pow returns a to the power of n
@@ -53,7 +55,7 @@ func FactorizePrimePower(q uint) (p uint, n uint, err error) {
 	} else if q%3 == 0 {
 		p = 3
 	}
-	maxP := CeilLog(q)
+	maxP := BoundSqrt(q)
 	for k := uint(6); p == 0 && k-1 <= maxP; k += 6 {
 		if q%(k-1) == 0 {
 			p = k - 1
@@ -113,7 +115,7 @@ func Factorize(n uint) (factors, exponents []uint, err error) {
 		}
 	}
 
-	maxFactor := CeilLog(n)
+	maxFactor := BoundSqrt(n)
 	for k := uint(6); k-1 <= maxFactor; k += 6 {
 		for _, p := range []uint{k - 1, k + 1} {
 			exp := uint(0)
