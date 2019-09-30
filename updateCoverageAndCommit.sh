@@ -5,7 +5,7 @@ do
 	## Run the coverage test
 	cover=$(go test -cover $subpkg | sed "s/.*coverage: \([0-9\.]\+\)%.*/\1/")
 
-	if [[ (echo $cover | tail -n1 ) == FAIL* ]]
+	if [[ $(echo $cover | tail -n1) == FAIL* ]]
 	then
 		## Test or build failed; abort commit
 		exit 1
