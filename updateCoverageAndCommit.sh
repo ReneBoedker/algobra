@@ -1,5 +1,8 @@
 #!/bin/bash
 
+## Run from Magit
+unset GIT_LITERAL_PATHSPECS
+
 for subpkg in $(go list ./... | sed "s/algobra/./g")
 do	
 	## Run the coverage test
