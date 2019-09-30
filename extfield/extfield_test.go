@@ -13,6 +13,21 @@ func DefineField(card uint) *Field {
 	return f
 }
 
+func TestTableMemory(t *testing.T) {
+	var bigPrimePow uint
+	if bits.UintSize == 32 {
+		bigPrimePow = uint(41781923) // 347^3
+	} else {
+		bigPrimePow = uint(22188041) // 281^3
+	}
+	f := DefineField(bigPrimePow)
+	if err := f.ComputeMultTable(); err == nil {
+		t.Errorf("No error returned")
+	} else if !errors.Is(errors.InputTooLarge, err) {
+		t.Errorf("Error returned has wrong kind. Expected errors.InputTooLarge, "+
+			"but received error %q", err.Error())
+	}
+}
 func TestGf4(t *testing.T) {
 	field := DefineField(4)
 	test := func(field *Field) {
@@ -45,7 +60,7 @@ func TestGf4(t *testing.T) {
 						elems[i].val, elems[j].val, t1, t2)
 				}
 				if t1, t2 := elems[i].Times(elems[j]), prodTable[i][j]; !t1.Equal(t2) {
-					t.Errorf("GF(4) failed: %v*%v=%v (Expected %v)",
+					t.Errorf("GF(4) failed: (%v) * (%v) = %v (Expected %v)",
 						elems[i], elems[j], t1, t2)
 				}
 			}
@@ -57,8 +72,8 @@ func TestGf4(t *testing.T) {
 	// Without tables
 	test(field)
 	// With tables
-	//field.ComputeTables(true, true)
-	//test(field)
+	field.ComputeMultTable()
+	test(field)
 }
 
 func TestGf9(t *testing.T) {
@@ -131,6 +146,6 @@ func TestGf9(t *testing.T) {
 	// Without tables
 	test(field)
 	// With tables
-	//field.ComputeTables(true, true)
-	//test(field)
+	field.ComputeMultTable()
+	test(field)
 }

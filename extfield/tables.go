@@ -1,48 +1,53 @@
 package extfield
 
 import (
-	"algobra/univariate"
+	"algobra/errors"
 	"math/bits"
 )
 
 const defaultMaxMem uint = 1 << 19 // Maximal memory allowed per table in KiB (default: 512 MiB)
 
 type table struct {
-	t [][]*univariate.Polynomial
+	log    []*Element
+	invLog map[string]int
+	card   int
 }
 
-// func newTable(f *Field, op func(i, j uint) uint, maxMem ...uint) (*table, error) {
-// 	if len(maxMem) == 0 {
-// 		maxMem = append(maxMem, defaultMaxMem)
-// 	}
-// 	if m := estimateMemory(f); m > maxMem[0] {
-// 		return nil, errors.New(
-// 			"Creating arithmetic table", errors.InputTooLarge,
-// 			"Requires %d KiB, which exceeds maxMem (%d KiB)", m, maxMem,
-// 		)
-// 	}
-// 	t := make([][]*Element, f.Card(), f.Card())
-// 	for i := uint(0); i < f.Card(); i++ {
-// 		t[i] = make([]*Element, f.Card()-i, f.Card()-i)
-// 		for j := i; j < f.Card(); j++ {
-// 			t[i][j-i] = op(i, j)
-// 		}
-// 	}
-// 	return &table{t: t}, nil
-// }
-
-func (t *table) lookup(i, j *univariate.Polynomial) *univariate.Polynomial {
-	if j.Ld() < i.Ld() {
-		return t.lookup(j, i)
+func newMultTable(f *Field, maxMem ...uint) (*table, error) {
+	if len(maxMem) == 0 {
+		maxMem = append(maxMem, defaultMaxMem)
 	}
-	return nil
-	// return t.t[i][j-i]
+	if m := estimateMemory(f); m > maxMem[0] {
+		return nil, errors.New(
+			"Creating arithmetic table", errors.InputTooLarge,
+			"Requires %d KiB, which exceeds maxMem (%d KiB)", m, maxMem,
+		)
+	}
+
+	log := f.Elements()[1:]
+
+	invLog := make(map[string]int, len(log))
+	for i, e := range log {
+		invLog[e.String()] = i
+	}
+
+	return &table{log: log, invLog: invLog, card: int(f.Card())}, nil
 }
 
-// estimateMemory gives a lower bound on the memory required to store a table.
-// This estimate ignores overhead from the slices. Return value is in KiB
+func (t *table) lookup(i, j *Element) *Element {
+	if i.Zero() || j.Zero() {
+		return i.field.Zero()
+	}
+	a, b := t.invLog[i.String()], t.invLog[j.String()]
+	return t.log[(a+b)%(t.card-1)].Copy()
+}
+
+// estimateMemory gives an estimate on the memory required to store a table.
+// This estimate ignores overhead from the map. Return value is in KiB
 func estimateMemory(f *Field) uint {
-	b := f.Char() * (f.Char() + 1) * (bits.UintSize / 16)
+	const keySize = uint(1) // Map keys are uint8 == 1 byte
+	elemSize := f.extDeg * bits.UintSize / 8
+	b := (f.Card() - 1) * (keySize + elemSize)
 	return b >> 10
 }
 
