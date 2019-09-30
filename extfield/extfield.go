@@ -15,7 +15,6 @@ type Field struct {
 	extDeg     uint
 	conwayPoly *univariate.Polynomial
 	polyRing   *univariate.QuotientRing
-	addTable   *table
 	multTable  *table
 }
 
@@ -45,6 +44,8 @@ func Define(card uint) (*Field, error) {
 	}
 
 	polyRing := univariate.DefRing(baseField)
+	polyRing.SetVarName("a") // Ignoring error since this always succeeds
+
 	conwayCoefs, err := conway.Lookup(char, extDeg)
 	if err != nil {
 		return nil, errors.Wrap(op, errors.Inherit, err)
@@ -66,7 +67,6 @@ func Define(card uint) (*Field, error) {
 		extDeg:     extDeg,
 		conwayPoly: conwayPoly,
 		polyRing:   polyRing,
-		addTable:   nil,
 		multTable:  nil,
 	}, nil
 }
@@ -86,6 +86,26 @@ func (f *Field) Card() uint {
 	return basic.Pow(f.Char(), f.extDeg)
 }
 
+// ComputeMultTable will precompute the multiplication table for the field f.
+//
+// The optional argument maxMem specifies the maximal table size in KiB. If no
+// value is given, a default value is used. If more than one value is given,
+// only the first is used.
+//
+// Returns an InputTooLarge-error if the estimated memory usage exceeds the
+// maximal value specified by maxMem.
+func (f *Field) ComputeMultTable(maxMem ...uint) (err error) {
+	if f.multTable == nil {
+		f.multTable, err = newMultTable(f, maxMem...)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // MultGenerator returns an element that generates the units of f.
 func (f *Field) MultGenerator() *Element {
 	// The field is defined from a Conway polynomial, so alpha is a generator
@@ -98,7 +118,7 @@ func (f *Field) Elements() []*Element {
 	out[0] = f.Zero()
 
 	gen := f.MultGenerator()
-	for i, e := uint(1), gen.Copy(); i < f.Char(); i, e = i+1, e.Mult(gen) {
+	for i, e := uint(1), f.Element([]uint{1}); i < f.Card(); i, e = i+1, e.Mult(gen) {
 		out[i] = e.Copy()
 	}
 	return out

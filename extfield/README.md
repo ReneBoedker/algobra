@@ -19,3 +19,6 @@ if a.Err()!=nil {
     // Handle error
 }
 ```
+
+## References
+* Frank Lübeck: [Conway polynomials for finite fields](http://www.math.rwth-aachen.de/~Frank.Luebeck/data/ConwayPol/index.html)

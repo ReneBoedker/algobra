@@ -21,11 +21,7 @@ func (a *Element) Add(b *Element) *Element {
 		return a
 	}
 
-	if a.field.addTable != nil {
-		a.val = a.field.addTable.lookup(a.val, b.val)
-	} else {
-		a.val.Add(b.val)
-	}
+	a.val.Add(b.val)
 
 	return a
 }
@@ -80,13 +76,14 @@ func (a *Element) Prod(b, c *Element) *Element {
 
 	if tmp := checkErrAndCompatible(op, b, c); tmp != nil {
 		a = tmp
+		return a
 	}
 
 	// Set the correct field of a
 	a.field = b.field
 
 	if a.field.multTable != nil {
-		a.val = a.field.multTable.lookup(b.val, c.val)
+		a = a.field.multTable.lookup(b, c)
 	} else {
 		a.val = (b.val.Times(c.val))
 	}
@@ -135,7 +132,8 @@ func (a *Element) Inv() *Element {
 	// [GG13; Algorithm 3.14])
 	r0 := a.field.conwayPoly.Copy()
 	r1 := a.val.Copy()
-	i0, i1 := a.field.polyRing.Zero(), a.field.polyRing.Polynomial([]*finitefield.Element{a.val.Lc().Inv()})
+	i0 := a.field.polyRing.Zero()
+	i1 := a.field.polyRing.Polynomial([]*finitefield.Element{a.val.Lc().Inv()})
 	for r1.Nonzero() {
 		quo, rem := r0.QuoRem(r1)
 		luInv := rem.Lc().Inv()
