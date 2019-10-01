@@ -5,7 +5,9 @@ import (
 	"math/bits"
 )
 
-const defaultMaxMem uint = 1 << 19 // Maximal memory allowed per table in KiB (default: 512 MiB)
+// DefaultMaxMem is the default maximal memory consumption for addition and
+// multiplication tables. The value is in KiB.
+const DefaultMaxMem uint = 1 << 19 // 512 MiB
 
 type table struct {
 	t [][]uint
@@ -13,7 +15,7 @@ type table struct {
 
 func newTable(f *Field, op func(i, j uint) uint, maxMem ...uint) (*table, error) {
 	if len(maxMem) == 0 {
-		maxMem = append(maxMem, defaultMaxMem)
+		maxMem = append(maxMem, DefaultMaxMem)
 	}
 	if m := estimateMemory(f); m > maxMem[0] {
 		return nil, errors.New(

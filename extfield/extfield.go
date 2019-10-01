@@ -9,7 +9,7 @@ import (
 	"fmt"
 )
 
-// Field is the implementation of a finite field
+// Field is the implementation of a finite field.
 type Field struct {
 	baseField  *finitefield.Field
 	extDeg     uint
@@ -71,17 +71,17 @@ func Define(card uint) (*Field, error) {
 	}, nil
 }
 
-// String returns the string representation of f
+// String returns the string representation of f.
 func (f *Field) String() string {
 	return fmt.Sprintf("Finite field of %d elements", f.Card())
 }
 
-// Char returns the characteristic of f
+// Char returns the characteristic of f.
 func (f *Field) Char() uint {
 	return f.baseField.Char()
 }
 
-// Card returns the cardinality of f
+// Card returns the cardinality of f.
 func (f *Field) Card() uint {
 	return basic.Pow(f.Char(), f.extDeg)
 }
@@ -148,7 +148,7 @@ func (f *Field) One() *Element {
 	}
 }
 
-// Element defines a new element over f with value val
+// Element defines a new element over f with value specified by val.
 //
 // The returned element will automatically be reduced modulo the characteristic.
 func (f *Field) Element(val []uint) *Element {
@@ -158,7 +158,7 @@ func (f *Field) Element(val []uint) *Element {
 	}
 }
 
-// ElementFromSigned defines a new element over f with value val
+// ElementFromSigned defines a new element over f with values specified by val.
 //
 // The returned element will be reduced modulo the characteristic automatically.
 // Negative values are reduced to a positive remainder (as opposed to the
@@ -170,7 +170,7 @@ func (f *Field) ElementFromSigned(val []int) *Element {
 	}
 }
 
-// Copy returns a copy of a
+// Copy returns a copy of a.
 func (a *Element) Copy() *Element {
 	return &Element{
 		field: a.field,
@@ -192,17 +192,17 @@ func (a *Element) Equal(b *Element) bool {
 	return false
 }
 
-// IsZero returns a boolean describing whether a is the zero element
+// IsZero returns a boolean describing whether a is the additive identity.
 func (a *Element) IsZero() bool {
 	return a.val.IsZero()
 }
 
-// IsNonzero returns a boolean describing whether a is a non-zero element
+// IsNonzero returns a boolean describing whether a is a non-zero element.
 func (a *Element) IsNonzero() bool {
 	return a.val.IsNonzero()
 }
 
-// IsOne returns a boolean describing whether a is one
+// IsOne returns a boolean describing whether a is the multiplicative identity.
 func (a *Element) IsOne() bool {
 	return a.val.IsOne()
 }

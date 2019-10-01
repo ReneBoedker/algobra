@@ -1,3 +1,5 @@
+// Package conway contains a database of Conway polynomials. The list of
+// polynomials was compiled by Frank Lübeck: http://www.math.rwth-aachen.de/~Frank.Luebeck/data/ConwayPol/index.html?LANG=en
 package conway
 
 import (

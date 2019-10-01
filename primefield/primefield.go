@@ -15,51 +15,51 @@ type Field struct {
 	multTable *table
 }
 
-// Define creates a new finite field with prime characteristic.
+// Define creates a new finite field with prime cardinality.
 //
-// If char is not a prime, the package returns an InputValue-error. If char
+// If card is not a prime, the package returns an InputValue-error. If card
 // implies that multiplication will overflow uint, the function returns an
 // InputTooLarge-error.
-func Define(char uint) (*Field, error) {
+func Define(card uint) (*Field, error) {
 	const op = "Defining prime field"
 
-	if char == 0 {
+	if card == 0 {
 		return nil, errors.New(
 			op, errors.InputValue,
 			"Field characteristic cannot be zero",
 		)
 	}
 
-	if char-1 >= 1<<(bits.UintSize/2) {
+	if card-1 >= 1<<(bits.UintSize/2) {
 		return nil, errors.New(
 			op, errors.InputTooLarge,
-			"%d exceeds maximal field size (2^%d)", char, bits.UintSize/2,
+			"%d exceeds maximal field size (2^%d)", card, bits.UintSize/2,
 		)
 	}
 
-	_, n, err := basic.FactorizePrimePower(char)
+	_, n, err := basic.FactorizePrimePower(card)
 	if err != nil {
 		return nil, errors.Wrap(op, errors.Inherit, err)
 	} else if n != 1 {
 		return nil, errors.New(
 			op, errors.InputValue,
-			"%d is not a prime", char,
+			"%d is not a prime", card,
 		)
 	}
-	return &Field{char: char, addTable: nil, multTable: nil}, nil
+	return &Field{char: card, addTable: nil, multTable: nil}, nil
 }
 
-// String returns the string representation of f
+// String returns the string representation of f.
 func (f *Field) String() string {
 	return fmt.Sprintf("Finite field of %d elements", f.char)
 }
 
-// Char returns the characteristic of f
+// Char returns the characteristic of f.
 func (f *Field) Char() uint {
 	return f.char
 }
 
-// Card returns the cardinality of f
+// Card returns the cardinality of f.
 func (f *Field) Card() uint {
 	return f.char
 }
@@ -68,7 +68,7 @@ func (f *Field) Card() uint {
 // (or both) for the field f.
 //
 // The optional argument maxMem specifies the maximal table size in KiB. If no
-// value is given, a default value is used. If more than one value is given,
+// value is given, a DefaultMaxMem is used. If more than one value is given,
 // only the first is used.
 //
 // Returns an InputTooLarge-error if the estimated memory usage exceeds the
@@ -120,7 +120,6 @@ outer:
 }
 
 // Elements returns a slice containing all elements of f.
-// TODO: This can be done much easier since card is prime
 func (f *Field) Elements() []*Element {
 	out := make([]*Element, f.Card(), f.Card())
 	for i := uint(0); i < f.Card(); i++ {
@@ -129,7 +128,7 @@ func (f *Field) Elements() []*Element {
 	return out
 }
 
-// Element is the implementation of an element in a finite field.
+// Element is the implementation of a finite field element.
 type Element struct {
 	field *Field
 	val   uint
@@ -146,14 +145,14 @@ func (f *Field) One() *Element {
 	return &Element{field: f, val: 1}
 }
 
-// Element defines a new element over f with value val
+// Element defines a new element over f with value val.
 //
 // The returned element will automatically be reduced modulo the characteristic.
 func (f *Field) Element(val uint) *Element {
 	return &Element{field: f, val: val % f.char}
 }
 
-// ElementFromSigned defines a new element over f with value val
+// ElementFromSigned defines a new element over f with value val.
 //
 // The returned element will be reduced modulo the characteristic automatically.
 // Negative values are reduced to a positive remainder (as opposed to the
@@ -166,7 +165,7 @@ func (f *Field) ElementFromSigned(val int) *Element {
 	return f.Element(uint(val))
 }
 
-// Copy returns a copy of a
+// Copy returns a copy of a.
 func (a *Element) Copy() *Element {
 	return &Element{
 		field: a.field,
@@ -180,12 +179,14 @@ func (a *Element) Err() error {
 	return a.err
 }
 
-// Uint returns the value of a represented as a uint.
+// Uint returns the value of a represented as an unsigned integer.
 func (a *Element) Uint() uint {
 	return a.val
 }
 
 // SetUnsigned sets the value of a to the element corresponding to val.
+//
+// The value is automatically reduced modulo the characteristic.
 func (a *Element) SetUnsigned(val uint) {
 	a.val = val % a.field.Char()
 }
@@ -198,17 +199,17 @@ func (a *Element) Equal(b *Element) bool {
 	return false
 }
 
-// IsZero returns a boolean describing whether a is the zero element
+// IsZero returns a boolean describing whether a is the additive identity.
 func (a *Element) IsZero() bool {
 	return (a.val == 0)
 }
 
-// IsNonzero returns a boolean describing whether a is a non-zero element
+// IsNonzero returns a boolean describing whether a is a nonzero element.
 func (a *Element) IsNonzero() bool {
 	return (a.val != 0)
 }
 
-// IsOne returns a boolean describing whether a is one
+// IsOne returns a boolean describing whether a is the multiplicative identity.
 func (a *Element) IsOne() bool {
 	return (a.val == 1)
 }

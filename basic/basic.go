@@ -1,3 +1,4 @@
+// Package basic contains a number of basic, auxiliary mathematical functions.
 package basic
 
 import (

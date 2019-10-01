@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-// Add sets a to the sum of a and b and returns a
+// Add sets a to the sum of a and b. It then returns a.
 //
 // If a and b are defined over different fields, a new element is returned with
 // an ArithmeticIncompat-error as error status.
@@ -26,7 +26,7 @@ func (a *Element) Add(b *Element) *Element {
 	return a
 }
 
-// Plus returns the sum of elements a and b
+// Plus returns the sum of elements a and b.
 //
 // If a and b are defined over different fields, a new element is returned with
 // an ArithmeticIncompat-error as error status.
@@ -37,7 +37,7 @@ func (a *Element) Plus(b *Element) *Element {
 	return a.Copy().Add(b)
 }
 
-// Sub sets a to the difference of elements a and b and returns a.
+// Sub sets a to the difference of elements a and b. It then returns a.
 //
 // If a and b are defined over different fields, a new element is returned with
 // an ArithmeticIncompat-error as error status.
@@ -56,7 +56,7 @@ func (a *Element) Sub(b *Element) *Element {
 	return a
 }
 
-// Minus returns the difference of elements a and b
+// Minus returns the difference of elements a and b.
 //
 // If a and b are defined over different fields, a new element is returned with
 // an ArithmeticIncompat-error as error status.
@@ -67,10 +67,13 @@ func (a *Element) Minus(b *Element) *Element {
 	return a.Copy().Sub(b)
 }
 
-// Prod sets a to the product of b and c, and returns a.
+// Prod sets a to the product of b and c. It then returns a.
 //
 // The function returns an ArithmeticIncompat-error if b, and c are not defined
 // over the same field.
+//
+// When b or c has a non-nil error status, its error is wrapped and the same
+// element is returned.
 func (a *Element) Prod(b, c *Element) *Element {
 	const op = "Multiplying elements"
 
@@ -97,7 +100,7 @@ func (a *Element) Prod(b, c *Element) *Element {
 	return a
 }
 
-// Times returns the product of elements a and b
+// Times returns the product of elements a and b.
 //
 // If a and b are defined over different fields, a new element is returned with
 // an ArithmeticIncompat-error as error status.
@@ -108,7 +111,7 @@ func (a *Element) Times(b *Element) *Element {
 	return a.Copy().Mult(b)
 }
 
-// Mult sets a to the product of elements a and b and returns a.
+// Mult sets a to the product of elements a and b. It then returns a.
 //
 // If a and b are defined over different fields, a new element is returned with
 // an ArithmeticIncompat-error as error status.
@@ -119,12 +122,13 @@ func (a *Element) Mult(b *Element) *Element {
 	return a.Prod(a, b)
 }
 
-// Neg returns -a (modulo the characteristic)
+// Neg returns a scaled by negative one (modulo the characteristic).
 func (a *Element) Neg() *Element {
 	return a.Copy().SetNeg()
 }
 
-// SetNeg sets a to -a (modulo the characteristic), and returns a
+// SetNeg sets a to a scaled by negative one (modulo the characteristic). It
+// then returns a.
 func (a *Element) SetNeg() *Element {
 	a.val.SetNeg()
 	return a
@@ -156,7 +160,7 @@ func (a *Element) Pow(n uint) *Element {
 	return out
 }
 
-// Inv returns the inverse of a
+// Inv returns the inverse of a.
 //
 // If a is the zero element, the return value is an element with
 // InputValue-error as error status.
