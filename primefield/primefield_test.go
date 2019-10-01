@@ -122,16 +122,16 @@ func TestArithmeticErrors(t *testing.T) {
 
 func TestBools(t *testing.T) {
 	field := DefineField(47)
-	if field.Element(0).Nonzero() {
+	if field.Element(0).IsNonzero() {
 		t.Errorf("Element(0) element considered non-zero")
 	}
-	if !field.Element(0).Zero() {
+	if !field.Element(0).IsZero() {
 		t.Errorf("Element(0) element not considered zero")
 	}
-	if !field.Element(1).One() {
+	if !field.Element(1).IsOne() {
 		t.Errorf("Element(1) not considered as one")
 	}
-	if !field.Element(1).Nonzero() {
+	if !field.Element(1).IsNonzero() {
 		t.Errorf("Element(1) not considered non-zero")
 	}
 }
@@ -200,11 +200,30 @@ func TestGenerator(t *testing.T) {
 	}
 }
 
+func TestElements(t *testing.T) {
+	for _, p := range []uint{2, 3, 5, 7, 11} {
+		unique := make(map[uint]struct{})
+
+		field, err := Define(p)
+		if err != nil {
+			panic(err)
+		}
+
+		for _, e := range field.Elements() {
+			if _, ok := unique[e.Uint()]; ok {
+				t.Errorf("Found element %v twice for p=%v", e, p)
+			} else {
+				unique[e.Uint()] = struct{}{}
+			}
+		}
+	}
+}
+
 func TestNeg(t *testing.T) {
 	for _, card := range []uint{3, 7, 13, 31} {
 		field := DefineField(card)
 		for _, e := range field.Elements() {
-			if tmp := e.Plus(e.Neg()); tmp.Nonzero() {
+			if tmp := e.Plus(e.Neg()); tmp.IsNonzero() {
 				t.Errorf("%[1]v + (-%[1]v) returned %[2]v rather than 0", e, tmp)
 			}
 		}

@@ -15,7 +15,7 @@ type Field struct {
 	extDeg     uint
 	conwayPoly *univariate.Polynomial
 	polyRing   *univariate.QuotientRing
-	multTable  *table
+	logTable   *table
 }
 
 // Define creates a new finite field with given cardinality.
@@ -67,7 +67,7 @@ func Define(card uint) (*Field, error) {
 		extDeg:     extDeg,
 		conwayPoly: conwayPoly,
 		polyRing:   polyRing,
-		multTable:  nil,
+		logTable:   nil,
 	}, nil
 }
 
@@ -86,7 +86,8 @@ func (f *Field) Card() uint {
 	return basic.Pow(f.Char(), f.extDeg)
 }
 
-// ComputeMultTable will precompute the multiplication table for the field f.
+// ComputeMultTable will precompute the table of discrete logarithms for the
+// field f.
 //
 // The optional argument maxMem specifies the maximal table size in KiB. If no
 // value is given, a default value is used. If more than one value is given,
@@ -95,8 +96,8 @@ func (f *Field) Card() uint {
 // Returns an InputTooLarge-error if the estimated memory usage exceeds the
 // maximal value specified by maxMem.
 func (f *Field) ComputeMultTable(maxMem ...uint) (err error) {
-	if f.multTable == nil {
-		f.multTable, err = newLogTable(f, maxMem...)
+	if f.logTable == nil {
+		f.logTable, err = newLogTable(f, maxMem...)
 	}
 
 	if err != nil {
@@ -131,11 +132,19 @@ type Element struct {
 	err   error
 }
 
-// Zero defines a new zero element over f.
+// Zero returns the additive identity in f.
 func (f *Field) Zero() *Element {
 	return &Element{
 		field: f,
 		val:   f.polyRing.Zero(),
+	}
+}
+
+// One returns the multiplicative identity in f.
+func (f *Field) One() *Element {
+	return &Element{
+		field: f,
+		val:   f.polyRing.One(),
 	}
 }
 
@@ -183,19 +192,19 @@ func (a *Element) Equal(b *Element) bool {
 	return false
 }
 
-// Zero returns a boolean describing whether a is the zero element
-func (a *Element) Zero() bool {
-	return a.val.Zero()
+// IsZero returns a boolean describing whether a is the zero element
+func (a *Element) IsZero() bool {
+	return a.val.IsZero()
 }
 
-// Nonzero returns a boolean describing whether a is a non-zero element
-func (a *Element) Nonzero() bool {
-	return a.val.Nonzero()
+// IsNonzero returns a boolean describing whether a is a non-zero element
+func (a *Element) IsNonzero() bool {
+	return a.val.IsNonzero()
 }
 
-// One returns a boolean describing whether a is one
-func (a *Element) One() bool {
-	return a.val.One()
+// IsOne returns a boolean describing whether a is one
+func (a *Element) IsOne() bool {
+	return a.val.IsOne()
 }
 
 // String returns the string representation of a.

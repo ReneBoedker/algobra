@@ -118,16 +118,16 @@ func TestArithmeticErrors(t *testing.T) {
 
 func TestBools(t *testing.T) {
 	field := DefineField(49)
-	if field.Element([]uint{0}).Nonzero() {
+	if field.Element([]uint{0}).IsNonzero() {
 		t.Errorf("Element(0) element considered non-zero")
 	}
-	if !field.Element([]uint{0}).Zero() {
+	if !field.Element([]uint{0}).IsZero() {
 		t.Errorf("Element(0) element not considered zero")
 	}
-	if !field.Element([]uint{1}).One() {
+	if !field.Element([]uint{1}).IsOne() {
 		t.Errorf("Element(1) not considered as one")
 	}
-	if !field.Element([]uint{1}).Nonzero() {
+	if !field.Element([]uint{1}).IsNonzero() {
 		t.Errorf("Element(1) not considered non-zero")
 	}
 }

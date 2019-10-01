@@ -43,7 +43,7 @@ func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 				"Generators defined over different rings",
 			)
 		}
-		if g.Zero() {
+		if g.IsZero() {
 			// Skip zero polynomials
 			continue
 		}
@@ -95,7 +95,7 @@ func (f *Polynomial) quoRemWithIgnore(ignoreIndex int, list ...*Polynomial) (q [
 		q[i] = f.baseRing.Zero()
 	}
 outer:
-	for p.Nonzero() {
+	for p.IsNonzero() {
 		for i, g := range list {
 			if i == ignoreIndex {
 				continue

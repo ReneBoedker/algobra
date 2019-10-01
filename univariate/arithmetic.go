@@ -40,11 +40,16 @@ func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
 // Neg returns the polynomial obtained by scaling f by -1 (modulo the
 // characteristic).
 func (f *Polynomial) Neg() *Polynomial {
-	g := f.baseRing.Zero()
-	for deg, c := range f.coefs {
-		g.SetCoef(deg, c.Neg())
+	return f.Copy().SetNeg()
+}
+
+// SetNeg returns the polynomial obtained by scaling f by -1 (modulo the
+// characteristic).
+func (f *Polynomial) SetNeg() *Polynomial {
+	for _, c := range f.coefs {
+		c.SetNeg()
 	}
-	return g
+	return f
 }
 
 // Equal determines whether two polynomials are equal. That is, whether they are
@@ -102,7 +107,7 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 		return tmp
 	}
 
-	if f.Zero() || g.Zero() {
+	if f.IsZero() || g.IsZero() {
 		return f.baseRing.Zero()
 	}
 	h := f.baseRing.zeroWithCap(f.Ld() + g.Ld() + 1)

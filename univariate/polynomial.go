@@ -108,7 +108,7 @@ func (f *Polynomial) Eval(point *finitefield.Element) *finitefield.Element {
 //
 // If f is the zero polynomial, a copy of f is returned.
 func (f *Polynomial) Normalize() *Polynomial {
-	if f.Zero() {
+	if f.IsZero() {
 		return f.Copy()
 	}
 	return f.Scale(f.Lc().Inv())
@@ -124,10 +124,9 @@ func (f *Polynomial) Scale(c *finitefield.Element) *Polynomial {
 	return g
 }
 
-// Degrees returns a list containing the degrees is the support of f.
+// Degrees returns a slice containing the degrees in the support of f.
 //
-// The list is sorted according to the ring order with higher orders preceding
-// lower orders in the list.
+// The list is sorted with higher degrees preceding lower ones in the list.
 func (f *Polynomial) Degrees() []int {
 	degs := make([]int, 0, len(f.coefs))
 	for deg := len(f.coefs) - 1; deg >= 0; deg-- {
@@ -137,6 +136,17 @@ func (f *Polynomial) Degrees() []int {
 		degs = append(degs, deg)
 	}
 	return degs
+}
+
+// Coefs returns a slice containing the coefficients of f.
+//
+// The i'th element of the resulting slice is the coefficient of degree i.
+func (f *Polynomial) Coefs() []*finitefield.Element {
+	coefs := make([]*finitefield.Element, len(f.coefs), len(f.coefs))
+	for i, c := range f.coefs {
+		coefs[i] = c.Copy()
+	}
+	return coefs
 }
 
 // Ld returns the leading degree of f.
@@ -157,29 +167,29 @@ func (f *Polynomial) Lt() *Polynomial {
 	return h
 }
 
-// Zero determines whether f is the zero polynomial.
-func (f *Polynomial) Zero() bool {
+// IsZero determines whether f is the zero polynomial.
+func (f *Polynomial) IsZero() bool {
 	if len(f.coefs) == 1 && f.Coef(0).Zero() {
 		return true
 	}
 	return false
 }
 
-// Nonzero determines whether f contains some monomial with nonzero coefficient.
-func (f *Polynomial) Nonzero() bool {
-	return !f.Zero()
+// IsNonzero determines whether f contains some monomial with nonzero coefficient.
+func (f *Polynomial) IsNonzero() bool {
+	return !f.IsZero()
 }
 
-// One determines whether f is the constant 1.
-func (f *Polynomial) One() bool {
+// IsOne determines whether f is the constant 1.
+func (f *Polynomial) IsOne() bool {
 	if len(f.coefs) == 1 && f.Coef(0).One() {
 		return true
 	}
 	return false
 }
 
-// Monomial returns a bool describing whether f consists of a single monomial.
-func (f *Polynomial) Monomial() bool {
+// IsMonomial returns a bool describing whether f consists of a single monomial.
+func (f *Polynomial) IsMonomial() bool {
 	if len(f.Degrees()) == 1 {
 		return true
 	}
@@ -196,12 +206,12 @@ func (f *Polynomial) reduce() {
 // checkErrAndCompatible is a wrapper for the two functions hasErr and
 // checkCompatible. It is used in arithmetic functions to check that the inputs
 // are 'good' to use.
-func checkErrAndCompatible(op errors.Op, f, g *Polynomial) *Polynomial {
-	if tmp := hasErr(op, f, g); tmp != nil {
+func checkErrAndCompatible(op errors.Op, f *Polynomial, g ...*Polynomial) *Polynomial {
+	if tmp := hasErr(op, f, g...); tmp != nil {
 		return tmp
 	}
 
-	if tmp := checkCompatible(op, f, g); tmp != nil {
+	if tmp := checkCompatible(op, f, g...); tmp != nil {
 		return tmp
 	}
 
@@ -213,20 +223,22 @@ func checkErrAndCompatible(op errors.Op, f, g *Polynomial) *Polynomial {
 //
 // It returns the first polynomial with non-nil error status after wrapping the
 // error. The new error inherits the kind from the old.
-func hasErr(op errors.Op, f, g *Polynomial) *Polynomial {
-	switch {
-	case f.err != nil:
+func hasErr(op errors.Op, f *Polynomial, g ...*Polynomial) *Polynomial {
+	if f.err != nil {
 		f.err = errors.Wrap(
 			op, errors.Inherit,
 			f.err,
 		)
 		return f
-	case g.err != nil:
-		g.err = errors.Wrap(
-			op, errors.Inherit,
-			g.err,
-		)
-		return g
+	}
+	for _, h := range g {
+		if h.err != nil {
+			h.err = errors.Wrap(
+				op, errors.Inherit,
+				h.err,
+			)
+			return h
+		}
 	}
 	return nil
 }
@@ -236,14 +248,16 @@ func hasErr(op errors.Op, f, g *Polynomial) *Polynomial {
 //
 // If not, the return value is an element with error status set to
 // ArithmeticIncompat.
-func checkCompatible(op errors.Op, f, g *Polynomial) *Polynomial {
-	if f.baseRing != g.baseRing {
-		out := f.baseRing.Zero()
-		out.err = errors.New(
-			op, errors.ArithmeticIncompat,
-			"%v and %v defined over different rings", f, g,
-		)
-		return out
+func checkCompatible(op errors.Op, f *Polynomial, g ...*Polynomial) *Polynomial {
+	for _, h := range g {
+		if f.baseRing != h.baseRing {
+			out := f.baseRing.Zero()
+			out.err = errors.New(
+				op, errors.ArithmeticIncompat,
+				"%v and %v defined over different rings", f, h,
+			)
+			return out
+		}
 	}
 	return nil
 }
@@ -251,7 +265,7 @@ func checkCompatible(op errors.Op, f, g *Polynomial) *Polynomial {
 // String returns the string representation of f. The variable is named
 // according to the ring used.
 func (f *Polynomial) String() string {
-	if f.Zero() {
+	if f.IsZero() {
 		return "0"
 	}
 

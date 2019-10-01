@@ -7,7 +7,7 @@ import (
 )
 
 func TestLagrangeBasis(t *testing.T) {
-	field := defineField(17, t)
+	field := defineField(17)
 	ring := DefRing(field)
 
 	for rep := 0; rep < 100; rep++ {
@@ -30,7 +30,7 @@ func TestLagrangeBasis(t *testing.T) {
 			// f evaluates to 1 in points[j] and 0 in other components of 0
 			f := ring.lagrangeBasis(points, j)
 
-			if f.Zero() {
+			if f.IsZero() {
 				t.Errorf("Lagrange basis is zero with points %v and index %d",
 					points, j)
 			} else if ld := f.Ld(); ld > (nPoints - 1) {
@@ -53,7 +53,7 @@ func TestLagrangeBasis(t *testing.T) {
 }
 
 func TestInterpolation(t *testing.T) {
-	field := defineField(23, t)
+	field := defineField(23)
 	ring := DefRing(field)
 	for rep := 0; rep < 100; rep++ {
 		const nPoints = 4
@@ -100,7 +100,7 @@ func TestInterpolation(t *testing.T) {
 }
 
 func TestInterpolationErrors(t *testing.T) {
-	field := defineField(13, t)
+	field := defineField(13)
 	ring := DefRing(field)
 
 	a := field.Zero()

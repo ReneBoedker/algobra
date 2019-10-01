@@ -89,6 +89,17 @@ func (r *QuotientRing) Zero() *Polynomial {
 	}
 }
 
+// One returns the degree zero polynomial over the specified ring with
+// coefficient 1.
+func (r *QuotientRing) One() *Polynomial {
+	coefs := make([]*finitefield.Element, 1)
+	coefs[0] = r.baseField.One()
+	return &Polynomial{
+		baseRing: r,
+		coefs:    coefs,
+	}
+}
+
 // Polynomial defines a new polynomial with the given coefficients
 func (r *QuotientRing) Polynomial(coefs []*finitefield.Element) *Polynomial {
 	out := r.Zero()
@@ -187,7 +198,14 @@ func (r *QuotientRing) Quotient(id *Ideal) (*QuotientRing, error) {
 // given list of polynomials.
 //
 // Loosely based on [GG; Algorithm 2.5].
-func (f *Polynomial) QuoRem(list ...*Polynomial) (q []*Polynomial, r *Polynomial) {
+func (f *Polynomial) QuoRem(list ...*Polynomial) (q []*Polynomial, r *Polynomial, err error) {
+	const op = "Computing polynomial quotient and remainder"
+
+	if tmp := checkErrAndCompatible(op, f, list...); tmp != nil {
+		err = tmp.Err()
+		return
+	}
+
 	r = f.baseRing.Zero()
 	p := f.Copy()
 
@@ -196,7 +214,7 @@ func (f *Polynomial) QuoRem(list ...*Polynomial) (q []*Polynomial, r *Polynomial
 		q[i] = f.baseRing.Zero()
 	}
 outer:
-	for p.Nonzero() {
+	for p.IsNonzero() {
 		for i, g := range list {
 			if p.Ld() >= g.Ld() {
 				tmp := f.baseRing.Zero()
@@ -213,7 +231,7 @@ outer:
 		r.Add(p.Lt())
 		p.Sub(p.Lt())
 	}
-	return q, r
+	return q, r, nil
 }
 
 /* Copyright 2019 René Bødker Christensen

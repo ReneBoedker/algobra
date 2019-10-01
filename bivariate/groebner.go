@@ -16,7 +16,7 @@ func max(values ...uint) uint {
 }
 
 func monomialLcm(f, g *Polynomial) (lcm *Polynomial, ok bool) {
-	if !f.Monomial() || !g.Monomial() || f.baseRing != g.baseRing {
+	if !f.IsMonomial() || !g.IsMonomial() || f.baseRing != g.baseRing {
 		return nil, false
 	}
 	ldf, ldg := f.Ld(), g.Ld()
@@ -60,7 +60,7 @@ func (id *Ideal) GroebnerBasis() *Ideal {
 				}
 				r, _ := SPolynomial(f, g)
 				id.Reduce(r)
-				if r.Nonzero() {
+				if r.IsNonzero() {
 					newGens = append(newGens, r)
 				}
 			}
@@ -97,7 +97,7 @@ func (id *Ideal) MinimizeBasis() error {
 		lts[i] = id.generators[i].Lt()
 	}
 	for i := 0; i < len(id.generators); {
-		if _, r := lts[i].quoRemWithIgnore(i, lts...); r.Zero() {
+		if _, r := lts[i].quoRemWithIgnore(i, lts...); r.IsZero() {
 			id.generators = append(id.generators[:i], id.generators[i+1:]...)
 			lts = append(lts[:i], lts[i+1:]...)
 		} else {
@@ -135,13 +135,13 @@ func (id *Ideal) ReduceBasis() error {
 func (f *Polynomial) monomialDivideBy(g *Polynomial) (q *Polynomial, ok bool, err error) {
 	const op = "Dividing monomials"
 
-	if !f.Monomial() {
+	if !f.IsMonomial() {
 		return nil, false, errors.New(
 			op, errors.InputValue,
 			"Object %v is not a monomial", f,
 		)
 	}
-	if !g.Monomial() {
+	if !g.IsMonomial() {
 		return nil, false, errors.New(
 			op, errors.InputValue,
 			"Input %v is not a monomial", g,

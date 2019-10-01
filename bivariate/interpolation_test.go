@@ -38,7 +38,7 @@ func TestLagrangeBasis(t *testing.T) {
 			}
 			// f now evaluates to 1 in points[j] and 0 in other points
 
-			if f.Zero() {
+			if f.IsZero() {
 				t.Errorf("Lagrange basis is zero with points %v and index %d",
 					points, i)
 			} else if ld := f.Ld(); ld[0]+ld[1] > 2*(nPoints-1) {

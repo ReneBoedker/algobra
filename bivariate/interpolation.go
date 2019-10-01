@@ -203,7 +203,7 @@ outer:
 	}
 	if k%2 != 0 {
 		// (-1)^k == -1
-		out.NegInPlace()
+		out.SetNeg()
 	}
 	return out
 }

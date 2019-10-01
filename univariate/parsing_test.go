@@ -8,7 +8,7 @@ import (
 )
 
 func TestParsingWellFormed(t *testing.T) {
-	field := defineField(7, t)
+	field := defineField(7)
 	ring := DefRing(field)
 	testStrings := []string{
 		"4X^4 + X^3 + 3X - 5",
@@ -41,7 +41,7 @@ func TestParsingWellFormed(t *testing.T) {
 }
 
 func TestParsingIllFormed(t *testing.T) {
-	field := defineField(7, t)
+	field := defineField(7)
 	ring := DefRing(field)
 
 	testStrings := []string{
@@ -70,7 +70,7 @@ func TestParsingIllFormed(t *testing.T) {
 }
 
 func TestConversionErrors(t *testing.T) {
-	field := defineField(13, t)
+	field := defineField(13)
 	ring := DefRing(field)
 
 	testStrings := []string{
@@ -98,7 +98,7 @@ func TestConversionErrors(t *testing.T) {
 
 func TestParseOutput(t *testing.T) {
 	char := uint(13)
-	field := defineField(char, t)
+	field := defineField(char)
 	ring := DefRing(field)
 	for _, varName := range []string{"X", "Y", "α", "\\beta", "e^i", "", "\t"} {
 		for rep := 0; rep < 200; rep++ {
@@ -122,7 +122,7 @@ func TestParseOutput(t *testing.T) {
 
 func TestSetVarName(t *testing.T) {
 	char := uint(31)
-	field := defineField(char, t)
+	field := defineField(char)
 	ring := DefRing(field)
 	f := ring.PolynomialFromUnsigned([]uint{0, 1})
 	// Check that the printed variable is correct

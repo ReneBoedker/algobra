@@ -96,7 +96,7 @@ func (f *Field) ComputeTables(add, mult bool, maxMem ...uint) (err error) {
 // MultGenerator returns an element that generates the units of f.
 func (f *Field) MultGenerator() *Element {
 	if f.Card() == 2 {
-		return f.Element(1)
+		return f.One()
 	}
 
 	// The possible orders of elements divide p-1 (we can ignore errors since
@@ -109,7 +109,7 @@ outer:
 		e = f.Element(i)
 		for _, p := range factors {
 			// We need to check if p is a non-trivial factor
-			if p != f.Card()-1 && e.Pow(p).One() {
+			if p != f.Card()-1 && e.Pow(p).IsOne() {
 				// Not a generator
 				continue outer
 			}
@@ -123,11 +123,8 @@ outer:
 // TODO: This can be done much easier since card is prime
 func (f *Field) Elements() []*Element {
 	out := make([]*Element, f.Card(), f.Card())
-	out[0] = f.Element(0)
-
-	gen := f.MultGenerator()
-	for i, e := uint(1), gen.Copy(); i < f.Char(); i, e = i+1, e.Mult(gen) {
-		out[i] = e.Copy()
+	for i := uint(0); i < f.Card(); i++ {
+		out[i] = f.Element(i)
 	}
 	return out
 }
@@ -137,6 +134,16 @@ type Element struct {
 	field *Field
 	val   uint
 	err   error
+}
+
+// Zero returns the additive identity in f.
+func (f *Field) Zero() *Element {
+	return &Element{field: f, val: 0}
+}
+
+// One returns the multiplicative identity in f.
+func (f *Field) One() *Element {
+	return &Element{field: f, val: 1}
 }
 
 // Element defines a new element over f with value val
@@ -191,18 +198,18 @@ func (a *Element) Equal(b *Element) bool {
 	return false
 }
 
-// Zero returns a boolean describing whether a is the zero element
-func (a *Element) Zero() bool {
+// IsZero returns a boolean describing whether a is the zero element
+func (a *Element) IsZero() bool {
 	return (a.val == 0)
 }
 
-// Nonzero returns a boolean describing whether a is a non-zero element
-func (a *Element) Nonzero() bool {
+// IsNonzero returns a boolean describing whether a is a non-zero element
+func (a *Element) IsNonzero() bool {
 	return (a.val != 0)
 }
 
-// One returns a boolean describing whether a is one
-func (a *Element) One() bool {
+// IsOne returns a boolean describing whether a is one
+func (a *Element) IsOne() bool {
 	return (a.val == 1)
 }
 
@@ -256,7 +263,7 @@ func hasErr(op errors.Op, a, b *Element) *Element {
 // ArithmeticIncompat.
 func checkCompatible(op errors.Op, a, b *Element) *Element {
 	if a.field != b.field {
-		out := a.field.Element(0)
+		out := a.field.Zero()
 		out.err = errors.New(
 			op, errors.ArithmeticIncompat,
 			"%v and %v defined over different fields", a, b,

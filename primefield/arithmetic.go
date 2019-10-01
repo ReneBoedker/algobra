@@ -117,18 +117,18 @@ func (a *Element) Mult(b *Element) *Element {
 
 // Neg returns -a (modulo the characteristic)
 func (a *Element) Neg() *Element {
-	return a.Copy().NegInPlace()
+	return a.Copy().SetNeg()
 }
 
-// NegInPlace sets a to -a (modulo the characteristic), and returns a
-func (a *Element) NegInPlace() *Element {
+// SetNeg sets a to -a (modulo the characteristic), and returns a
+func (a *Element) SetNeg() *Element {
 	a.val = a.field.char - a.val
 	return a
 }
 
 // Pow returns a raised to the power of n.
 func (a *Element) Pow(n uint) *Element {
-	if a.Zero() {
+	if a.IsZero() {
 		if n == 0 {
 			return a.field.Element(1)
 		}

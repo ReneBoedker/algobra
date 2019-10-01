@@ -10,16 +10,17 @@ import (
 
 var prg = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 
-func defineField(card uint, t *testing.T) *finitefield.Field {
+func defineField(card uint) *finitefield.Field {
 	field, err := finitefield.Define(card)
 	if err != nil {
-		t.Fatalf("Failed to define finite field of %d elements", card)
+		// Error is in tests, so panic is OK
+		panic(err)
 	}
 	return field
 }
 
 func TestAssignment(t *testing.T) {
-	field := defineField(13, t)
+	field := defineField(13)
 	ring := DefRing(field)
 
 	// Define 2X^4-X^2+3X-3 in three separate ways
@@ -88,8 +89,29 @@ func TestAssignment(t *testing.T) {
 	}
 }
 
+func TestCoefs(t *testing.T) {
+	field := defineField(13)
+	ring := DefRing(field)
+
+	for rep := 0; rep < 200; rep++ {
+		const nDegs = 20
+		coefs := make([]uint, nDegs, nDegs)
+
+		for j := range coefs {
+			coefs[j] = uint(prg.Uint32())
+		}
+
+		f := ring.PolynomialFromUnsigned(coefs)
+		g := ring.Polynomial(f.Coefs())
+
+		if !f.Equal(g) {
+			t.Errorf("%v did not test equal to %v", f, g)
+		}
+	}
+}
+
 func TestPlus(t *testing.T) {
-	field := defineField(7, t)
+	field := defineField(7)
 	ring := DefRing(field)
 
 	f := ring.PolynomialFromUnsigned([]uint{2, 0, 3})
@@ -120,7 +142,7 @@ func TestPlus(t *testing.T) {
 }
 
 func TestMinus(t *testing.T) {
-	field := defineField(7, t)
+	field := defineField(7)
 	ring := DefRing(field)
 
 	f := ring.PolynomialFromUnsigned([]uint{2, 0, 3})
@@ -151,7 +173,7 @@ func TestMinus(t *testing.T) {
 }
 
 func TestTimes(t *testing.T) {
-	field := defineField(7, t)
+	field := defineField(7)
 	ring := DefRing(field)
 
 	f := ring.PolynomialFromUnsigned([]uint{2, 0, 3})
@@ -179,10 +201,40 @@ func TestTimes(t *testing.T) {
 			)
 		}
 	}
+
+	zero := ring.Zero()
+	one := ring.One()
+	for _, test := range []*Polynomial{f, g, h} {
+		if res := test.Times(zero); !res.Equal(zero) {
+			t.Errorf(
+				"(%v) * 0 = %v, but expected 0",
+				test, res,
+			)
+		}
+		if res := zero.Times(test); !res.Equal(zero) {
+			t.Errorf(
+				"0 * (%v) = %v, but expected 0",
+				test, res,
+			)
+		}
+
+		if res := test.Times(one); !res.Equal(test) {
+			t.Errorf(
+				"(%v) * 1 = %v, but expected %[1]v",
+				test, res,
+			)
+		}
+		if res := one.Times(test); !res.Equal(test) {
+			t.Errorf(
+				"1 * (%v) = %v, but expected %[1]v",
+				test, res,
+			)
+		}
+	}
 }
 
 func TestEquality(t *testing.T) {
-	field := defineField(5, t)
+	field := defineField(5)
 	ring1 := DefRing(field)
 	ring2 := DefRing(field)
 
@@ -234,7 +286,7 @@ func TestEquality(t *testing.T) {
 }
 
 func TestNormalize(t *testing.T) {
-	field := defineField(11, t)
+	field := defineField(11)
 	ring := DefRing(field)
 	for rep := 0; rep <= 100; rep++ {
 		const nDegs = 5
@@ -245,7 +297,7 @@ func TestNormalize(t *testing.T) {
 		}
 
 		f := ring.PolynomialFromUnsigned(degs)
-		if f.Zero() {
+		if f.IsZero() {
 			continue
 		}
 		g := f.Normalize()
@@ -267,7 +319,7 @@ func TestNormalize(t *testing.T) {
 }
 
 func TestQuotient(t *testing.T) {
-	field := defineField(5, t)
+	field := defineField(5)
 	ring := DefRing(field)
 
 	id, err := ring.NewIdeal(
@@ -290,7 +342,7 @@ func TestQuotient(t *testing.T) {
 	}
 
 	// Check that simple calculations in the ring succeed
-	if qr.PolynomialFromUnsigned([]uint{1, 0, 2, 0, 1}).Nonzero() {
+	if qr.PolynomialFromUnsigned([]uint{1, 0, 2, 0, 1}).IsNonzero() {
 		t.Errorf(
 			"Polynomial (X^2 + 1)^2 reduced to %v rather than 0",
 			qr.PolynomialFromUnsigned([]uint{1, 0, 2, 0, 1}),
@@ -308,7 +360,7 @@ func TestQuotient(t *testing.T) {
 }
 
 func TestGcd(t *testing.T) {
-	field := defineField(3, t)
+	field := defineField(3)
 	ring := DefRing(field)
 
 	gcd, err := Gcd(
@@ -326,7 +378,7 @@ func TestGcd(t *testing.T) {
 
 	// Test that an error is returned when polynomials are defined over
 	// different rings.
-	field2 := defineField(5, t)
+	field2 := defineField(5)
 	ring2 := DefRing(field2)
 	gcd, err = Gcd(
 		ring.PolynomialFromUnsigned([]uint{2, 1, 2, 1, 2, 0, 2}),
@@ -344,7 +396,7 @@ func TestGcd(t *testing.T) {
 }
 
 func TestPow(t *testing.T) {
-	field := defineField(11, t)
+	field := defineField(11)
 	ring := DefRing(field)
 
 	f := ring.PolynomialFromUnsigned([]uint{5, 4, 3, 2, 1})

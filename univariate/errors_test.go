@@ -6,7 +6,7 @@ import (
 )
 
 func TestHasErr(t *testing.T) {
-	field := defineField(7, t)
+	field := defineField(7)
 	ring := DefRing(field)
 
 	f := ring.Zero()
@@ -30,8 +30,8 @@ func TestHasErr(t *testing.T) {
 }
 
 func TestDiffRings(t *testing.T) {
-	field1 := defineField(11, t)
-	field2 := defineField(7, t)
+	field1 := defineField(11)
+	field2 := defineField(7)
 	ring1 := DefRing(field1)
 	ring2 := DefRing(field2)
 

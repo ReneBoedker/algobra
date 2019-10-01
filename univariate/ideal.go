@@ -67,8 +67,11 @@ func Gcd(f *Polynomial, g ...*Polynomial) (*Polynomial, error) {
 	r0 := f.Copy()
 	r1 := g[0].Copy()
 
-	for r1.Nonzero() {
-		_, rem := r0.QuoRem(r1)
+	for r1.IsNonzero() {
+		_, rem, err := r0.QuoRem(r1)
+		if err != nil {
+			return nil, errors.Wrap(op, errors.Inherit, err)
+		}
 		r0, r1 = r1, rem
 	}
 
@@ -86,7 +89,10 @@ func (id *Ideal) Copy() *Ideal {
 // Reduce sets f to f modulo id
 func (id *Ideal) Reduce(f *Polynomial) {
 	// TODO: Ought id to be a Gröbner basis here?
-	_, r := f.QuoRem(id.generator)
+	_, r, err := f.QuoRem(id.generator)
+	if err != nil {
+		panic(err)
+	}
 	*f = *r // For some reason using pointers alone is not enough
 }
 

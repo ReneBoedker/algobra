@@ -400,11 +400,11 @@ func (a *Element) Neg() *Element {
 	}
 }
 
-// NegInPlace sets a to -a (modulo the characteristic) and returns a
-func (a *Element) NegInPlace() *Element {
+// SetNeg sets a to -a (modulo the characteristic) and returns a
+func (a *Element) SetNeg() *Element {
 	switch a.kind() {
 	case primeKind:
-		a.pf.NegInPlace()
+		a.pf.SetNeg()
 	default:
 		panic("Error")
 	}
@@ -427,7 +427,7 @@ func (a *Element) Pow(n uint) *Element {
 func (a *Element) Zero() bool {
 	switch a.kind() {
 	case primeKind:
-		return a.pf.Zero()
+		return a.pf.IsZero()
 	default:
 		panic("Error")
 	}
@@ -437,7 +437,7 @@ func (a *Element) Zero() bool {
 func (a *Element) Nonzero() bool {
 	switch a.kind() {
 	case primeKind:
-		return a.pf.Nonzero()
+		return a.pf.IsNonzero()
 	default:
 		panic("Error")
 	}
@@ -447,7 +447,7 @@ func (a *Element) Nonzero() bool {
 func (a *Element) One() bool {
 	switch a.kind() {
 	case primeKind:
-		return a.pf.One()
+		return a.pf.IsOne()
 	default:
 		panic("Error")
 	}

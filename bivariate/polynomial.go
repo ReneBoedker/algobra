@@ -303,7 +303,7 @@ func (f *Polynomial) Mult(g *Polynomial) *Polynomial {
 //
 // If f is the zero polynomial, a copy of f is returned.
 func (f *Polynomial) Normalize() *Polynomial {
-	if f.Zero() {
+	if f.IsZero() {
 		return f.Copy()
 	}
 	return f.Scale(f.Lc().Inv())
@@ -388,21 +388,21 @@ func (f *Polynomial) Lt() *Polynomial {
 	return h
 }
 
-// Zero determines whether f is the zero polynomial.
-func (f *Polynomial) Zero() bool {
+// IsZero determines whether f is the zero polynomial.
+func (f *Polynomial) IsZero() bool {
 	if len(f.coefs) == 0 {
 		return true
 	}
 	return false
 }
 
-// Nonzero determines whether f contains some monomial with nonzero coefficient.
-func (f *Polynomial) Nonzero() bool {
-	return !f.Zero()
+// IsNonzero determines whether f contains some monomial with nonzero coefficient.
+func (f *Polynomial) IsNonzero() bool {
+	return !f.IsZero()
 }
 
-// Monomial returns a bool describing whether f consists of a single monomial.
-func (f *Polynomial) Monomial() bool {
+// IsMonomial returns a bool describing whether f consists of a single monomial.
+func (f *Polynomial) IsMonomial() bool {
 	if len(f.coefs) == 1 {
 		return true
 	}

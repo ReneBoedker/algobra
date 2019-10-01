@@ -82,15 +82,15 @@ func (a *Element) Prod(b, c *Element) *Element {
 	// Set the correct field of a
 	a.field = b.field
 
-	if a.field.multTable != nil {
-		if b.Zero() || c.Zero() {
+	if a.field.logTable != nil {
+		if b.IsZero() || c.IsZero() {
 			return a.field.Zero()
 		}
 
-		s := a.field.multTable.lookup(b)
-		t := a.field.multTable.lookup(c)
+		s := a.field.logTable.lookup(b)
+		t := a.field.logTable.lookup(c)
 
-		a = a.field.multTable.lookupReverse((s + t) % (a.field.Card() - 1))
+		a = a.field.logTable.lookupReverse((s + t) % (a.field.Card() - 1))
 	} else {
 		a.val = (b.val.Times(c.val))
 	}
@@ -119,9 +119,20 @@ func (a *Element) Mult(b *Element) *Element {
 	return a.Prod(a, b)
 }
 
+// Neg returns -a (modulo the characteristic)
+func (a *Element) Neg() *Element {
+	return a.Copy().SetNeg()
+}
+
+// SetNeg sets a to -a (modulo the characteristic), and returns a
+func (a *Element) SetNeg() *Element {
+	a.val.SetNeg()
+	return a
+}
+
 // Pow returns a raised to the power of n.
 func (a *Element) Pow(n uint) *Element {
-	if a.Zero() {
+	if a.IsZero() {
 		if n == 0 {
 			return a.field.Element([]uint{1})
 		}
@@ -152,7 +163,7 @@ func (a *Element) Pow(n uint) *Element {
 func (a *Element) Inv() *Element {
 	const op = "Inverting element"
 
-	if a.Zero() {
+	if a.IsZero() {
 		out := a.field.Zero()
 		out.err = errors.New(
 			op, errors.InputValue,
@@ -161,13 +172,13 @@ func (a *Element) Inv() *Element {
 		return out
 	}
 
-	if a.One() {
+	if a.IsOne() {
 		return a.Copy()
 	}
 
-	if a.field.multTable != nil {
-		s := a.field.multTable.lookup(a)
-		return a.field.multTable.lookupReverse(a.field.Card() - 1 - s)
+	if a.field.logTable != nil {
+		s := a.field.logTable.lookup(a)
+		return a.field.logTable.lookupReverse(a.field.Card() - 1 - s)
 	}
 
 	// Implemented using the extended euclidean algorithm (see for instance
@@ -176,9 +187,14 @@ func (a *Element) Inv() *Element {
 	r1 := a.val.Copy()
 	i0 := a.field.polyRing.Zero()
 	i1 := a.field.polyRing.Polynomial([]*finitefield.Element{a.val.Lc().Inv()})
-	for r1.Nonzero() {
+	for r1.IsNonzero() {
 		fmt.Println(r0, r1)
-		quo, rem := r0.QuoRem(r1)
+		quo, rem, err := r0.QuoRem(r1)
+		if err != nil {
+			out := a.field.Zero()
+			out.err = err
+			return out
+		}
 		lcInv := rem.Lc().Inv()
 		r0, r1 = r1, rem.Scale(lcInv)
 		i0, i1 = i1, i0.Minus(quo[0].Mult(i1)).Scale(lcInv)
