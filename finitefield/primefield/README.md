@@ -1,4 +1,4 @@
-![coverage-badge](https://img.shields.io/badge/coverage-99.3%25-brightgreen?cacheSeconds=86400&style=flat)
+![coverage-badge](https://img.shields.io/badge/coverage-96.3%25-brightgreen?cacheSeconds=86400&style=flat)
 # Algobra: Prime Fields
 This package implements arithmetic in finite fields of prime cardinality.
 
