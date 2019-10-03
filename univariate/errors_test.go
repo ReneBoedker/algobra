@@ -1,18 +1,19 @@
-package univariate
+package univariate_test
 
 import (
 	"algobra/errors"
+	"algobra/univariate"
 	"testing"
 )
 
 func TestHasErr(t *testing.T) {
 	field := defineField(7)
-	ring := DefRing(field)
+	ring := univariate.DefRing(field)
 
 	f := ring.Zero()
-	f.err = errors.New("Testing", errors.Internal, "Message")
+	f.SetError(errors.New("Testing", errors.Internal, "Message"))
 
-	tmp := hasErr("", f, ring.Zero())
+	tmp := univariate.HasErr("", f, ring.Zero())
 	if tmp.Err() == nil {
 		t.Errorf("hasErr returned polynomial with nil error status")
 	} else if !errors.Is(errors.Internal, tmp.Err()) {
@@ -20,7 +21,7 @@ func TestHasErr(t *testing.T) {
 			"kind(err = %v)", tmp.Err())
 	}
 
-	tmp = hasErr("", ring.Zero(), f)
+	tmp = univariate.HasErr("", ring.Zero(), f)
 	if tmp.Err() == nil {
 		t.Errorf("hasErr returned polynomial with nil error status")
 	} else if !errors.Is(errors.Internal, tmp.Err()) {
@@ -32,29 +33,29 @@ func TestHasErr(t *testing.T) {
 func TestDiffRings(t *testing.T) {
 	field1 := defineField(11)
 	field2 := defineField(7)
-	ring1 := DefRing(field1)
-	ring2 := DefRing(field2)
+	ring1 := univariate.DefRing(field1)
+	ring2 := univariate.DefRing(field2)
 
 	f := ring1.Zero()
 	g := ring2.Zero()
 
-	funcs := [](func(*Polynomial, *Polynomial) error){
-		func(f, g *Polynomial) error {
-			return checkCompatible("", f, g).Err()
+	funcs := [](func(*univariate.Polynomial, *univariate.Polynomial) error){
+		func(f, g *univariate.Polynomial) error {
+			return univariate.CheckCompatible("", f, g).Err()
 		},
-		func(f, g *Polynomial) error {
+		func(f, g *univariate.Polynomial) error {
 			_, err := ring1.NewIdeal(f, g)
 			return err
 		},
-		func(f, g *Polynomial) error {
+		func(f, g *univariate.Polynomial) error {
 			h := f.Plus(g)
 			return h.Err()
 		},
-		func(f, g *Polynomial) error {
+		func(f, g *univariate.Polynomial) error {
 			h := f.Minus(g)
 			return h.Err()
 		},
-		func(f, g *Polynomial) error {
+		func(f, g *univariate.Polynomial) error {
 			h := f.Mult(g)
 			return h.Err()
 		},

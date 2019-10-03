@@ -1,66 +1,75 @@
-package univariate
+package univariate_test
 
 import (
 	"algobra/errors"
 	"algobra/finitefield/ff"
+	"algobra/univariate"
 	"testing"
 )
 
 func TestLagrangeBasis(t *testing.T) {
-	field := defineField(17)
-	ring := DefRing(field)
-
-	for rep := 0; rep < 100; rep++ {
-		const nPoints = 4
-		points := make([]ff.Element, nPoints, nPoints)
-
-		nRuns := 0
-		for nRuns == 0 || !allDistinct(points) {
-			for j := 0; j < nPoints; j++ {
-				points[j] = field.ElementFromUnsigned(uint(prg.Uint32()))
-			}
-			nRuns++
-			if nRuns >= 100 {
-				t.Log("Skipping generation after 100 attempts")
-				break
-			}
+	do := func(field ff.Field) {
+		if tmp := field.Card(); tmp <= 4 || tmp != field.Char() {
+			// TODO: This test only works for prime fields
+			return
 		}
 
-		for j := range points {
-			// f evaluates to 1 in points[j] and 0 in other components of 0
-			f := ring.lagrangeBasis(points, j)
+		ring := univariate.DefRing(field)
 
-			if f.IsZero() {
-				t.Errorf("Lagrange basis is zero with points %v and index %d",
-					points, j)
-			} else if ld := f.Ld(); ld > (nPoints - 1) {
-				t.Errorf("Lagrange basis has too large total degree (%d) with point %v",
-					ld, points[j],
-				)
+		for rep := 0; rep < 100; rep++ {
+			const nPoints = 4
+			points := make([]ff.Element, nPoints, nPoints)
+
+			nRuns := 0
+			for nRuns == 0 || !univariate.AllDistinct(points) {
+				for j := 0; j < nPoints; j++ {
+					points[j] = field.ElementFromUnsigned(uint(prg.Uint32()))
+				}
+				nRuns++
+				if nRuns >= 100 {
+					t.Log("Skipping generation after 100 attempts")
+					break
+				}
 			}
 
-			for k, p := range points {
-				ev := f.Eval(p)
-				switch {
-				case j == k && !ev.IsOne():
-					t.Errorf("f(%v)=%v instead of 1 with f = %v", p, ev, f)
-				case j != k && ev.IsNonzero():
-					t.Errorf("f(%v)=%v instead of 0 with f = %v", p, ev, f)
+			for j := range points {
+				// f evaluates to 1 in points[j] and 0 in other components of 0
+				f := ring.LagrangeBasis(points, j)
+
+				if f.IsZero() {
+					t.Errorf("GF(%d): Lagrange basis is zero with points %v and index %d",
+						field.Card(), points, j)
+				} else if ld := f.Ld(); ld > (nPoints - 1) {
+					t.Errorf("GF(%d): Lagrange basis has too large total degree (%d) with point %v",
+						field.Card(), ld, points[j],
+					)
+				}
+
+				for k, p := range points {
+					ev := f.Eval(p)
+					switch {
+					case j == k && !ev.IsOne():
+						t.Errorf("GF(%d): f(%v)=%v instead of 1 with f = %v", field.Card(), p, ev, f)
+					case j != k && ev.IsNonzero():
+						t.Errorf("GF(%d): f(%v)=%v instead of 0 with f = %v", field.Card(), p, ev, f)
+					}
 				}
 			}
 		}
 	}
+
+	fieldLoop(do)
 }
 
 func TestInterpolation(t *testing.T) {
 	field := defineField(23)
-	ring := DefRing(field)
+	ring := univariate.DefRing(field)
 	for rep := 0; rep < 100; rep++ {
 		const nPoints = 4
 		points := make([]ff.Element, nPoints, nPoints)
 
 		nRuns := 0
-		for nRuns == 0 || !allDistinct(points) {
+		for nRuns == 0 || !univariate.AllDistinct(points) {
 			for j := 0; j < nPoints; j++ {
 				points[j] = field.ElementFromUnsigned(uint(prg.Uint32()))
 			}
@@ -101,7 +110,7 @@ func TestInterpolation(t *testing.T) {
 
 func TestInterpolationErrors(t *testing.T) {
 	field := defineField(13)
-	ring := DefRing(field)
+	ring := univariate.DefRing(field)
 
 	a := field.Zero()
 	b := field.ElementFromUnsigned(5)

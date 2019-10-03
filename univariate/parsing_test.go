@@ -1,7 +1,8 @@
-package univariate
+package univariate_test
 
 import (
 	"algobra/errors"
+	"algobra/univariate"
 	"fmt"
 	"math"
 	"testing"
@@ -9,14 +10,14 @@ import (
 
 func TestParsingWellFormed(t *testing.T) {
 	field := defineField(7)
-	ring := DefRing(field)
+	ring := univariate.DefRing(field)
 	testStrings := []string{
 		"4X^4 + X^3 + 3X - 5",
 		"4*x4 + X^3  + 3*x -5",
 		"4 * X^4 + X^3 + 3 * X - 5",
 		"3X4 + X4 +X3+3X-5",
 	}
-	testPolys := make([]*Polynomial, len(testStrings), len(testStrings)+1)
+	testPolys := make([]*univariate.Polynomial, len(testStrings), len(testStrings)+1)
 	testErrs := make([]error, len(testStrings))
 	for i, s := range testStrings {
 		testPolys[i], testErrs[i] = ring.PolynomialFromString(s)
@@ -42,7 +43,7 @@ func TestParsingWellFormed(t *testing.T) {
 
 func TestParsingIllFormed(t *testing.T) {
 	field := defineField(7)
-	ring := DefRing(field)
+	ring := univariate.DefRing(field)
 
 	testStrings := []string{
 		"2^2 X",
@@ -51,7 +52,7 @@ func TestParsingIllFormed(t *testing.T) {
 		"y^3+y^4",
 	}
 
-	testPolys := make([]*Polynomial, len(testStrings), len(testStrings))
+	testPolys := make([]*univariate.Polynomial, len(testStrings), len(testStrings))
 	testErrs := make([]error, len(testStrings))
 
 	for i, s := range testStrings {
@@ -71,14 +72,14 @@ func TestParsingIllFormed(t *testing.T) {
 
 func TestConversionErrors(t *testing.T) {
 	field := defineField(13)
-	ring := DefRing(field)
+	ring := univariate.DefRing(field)
 
 	testStrings := []string{
 		fmt.Sprintf("%d0X", math.MaxInt64),
 		fmt.Sprintf("X^%d0", uint(math.MaxUint64)),
 	}
 
-	testPolys := make([]*Polynomial, len(testStrings), len(testStrings))
+	testPolys := make([]*univariate.Polynomial, len(testStrings), len(testStrings))
 	testErrs := make([]error, len(testStrings))
 
 	for i, s := range testStrings {
@@ -99,7 +100,7 @@ func TestConversionErrors(t *testing.T) {
 func TestParseOutput(t *testing.T) {
 	char := uint(13)
 	field := defineField(char)
-	ring := DefRing(field)
+	ring := univariate.DefRing(field)
 	for _, varName := range []string{"X", "Y", "α", "\\beta", "e^i", "", "\t"} {
 		for rep := 0; rep < 200; rep++ {
 			ring.SetVarName(varName)
@@ -123,7 +124,7 @@ func TestParseOutput(t *testing.T) {
 func TestSetVarName(t *testing.T) {
 	char := uint(31)
 	field := defineField(char)
-	ring := DefRing(field)
+	ring := univariate.DefRing(field)
 	f := ring.PolynomialFromUnsigned([]uint{0, 1})
 	// Check that the printed variable is correct
 	for _, varName := range []string{"X", "y", "(ω^2)", "", "c\td"} {

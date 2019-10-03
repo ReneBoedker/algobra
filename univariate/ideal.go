@@ -11,6 +11,10 @@ type Ideal struct {
 	generator *Polynomial
 }
 
+func (id *Ideal) Generator() *Polynomial {
+	return id.generator.Copy()
+}
+
 // String returns the string representation of id.
 func (id *Ideal) String() string {
 	return fmt.Sprintf("Ideal <%v> over %v", id.generator, id.ring)

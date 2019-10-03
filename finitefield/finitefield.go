@@ -20,7 +20,7 @@ func Define(card uint) (ff.Field, error) {
 	}
 
 	if extDeg == 1 {
-		return extfield.Define(card)
+		return primefield.Define(card)
 	}
-	return primefield.Define(card)
+	return extfield.Define(card)
 }
