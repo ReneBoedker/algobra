@@ -3,6 +3,8 @@ package ff
 type Field interface {
 	Card() uint
 	Char() uint
+	ElementFromSigned(int) Element
+	ElementFromUnsigned(uint) Element
 	Elements() []Element
 	MultGenerator() Element
 	One() Element

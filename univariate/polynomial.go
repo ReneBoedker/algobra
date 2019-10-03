@@ -2,7 +2,7 @@ package univariate
 
 import (
 	"algobra/errors"
-	"algobra/finitefield"
+	"algobra/finitefield/ff"
 	"fmt"
 	"strings"
 )
@@ -10,12 +10,12 @@ import (
 // Polynomial denotes a bivariate polynomial.
 type Polynomial struct {
 	baseRing *QuotientRing
-	coefs    []*finitefield.Element
+	coefs    []ff.Element
 	err      error
 }
 
 // BaseField returns the field over which the coefficients of f are defined.
-func (f *Polynomial) BaseField() *finitefield.Field {
+func (f *Polynomial) BaseField() ff.Field {
 	return f.baseRing.baseField
 }
 
@@ -26,7 +26,7 @@ func (f *Polynomial) Err() error {
 
 // Coef returns the coefficient of the monomial with degree specified by the
 // input. The return value is a finite field element.
-func (f *Polynomial) Coef(deg int) *finitefield.Element {
+func (f *Polynomial) Coef(deg int) ff.Element {
 	if deg < len(f.coefs) {
 		return f.coefs[deg]
 	}
@@ -34,16 +34,16 @@ func (f *Polynomial) Coef(deg int) *finitefield.Element {
 }
 
 // SetCoef sets the coefficient of the monomial with degree deg in f to val.
-func (f *Polynomial) SetCoef(deg int, val *finitefield.Element) {
+func (f *Polynomial) SetCoef(deg int, val ff.Element) {
 	if deg <= f.Ld() {
 		f.coefs[deg] = val.Copy()
-		if val.Zero() {
+		if val.IsZero() {
 			f.reslice()
 		}
 		return
 	}
 	// Otherwise, grow the slice to needed length
-	grow := make([]*finitefield.Element, deg-f.Ld())
+	grow := make([]ff.Element, deg-f.Ld())
 	for i := range grow {
 		grow[i] = f.BaseField().Zero()
 	}
@@ -53,8 +53,8 @@ func (f *Polynomial) SetCoef(deg int, val *finitefield.Element) {
 
 // IncrementCoef increments the coefficient of the monomial with degree deg in f
 // by val.
-func (f *Polynomial) IncrementCoef(deg int, val *finitefield.Element) {
-	if val.Zero() {
+func (f *Polynomial) IncrementCoef(deg int, val ff.Element) {
+	if val.IsZero() {
 		return
 	}
 	if deg <= f.Ld() {
@@ -63,7 +63,7 @@ func (f *Polynomial) IncrementCoef(deg int, val *finitefield.Element) {
 		return
 	}
 	// Otherwise, grow the slice to needed length
-	grow := make([]*finitefield.Element, deg-f.Ld())
+	grow := make([]ff.Element, deg-f.Ld())
 	for i := range grow {
 		grow[i] = f.BaseField().Zero()
 	}
@@ -74,7 +74,7 @@ func (f *Polynomial) IncrementCoef(deg int, val *finitefield.Element) {
 // reslice ensures that the coefficients of f do not contain leading zeros
 func (f *Polynomial) reslice() {
 	for i := len(f.coefs) - 1; i >= 0; i-- {
-		if f.Coef(i).Nonzero() {
+		if f.Coef(i).IsNonzero() {
 			f.coefs = f.coefs[:i+1]
 			return
 		}
@@ -87,7 +87,7 @@ func (f *Polynomial) reslice() {
 // coefficients as f.
 func (f *Polynomial) Copy() *Polynomial {
 	h := f.baseRing.Zero()
-	h.coefs = make([]*finitefield.Element, len(f.coefs))
+	h.coefs = make([]ff.Element, len(f.coefs))
 	for deg, c := range f.coefs {
 		h.coefs[deg] = c.Copy()
 	}
@@ -112,7 +112,7 @@ func (f *Polynomial) EmbedIn(r *QuotientRing, reduce bool) error {
 }
 
 // Eval evaluates f at the given point.
-func (f *Polynomial) Eval(point *finitefield.Element) *finitefield.Element {
+func (f *Polynomial) Eval(point ff.Element) ff.Element {
 	out := f.BaseField().Zero()
 	for deg, c := range f.coefs {
 		out = out.Plus(c.Times(point.Pow(uint(deg))))
@@ -133,7 +133,7 @@ func (f *Polynomial) Normalize() *Polynomial {
 
 // Scale scales all coefficients of f by the field element c and returns the
 // result as a new polynomial.
-func (f *Polynomial) Scale(c *finitefield.Element) *Polynomial {
+func (f *Polynomial) Scale(c ff.Element) *Polynomial {
 	g := f.Copy()
 	for deg := range g.coefs {
 		g.SetCoef(deg, g.Coef(deg).Times(c))
@@ -147,7 +147,7 @@ func (f *Polynomial) Scale(c *finitefield.Element) *Polynomial {
 func (f *Polynomial) Degrees() []int {
 	degs := make([]int, 0, len(f.coefs))
 	for deg := len(f.coefs) - 1; deg >= 0; deg-- {
-		if f.Coef(deg).Zero() {
+		if f.Coef(deg).IsZero() {
 			continue
 		}
 		degs = append(degs, deg)
@@ -158,8 +158,8 @@ func (f *Polynomial) Degrees() []int {
 // Coefs returns a slice containing the coefficients of f.
 //
 // The i'th element of the resulting slice is the coefficient of degree i.
-func (f *Polynomial) Coefs() []*finitefield.Element {
-	coefs := make([]*finitefield.Element, len(f.coefs), len(f.coefs))
+func (f *Polynomial) Coefs() []ff.Element {
+	coefs := make([]ff.Element, len(f.coefs), len(f.coefs))
 	for i, c := range f.coefs {
 		coefs[i] = c.Copy()
 	}
@@ -172,7 +172,7 @@ func (f *Polynomial) Ld() int {
 }
 
 // Lc returns the leading coefficient of f.
-func (f *Polynomial) Lc() *finitefield.Element {
+func (f *Polynomial) Lc() ff.Element {
 	return f.Coef(f.Ld())
 }
 
@@ -186,7 +186,7 @@ func (f *Polynomial) Lt() *Polynomial {
 
 // IsZero determines whether f is the zero polynomial.
 func (f *Polynomial) IsZero() bool {
-	if len(f.coefs) == 1 && f.Coef(0).Zero() {
+	if len(f.coefs) == 1 && f.Coef(0).IsZero() {
 		return true
 	}
 	return false
@@ -199,7 +199,7 @@ func (f *Polynomial) IsNonzero() bool {
 
 // IsOne determines whether f is the constant 1.
 func (f *Polynomial) IsOne() bool {
-	if len(f.coefs) == 1 && f.Coef(0).One() {
+	if len(f.coefs) == 1 && f.Coef(0).IsOne() {
 		return true
 	}
 	return false
@@ -291,7 +291,7 @@ func (f *Polynomial) String() string {
 		if i > 0 {
 			fmt.Fprint(&b, " + ")
 		}
-		if tmp := f.Coef(d); !tmp.One() || d == 0 {
+		if tmp := f.Coef(d); !tmp.IsOne() || d == 0 {
 			fmt.Fprintf(&b, "%v", tmp)
 		}
 		if d == 1 {

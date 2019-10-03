@@ -2,6 +2,7 @@ package extfield
 
 import (
 	"algobra/errors"
+	"algobra/finitefield/ff"
 	"math/bits"
 )
 
@@ -10,7 +11,7 @@ import (
 const DefaultMaxMem uint = 1 << 19 // 512 MiB
 
 type table struct {
-	invLog []*Element
+	invLog []ff.Element
 	log    map[string]uint
 	zero   *Element
 }
@@ -33,7 +34,7 @@ func newLogTable(f *Field, maxMem ...uint) (*table, error) {
 		log[e.String()] = uint(i)
 	}
 
-	return &table{log: log, invLog: invLog, zero: f.Zero()}, nil
+	return &table{log: log, invLog: invLog, zero: f.Zero().(*Element)}, nil
 }
 
 func (t *table) lookup(a *Element) uint {
@@ -41,7 +42,7 @@ func (t *table) lookup(a *Element) uint {
 }
 
 func (t *table) lookupReverse(i uint) *Element {
-	return t.invLog[i].Copy()
+	return t.invLog[i].Copy().(*Element)
 }
 
 // estimateMemory gives an estimate on the memory required to store a table.

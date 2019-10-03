@@ -2,7 +2,7 @@ package univariate
 
 import (
 	"algobra/errors"
-	"algobra/finitefield"
+	"algobra/finitefield/ff"
 )
 
 // Interpolate computes the Lagrange interpolation polynomial evaluating to
@@ -12,8 +12,8 @@ import (
 // It returns an InputValue-error if the number of points and values differ, or
 // if points are not distinct.
 func (r *QuotientRing) Interpolate(
-	points []*finitefield.Element,
-	values []*finitefield.Element,
+	points []ff.Element,
+	values []ff.Element,
 ) (*Polynomial, error) {
 	const op = "Computing interpolation"
 
@@ -40,7 +40,7 @@ func (r *QuotientRing) Interpolate(
 }
 
 // allDistinct checks if given points are all distinct
-func allDistinct(points []*finitefield.Element) bool {
+func allDistinct(points []ff.Element) bool {
 	unique := make(map[string]struct{})
 	for _, p := range points {
 		if _, ok := unique[p.String()]; ok {
@@ -54,7 +54,7 @@ func allDistinct(points []*finitefield.Element) bool {
 // lagrangeBasis computes a "lagrange-type" basis element. That is, it computes
 // a polynomial that evaluates to 1 in point at index and to 0 in any other
 // point of points.
-func (r *QuotientRing) lagrangeBasis(points []*finitefield.Element, index int) *Polynomial {
+func (r *QuotientRing) lagrangeBasis(points []ff.Element, index int) *Polynomial {
 	f := r.PolynomialFromUnsigned([]uint{1})
 
 	for i, p := range points {
@@ -62,7 +62,7 @@ func (r *QuotientRing) lagrangeBasis(points []*finitefield.Element, index int) *
 			continue
 		}
 
-		f = f.Mult(r.Polynomial([]*finitefield.Element{
+		f = f.Mult(r.Polynomial([]ff.Element{
 			p.Neg(),
 			r.baseField.One(),
 		})).Scale(points[index].Minus(p).Inv())

@@ -2,13 +2,13 @@ package univariate
 
 import (
 	"algobra/errors"
-	"algobra/finitefield"
+	"algobra/finitefield/ff"
 	"fmt"
 	"strings"
 )
 
 type ring struct {
-	baseField *finitefield.Field
+	baseField ff.Field
 	varName   string
 }
 
@@ -38,7 +38,7 @@ func (r *QuotientRing) String() string {
 
 // DefRing defines a new polynomial ring over the given field. It returns a new
 // ring-object
-func DefRing(field *finitefield.Field) *QuotientRing {
+func DefRing(field ff.Field) *QuotientRing {
 	return &QuotientRing{
 		ring: &ring{
 			baseField: field,
@@ -71,7 +71,7 @@ func (r *QuotientRing) SetVarName(varName string) error {
 // underlying representation has given capacity.
 // TODO: Check cap and write into Zero
 func (r *QuotientRing) zeroWithCap(cap int) *Polynomial {
-	coefs := make([]*finitefield.Element, 1, cap)
+	coefs := make([]ff.Element, 1, cap)
 	coefs[0] = r.baseField.Zero()
 	return &Polynomial{
 		baseRing: r,
@@ -81,7 +81,7 @@ func (r *QuotientRing) zeroWithCap(cap int) *Polynomial {
 
 // Zero returns a zero polynomial over the specified ring.
 func (r *QuotientRing) Zero() *Polynomial {
-	coefs := make([]*finitefield.Element, 1)
+	coefs := make([]ff.Element, 1)
 	coefs[0] = r.baseField.Zero()
 	return &Polynomial{
 		baseRing: r,
@@ -92,7 +92,7 @@ func (r *QuotientRing) Zero() *Polynomial {
 // One returns the degree zero polynomial over the specified ring with
 // coefficient 1.
 func (r *QuotientRing) One() *Polynomial {
-	coefs := make([]*finitefield.Element, 1)
+	coefs := make([]ff.Element, 1)
 	coefs[0] = r.baseField.One()
 	return &Polynomial{
 		baseRing: r,
@@ -101,10 +101,10 @@ func (r *QuotientRing) One() *Polynomial {
 }
 
 // Polynomial defines a new polynomial with the given coefficients
-func (r *QuotientRing) Polynomial(coefs []*finitefield.Element) *Polynomial {
+func (r *QuotientRing) Polynomial(coefs []ff.Element) *Polynomial {
 	out := r.Zero()
 	for d, e := range coefs {
-		if e.Nonzero() {
+		if e.IsNonzero() {
 			out.SetCoef(d, e.Copy())
 		}
 	}
@@ -117,7 +117,7 @@ func (r *QuotientRing) PolynomialFromUnsigned(coefs []uint) *Polynomial {
 	out := r.Zero()
 	for d, c := range coefs {
 		e := r.baseField.ElementFromUnsigned(c)
-		if e.Nonzero() {
+		if e.IsNonzero() {
 			out.SetCoef(d, e)
 		}
 	}

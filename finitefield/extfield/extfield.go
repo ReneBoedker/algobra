@@ -3,15 +3,16 @@ package extfield
 import (
 	"algobra/basic"
 	"algobra/errors"
-	"algobra/extfield/conway"
-	"algobra/finitefield"
+	"algobra/finitefield/extfield/conway"
+	"algobra/finitefield/ff"
+	"algobra/finitefield/primefield"
 	"algobra/univariate"
 	"fmt"
 )
 
 // Field is the implementation of a finite field.
 type Field struct {
-	baseField  *finitefield.Field
+	baseField  *primefield.Field
 	extDeg     uint
 	conwayPoly *univariate.Polynomial
 	polyRing   *univariate.QuotientRing
@@ -38,7 +39,7 @@ func Define(card uint) (*Field, error) {
 		return nil, errors.Wrap(op, errors.Inherit, err)
 	}
 
-	baseField, err := finitefield.Define(char)
+	baseField, err := primefield.Define(char)
 	if err != nil {
 		return nil, err
 	}
@@ -108,18 +109,18 @@ func (f *Field) ComputeMultTable(maxMem ...uint) (err error) {
 }
 
 // MultGenerator returns an element that generates the units of f.
-func (f *Field) MultGenerator() *Element {
+func (f *Field) MultGenerator() ff.Element {
 	// The field is defined from a Conway polynomial, so alpha is a generator
 	return f.Element([]uint{0, 1})
 }
 
 // Elements returns a slice containing all elements of f.
-func (f *Field) Elements() []*Element {
-	out := make([]*Element, f.Card(), f.Card())
+func (f *Field) Elements() []ff.Element {
+	out := make([]ff.Element, f.Card(), f.Card())
 	out[0] = f.Zero()
 
 	gen := f.MultGenerator()
-	for i, e := uint(1), f.Element([]uint{1}); i < f.Card(); i, e = i+1, e.Mult(gen) {
+	for i, e := uint(1), f.One(); i < f.Card(); i, e = i+1, e.Mult(gen) {
 		out[i] = e.Copy()
 	}
 	return out
@@ -133,7 +134,7 @@ type Element struct {
 }
 
 // Zero returns the additive identity in f.
-func (f *Field) Zero() *Element {
+func (f *Field) Zero() ff.Element {
 	return &Element{
 		field: f,
 		val:   f.polyRing.Zero(),
@@ -141,7 +142,7 @@ func (f *Field) Zero() *Element {
 }
 
 // One returns the multiplicative identity in f.
-func (f *Field) One() *Element {
+func (f *Field) One() ff.Element {
 	return &Element{
 		field: f,
 		val:   f.polyRing.One(),
@@ -158,12 +159,22 @@ func (f *Field) Element(val []uint) *Element {
 	}
 }
 
+// ElementFromUnsigned defines a new element over f with value specified by val.
+//
+// The returned element will automatically be reduced modulo the characteristic.
+func (f *Field) ElementFromUnsigned(val []uint) ff.Element {
+	return &Element{
+		field: f,
+		val:   f.polyRing.PolynomialFromUnsigned(val),
+	}
+}
+
 // ElementFromSigned defines a new element over f with values specified by val.
 //
 // The returned element will be reduced modulo the characteristic automatically.
 // Negative values are reduced to a positive remainder (as opposed to the
 // %-operator in Go).
-func (f *Field) ElementFromSigned(val []int) *Element {
+func (f *Field) ElementFromSigned(val []int) ff.Element {
 	return &Element{
 		field: f,
 		val:   f.polyRing.PolynomialFromSigned(val),
@@ -171,7 +182,7 @@ func (f *Field) ElementFromSigned(val []int) *Element {
 }
 
 // Copy returns a copy of a.
-func (a *Element) Copy() *Element {
+func (a *Element) Copy() ff.Element {
 	return &Element{
 		field: a.field,
 		val:   a.val.Copy(),
@@ -184,9 +195,23 @@ func (a *Element) Err() error {
 	return a.err
 }
 
+// SetUnsigned sets the value of a to the element corresponding to val.
+//
+// The value is automatically reduced modulo the characteristic.
+func (a *Element) SetUnsigned(val uint) {
+	a.val = a.field.polyRing.Polynomial(
+		[]ff.Element{a.field.baseField.ElementFromUnsigned(val)},
+	)
+}
+
 // Equal tests equality of elements a and b.
-func (a *Element) Equal(b *Element) bool {
-	if a.field == b.field && a.val.Equal(b.val) {
+func (a *Element) Equal(b ff.Element) bool {
+	bb, ok := b.(*Element)
+	if !ok {
+		return false
+	}
+
+	if a.field == bb.field && a.val.Equal(bb.val) {
 		return true
 	}
 	return false
@@ -257,7 +282,8 @@ func hasErr(op errors.Op, a, b *Element) *Element {
 // ArithmeticIncompat.
 func checkCompatible(op errors.Op, a, b *Element) *Element {
 	if a.field != b.field {
-		out := a.field.Zero()
+		o := a.field.Zero()
+		out := o.(*Element)
 		out.err = errors.New(
 			op, errors.ArithmeticIncompat,
 			"%v and %v defined over different fields", a, b,

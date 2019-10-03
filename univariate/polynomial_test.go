@@ -2,7 +2,8 @@ package univariate
 
 import (
 	"algobra/errors"
-	"algobra/finitefield"
+	"algobra/finitefield/ff"
+	"algobra/finitefield/primefield"
 	"math/rand"
 	"testing"
 	"time"
@@ -10,8 +11,8 @@ import (
 
 var prg = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 
-func defineField(card uint) *finitefield.Field {
-	field, err := finitefield.Define(card)
+func defineField(card uint) ff.Field {
+	field, err := primefield.Define(card)
 	if err != nil {
 		// Error is in tests, so panic is OK
 		panic(err)
@@ -25,7 +26,7 @@ func TestAssignment(t *testing.T) {
 
 	// Define 2X^4-X^2+3X-3 in three separate ways
 	polynomials := []*Polynomial{
-		ring.Polynomial([]*finitefield.Element{
+		ring.Polynomial([]ff.Element{
 			field.ElementFromSigned(-3),
 			field.ElementFromSigned(3),
 			field.ElementFromSigned(-1),
@@ -306,7 +307,7 @@ func TestNormalize(t *testing.T) {
 			continue
 		}
 
-		if !g.Lc().One() || !f.Equal(g.Scale(f.Lc())) {
+		if !g.Lc().IsOne() || !f.Equal(g.Scale(f.Lc())) {
 			t.Errorf("%v was normalized as %v (f.coefs = %v)", f, g.coefs, f.coefs)
 		}
 	}

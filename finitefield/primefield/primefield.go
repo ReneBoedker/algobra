@@ -3,6 +3,7 @@ package primefield
 import (
 	"algobra/basic"
 	"algobra/errors"
+	"algobra/finitefield/ff"
 	"fmt"
 	"math/bits"
 	"strconv"
@@ -94,7 +95,7 @@ func (f *Field) ComputeTables(add, mult bool, maxMem ...uint) (err error) {
 }
 
 // MultGenerator returns an element that generates the units of f.
-func (f *Field) MultGenerator() *Element {
+func (f *Field) MultGenerator() ff.Element {
 	if f.Card() == 2 {
 		return f.One()
 	}
@@ -120,8 +121,8 @@ outer:
 }
 
 // Elements returns a slice containing all elements of f.
-func (f *Field) Elements() []*Element {
-	out := make([]*Element, f.Card(), f.Card())
+func (f *Field) Elements() []ff.Element {
+	out := make([]ff.Element, f.Card(), f.Card())
 	for i := uint(0); i < f.Card(); i++ {
 		out[i] = f.Element(i)
 	}
@@ -136,12 +137,12 @@ type Element struct {
 }
 
 // Zero returns the additive identity in f.
-func (f *Field) Zero() *Element {
+func (f *Field) Zero() ff.Element {
 	return &Element{field: f, val: 0}
 }
 
 // One returns the multiplicative identity in f.
-func (f *Field) One() *Element {
+func (f *Field) One() ff.Element {
 	return &Element{field: f, val: 1}
 }
 
@@ -152,12 +153,19 @@ func (f *Field) Element(val uint) *Element {
 	return &Element{field: f, val: val % f.char}
 }
 
+// Element defines a new element over f with value val.
+//
+// The returned element will automatically be reduced modulo the characteristic.
+func (f *Field) ElementFromUnsigned(val uint) ff.Element {
+	return &Element{field: f, val: val % f.char}
+}
+
 // ElementFromSigned defines a new element over f with value val.
 //
 // The returned element will be reduced modulo the characteristic automatically.
 // Negative values are reduced to a positive remainder (as opposed to the
 // %-operator in Go).
-func (f *Field) ElementFromSigned(val int) *Element {
+func (f *Field) ElementFromSigned(val int) ff.Element {
 	val %= int(f.char)
 	if val < 0 {
 		val += int(f.char)
@@ -166,7 +174,7 @@ func (f *Field) ElementFromSigned(val int) *Element {
 }
 
 // Copy returns a copy of a.
-func (a *Element) Copy() *Element {
+func (a *Element) Copy() ff.Element {
 	return &Element{
 		field: a.field,
 		val:   a.val,
@@ -192,8 +200,13 @@ func (a *Element) SetUnsigned(val uint) {
 }
 
 // Equal tests equality of elements a and b.
-func (a *Element) Equal(b *Element) bool {
-	if a.field == b.field && a.val == b.val {
+func (a *Element) Equal(b ff.Element) bool {
+	bb, ok := b.(*Element)
+	if !ok {
+		return false
+	}
+
+	if a.field == bb.field && a.val == bb.val {
 		return true
 	}
 	return false
@@ -264,7 +277,8 @@ func hasErr(op errors.Op, a, b *Element) *Element {
 // ArithmeticIncompat.
 func checkCompatible(op errors.Op, a, b *Element) *Element {
 	if a.field != b.field {
-		out := a.field.Zero()
+		o := a.field.Zero()
+		out := o.(*Element)
 		out.err = errors.New(
 			op, errors.ArithmeticIncompat,
 			"%v and %v defined over different fields", a, b,

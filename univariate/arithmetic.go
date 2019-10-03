@@ -2,7 +2,7 @@ package univariate
 
 import (
 	"algobra/errors"
-	"algobra/finitefield"
+	"algobra/finitefield/ff"
 )
 
 // Add sets f to the sum of the two polynomials f and g and returns f.
@@ -168,7 +168,7 @@ func (f *Polynomial) Mult(g *Polynomial) *Polynomial {
 func (f *Polynomial) Pow(n uint) *Polynomial {
 	const op = "Computing polynomial power"
 
-	out := f.baseRing.Polynomial([]*finitefield.Element{
+	out := f.baseRing.Polynomial([]ff.Element{
 		f.BaseField().One(),
 	})
 	g := f.Copy()

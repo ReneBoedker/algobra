@@ -2,6 +2,7 @@ package primefield
 
 import (
 	"algobra/errors"
+	"algobra/finitefield/ff"
 )
 
 // Add sets a to the sum of a and b. It then returns a.
@@ -11,18 +12,26 @@ import (
 //
 // When a or b has a non-nil error status, its error is wrapped and the same
 // element is returned.
-func (a *Element) Add(b *Element) *Element {
+func (a *Element) Add(b ff.Element) ff.Element {
 	const op = "Adding elements"
 
-	if tmp := checkErrAndCompatible(op, a, b); tmp != nil {
+	bb, ok := b.(*Element)
+	if !ok {
+		a.err = errors.New(
+			op, errors.InputIncompatible,
+			"Something...",
+		)
+	}
+
+	if tmp := checkErrAndCompatible(op, a, bb); tmp != nil {
 		a = tmp
 		return a
 	}
 
 	if a.field.addTable != nil {
-		a.val = a.field.addTable.lookup(a.val, b.val)
+		a.val = a.field.addTable.lookup(a.val, bb.val)
 	} else {
-		a.val = (a.val + b.val) % a.field.Char()
+		a.val = (a.val + bb.val) % a.field.Char()
 	}
 
 	return a
@@ -35,7 +44,7 @@ func (a *Element) Add(b *Element) *Element {
 //
 // When a or b has a non-nil error status, its error is wrapped and the same
 // element is returned.
-func (a *Element) Plus(b *Element) *Element {
+func (a *Element) Plus(b ff.Element) ff.Element {
 	return a.Copy().Add(b)
 }
 
@@ -46,16 +55,24 @@ func (a *Element) Plus(b *Element) *Element {
 //
 // When a or b has a non-nil error status, its error is wrapped and the same
 // element is returned.
-func (a *Element) Sub(b *Element) *Element {
+func (a *Element) Sub(b ff.Element) ff.Element {
 	const op = "Subtracting elements"
 
-	if tmp := checkErrAndCompatible(op, a, b); tmp != nil {
+	c, ok := b.(*Element)
+	if !ok {
+		a.err = errors.New(
+			op, errors.InputIncompatible,
+			"Something...",
+		)
+	}
+
+	if tmp := checkErrAndCompatible(op, a, c); tmp != nil {
 		a = tmp
 		return a
 	}
 
 	a.val = (a.field.Char() - a.val) % a.field.Char()
-	a.Add(b)
+	a.Add(c)
 	a.val = (a.field.Char() - a.val) % a.field.Char()
 	return a
 }
@@ -67,7 +84,7 @@ func (a *Element) Sub(b *Element) *Element {
 //
 // When a or b has a non-nil error status, its error is wrapped and the same
 // element is returned.
-func (a *Element) Minus(b *Element) *Element {
+func (a *Element) Minus(b ff.Element) ff.Element {
 	return a.Copy().Sub(b)
 }
 
@@ -78,21 +95,30 @@ func (a *Element) Minus(b *Element) *Element {
 //
 // When b or c has a non-nil error status, its error is wrapped and the same
 // element is returned.
-func (a *Element) Prod(b, c *Element) *Element {
+func (a *Element) Prod(b, c ff.Element) ff.Element {
 	const op = "Multiplying elements"
 
-	if tmp := checkErrAndCompatible(op, b, c); tmp != nil {
+	bb, okB := b.(*Element)
+	cc, okC := c.(*Element)
+	if !okB || !okC {
+		a.err = errors.New(
+			op, errors.InputIncompatible,
+			"Something...",
+		)
+	}
+
+	if tmp := checkErrAndCompatible(op, bb, cc); tmp != nil {
 		a = tmp
 		return a
 	}
 
 	// Set the correct field of a
-	a.field = b.field
+	a.field = bb.field
 
 	if a.field.multTable != nil {
-		a.val = a.field.multTable.lookup(b.val, c.val)
+		a.val = a.field.multTable.lookup(bb.val, cc.val)
 	} else {
-		a.val = (b.val * c.val) % a.field.Char()
+		a.val = (bb.val * cc.val) % a.field.Char()
 	}
 	return a
 }
@@ -104,7 +130,7 @@ func (a *Element) Prod(b, c *Element) *Element {
 //
 // When a or b has a non-nil error status, its error is wrapped and the same
 // element is returned.
-func (a *Element) Times(b *Element) *Element {
+func (a *Element) Times(b ff.Element) ff.Element {
 	return a.Copy().Mult(b)
 }
 
@@ -115,24 +141,24 @@ func (a *Element) Times(b *Element) *Element {
 //
 // When a or b has a non-nil error status, its error is wrapped and the same
 // element is returned.
-func (a *Element) Mult(b *Element) *Element {
+func (a *Element) Mult(b ff.Element) ff.Element {
 	return a.Prod(a, b)
 }
 
 // Neg returns a scaled by negative one (modulo the characteristic).
-func (a *Element) Neg() *Element {
+func (a *Element) Neg() ff.Element {
 	return a.Copy().SetNeg()
 }
 
 // SetNeg sets a to a scaled by negative one (modulo the characteristic). It
 // then returns a.
-func (a *Element) SetNeg() *Element {
+func (a *Element) SetNeg() ff.Element {
 	a.val = a.field.char - a.val
 	return a
 }
 
 // Pow returns a raised to the power of n.
-func (a *Element) Pow(n uint) *Element {
+func (a *Element) Pow(n uint) ff.Element {
 	if a.IsZero() {
 		if n == 0 {
 			return a.field.Element(1)
@@ -161,7 +187,7 @@ func (a *Element) Pow(n uint) *Element {
 //
 // If a is the zero element, the return value is an element with
 // InputValue-error as error status.
-func (a *Element) Inv() *Element {
+func (a *Element) Inv() ff.Element {
 	const op = "Inverting element"
 
 	if a.val == 0 {

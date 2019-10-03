@@ -191,10 +191,11 @@ func TestGenerator(t *testing.T) {
 
 		g := field.MultGenerator()
 		for i, e := uint(0), g.Copy(); i < p-1; i, e = i+1, e.Times(g) {
-			if _, ok := unique[e.Uint()]; ok {
+			ee := e.(*Element)
+			if _, ok := unique[ee.Uint()]; ok {
 				t.Errorf("Found element %v twice for p=%v (generator = %v)", e, p, g)
 			} else {
-				unique[e.Uint()] = struct{}{}
+				unique[ee.Uint()] = struct{}{}
 			}
 		}
 	}
@@ -210,10 +211,11 @@ func TestElements(t *testing.T) {
 		}
 
 		for _, e := range field.Elements() {
-			if _, ok := unique[e.Uint()]; ok {
+			ee := e.(*Element)
+			if _, ok := unique[ee.Uint()]; ok {
 				t.Errorf("Found element %v twice for p=%v", e, p)
 			} else {
-				unique[e.Uint()] = struct{}{}
+				unique[ee.Uint()] = struct{}{}
 			}
 		}
 	}
@@ -287,9 +289,9 @@ func TestGf2(t *testing.T) {
 					t.Errorf("GF(2) failed: %v+%v=%v (Expected %v)",
 						elems[i], elems[j], t1, t2)
 				}
-				if t1, t2 := elems[i].Minus(elems[j]).val, sumTable[i][j].val; t1 != t2 { // Note that Plus=Minus
-					t.Errorf("GF(7) failed: %d-%d=%d (Expected %d)",
-						elems[i].val, elems[j].val, t1, t2)
+				if t1, t2 := elems[i].Minus(elems[j]), sumTable[i][j]; !t1.Equal(t2) { // Note that Plus=Minus
+					t.Errorf("GF(2) failed: %v - %v = %v (Expected %v)",
+						elems[i], elems[j], t1, t2)
 				}
 				if t1, t2 := elems[i].Times(elems[j]), prodTable[i][j]; !t1.Equal(t2) {
 					t.Errorf("GF(2) failed: %v*%v=%v (Expected %v)",
@@ -298,7 +300,7 @@ func TestGf2(t *testing.T) {
 			}
 		}
 		if t1 := elems[1].Inv(); !t1.Equal(elems[1]) {
-			t.Errorf("GF(2) failed: inv(1)=%d (Expected 1)", t1.val)
+			t.Errorf("GF(2) failed: inv(1)=%v (Expected 1)", t1)
 		}
 	}
 	// Without tables
@@ -329,24 +331,24 @@ func TestGf3(t *testing.T) {
 		}
 		for i := range elems {
 			for j := range elems {
-				if t1, t2 := elems[i].Plus(elems[j]).val, sumTable[i][j].val; t1 != t2 {
-					t.Errorf("GF(3) failed: %d+%d=%d (Expected %d)",
-						elems[i].val, elems[j].val, t1, t2)
+				if t1, t2 := elems[i].Plus(elems[j]), sumTable[i][j]; !t1.Equal(t2) {
+					t.Errorf("GF(3) failed: %v + %v = %v (Expected %v)",
+						elems[i], elems[j], t1, t2)
 				}
-				if t1, t2 := elems[i].Minus(elems[j]).val, diffTable[i][j].val; t1 != t2 {
-					t.Errorf("GF(7) failed: %d-%d=%d (Expected %d)",
-						elems[i].val, elems[j].val, t1, t2)
+				if t1, t2 := elems[i].Minus(elems[j]), diffTable[i][j]; !t1.Equal(t2) {
+					t.Errorf("GF(3) failed: %v - %v =%v (Expected %v)",
+						elems[i], elems[j], t1, t2)
 				}
-				if t1, t2 := elems[i].Times(elems[j]).val, prodTable[i][j].val; t1 != t2 {
-					t.Errorf("GF(3) failed: %d*%d=%d (Expected %d)",
-						elems[i].val, elems[j].val, t1, t2)
+				if t1, t2 := elems[i].Times(elems[j]), prodTable[i][j]; !t1.Equal(t2) {
+					t.Errorf("GF(3) failed: %v * %v = %v (Expected %v)",
+						elems[i], elems[j], t1, t2)
 				}
 			}
 		}
 		invList := []*Element{field.Element(1), field.Element(2)}
 		for i := 1; i < len(elems); i++ {
 			if t1 := elems[i].Inv(); !t1.Equal(invList[i-1]) {
-				t.Errorf("GF(3) failed: inv(%d)=%d (Expected %d)", elems[i].val, t1.val, invList[i].val)
+				t.Errorf("GF(3) failed: inv(%v) = %v (Expected %v)", elems[i], t1, invList[i])
 			}
 		}
 	}
@@ -393,17 +395,17 @@ func TestGf7(t *testing.T) {
 		}
 		for i := range elems {
 			for j := range elems {
-				if t1, t2 := elems[i].Plus(elems[j]).val, sumTable[i][j].val; t1 != t2 {
-					t.Errorf("GF(7) failed: %d+%d=%d (Expected %d)",
-						elems[i].val, elems[j].val, t1, t2)
+				if t1, t2 := elems[i].Plus(elems[j]), sumTable[i][j]; !t1.Equal(t2) {
+					t.Errorf("GF(7) failed: %v + %v = %v (Expected %v)",
+						elems[i], elems[j], t1, t2)
 				}
-				if t1, t2 := elems[i].Minus(elems[j]).val, diffTable[i][j].val; t1 != t2 {
-					t.Errorf("GF(7) failed: %d-%d=%d (Expected %d)",
-						elems[i].val, elems[j].val, t1, t2)
+				if t1, t2 := elems[i].Minus(elems[j]), diffTable[i][j]; !t1.Equal(t2) {
+					t.Errorf("GF(7) failed: %v - %v = %v (Expected %v)",
+						elems[i], elems[j], t1, t2)
 				}
-				if t1, t2 := elems[i].Times(elems[j]).val, prodTable[i][j].val; t1 != t2 {
-					t.Errorf("GF(7) failed: %d*%d=%d (Expected %d)",
-						elems[i].val, elems[j].val, t1, t2)
+				if t1, t2 := elems[i].Times(elems[j]), prodTable[i][j]; !t1.Equal(t2) {
+					t.Errorf("GF(7) failed: %v * %v = %v (Expected %v)",
+						elems[i], elems[j], t1, t2)
 				}
 			}
 		}
@@ -412,8 +414,8 @@ func TestGf7(t *testing.T) {
 		}
 		for i := 1; i < len(elems); i++ {
 			if t1 := elems[i].Inv(); !t1.Equal(invList[i-1]) {
-				t.Errorf("GF(7) failed: inv(%d)=%d (Expected %d)",
-					elems[i].val, t1.val, invList[i-1].val,
+				t.Errorf("GF(7) failed: inv(%v) = %v (Expected %v)",
+					elems[i], t1, invList[i-1],
 				)
 			}
 		}
