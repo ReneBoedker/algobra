@@ -94,6 +94,23 @@ func (f *Polynomial) Copy() *Polynomial {
 	return h
 }
 
+func (f *Polynomial) EmbedIn(r *QuotientRing, reduce bool) error {
+	const op = "Embedding polynomial in ring"
+
+	if f.baseRing.ring != r.ring {
+		return errors.New(
+			op, errors.InputIncompatible,
+			"Cannot embed polynomial over %v in %v", f.baseRing, r,
+		)
+	}
+
+	f.baseRing.id = r.id
+	if reduce {
+		f.reduce()
+	}
+	return nil
+}
+
 // Eval evaluates f at the given point.
 func (f *Polynomial) Eval(point *finitefield.Element) *finitefield.Element {
 	out := f.BaseField().Zero()

@@ -187,8 +187,10 @@ func (a *Element) Inv() *Element {
 
 	// Implemented using the extended euclidean algorithm (see for instance
 	// [GG13; Algorithm 3.14])
-	r0 := a.field.conwayPoly.Copy()
-	r1 := a.val.Copy()
+	r0 := a.field.conwayPoly.Normalize()
+	r0.EmbedIn(a.field.polyRing)
+	r1 := a.val.Normalize()
+
 	i0 := a.field.polyRing.Zero()
 	i1 := a.field.polyRing.Polynomial([]*finitefield.Element{a.val.Lc().Inv()})
 	for r1.IsNonzero() {
