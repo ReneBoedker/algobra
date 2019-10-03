@@ -2,7 +2,7 @@ package bivariate
 
 import (
 	"algobra/errors"
-	"algobra/finitefield"
+	"algobra/finitefield/ff"
 	"fmt"
 	"sort"
 	"strings"
@@ -38,12 +38,12 @@ func subtractDegs(deg1, deg2 [2]uint) (deg [2]uint, ok bool) {
 // Polynomial denotes a bivariate polynomial.
 type Polynomial struct {
 	baseRing *QuotientRing
-	coefs    map[[2]uint]*finitefield.Element
+	coefs    map[[2]uint]ff.Element
 	err      error
 }
 
 // BaseField returns the field over which the coefficients of f are defined.
-func (f *Polynomial) BaseField() *finitefield.Field {
+func (f *Polynomial) BaseField() ff.Field {
 	return f.baseRing.baseField
 }
 
@@ -54,7 +54,7 @@ func (f *Polynomial) Err() error {
 
 // Coef returns the coefficient of the monomial with degree specified by the
 // input. The return value is a finite field element.
-func (f *Polynomial) Coef(deg [2]uint) *finitefield.Element {
+func (f *Polynomial) Coef(deg [2]uint) ff.Element {
 	if c, ok := f.coefs[deg]; ok {
 		return c
 	}
@@ -63,8 +63,8 @@ func (f *Polynomial) Coef(deg [2]uint) *finitefield.Element {
 
 // SetCoef sets the coefficient of the monomial with degree deg in f to val by
 // copying. See also SetCoefPtr.
-func (f *Polynomial) SetCoef(deg [2]uint, val *finitefield.Element) {
-	if val.Zero() {
+func (f *Polynomial) SetCoef(deg [2]uint, val ff.Element) {
+	if val.IsZero() {
 		delete(f.coefs, deg)
 	} else {
 		f.coefs[deg] = val.Copy()
@@ -73,8 +73,8 @@ func (f *Polynomial) SetCoef(deg [2]uint, val *finitefield.Element) {
 
 // SetCoefPtr sets the coefficient of the monomial with degree deg in f to ptr
 // as a pointer. To set coefficient as a value, use SetCoef instead.
-func (f *Polynomial) SetCoefPtr(deg [2]uint, ptr *finitefield.Element) {
-	if ptr.Zero() {
+func (f *Polynomial) SetCoefPtr(deg [2]uint, ptr ff.Element) {
+	if ptr.IsZero() {
 		delete(f.coefs, deg)
 	} else {
 		f.coefs[deg] = ptr
@@ -83,13 +83,13 @@ func (f *Polynomial) SetCoefPtr(deg [2]uint, ptr *finitefield.Element) {
 
 // IncrementCoef increments the coefficient of the monomial with degree deg in f
 // by val.
-func (f *Polynomial) IncrementCoef(deg [2]uint, val *finitefield.Element) {
-	if val.Zero() {
+func (f *Polynomial) IncrementCoef(deg [2]uint, val ff.Element) {
+	if val.IsZero() {
 		return
 	}
 	if c, ok := f.coefs[deg]; ok {
 		c.Add(val)
-		if c.Zero() {
+		if c.IsZero() {
 			delete(f.coefs, deg)
 		}
 	} else {
@@ -98,7 +98,7 @@ func (f *Polynomial) IncrementCoef(deg [2]uint, val *finitefield.Element) {
 }
 
 // SetCoef sets the coefficient of the monomial with degree deg in f to ptr.
-// func (f *Polynomial) IncrementCoefPtr(deg [2]uint, val *finitefield.Element) {
+// func (f *Polynomial) IncrementCoefPtr(deg [2]uint, val ff.Element) {
 // 	if val.Zero() {
 // 		return
 // 	}
@@ -124,14 +124,14 @@ func (f *Polynomial) Copy() *Polynomial {
 
 func (f *Polynomial) clean() {
 	for d, c := range f.coefs {
-		if c.Zero() {
+		if c.IsZero() {
 			delete(f.coefs, d)
 		}
 	}
 }
 
 // Eval evaluates f at the given point.
-func (f *Polynomial) Eval(point [2]*finitefield.Element) *finitefield.Element {
+func (f *Polynomial) Eval(point [2]ff.Element) ff.Element {
 	out := f.BaseField().Zero()
 	for deg, coef := range f.coefs {
 		out = out.Plus(coef.Times(point[0].Pow(deg[0])).Times(point[1].Pow(deg[1])))
@@ -311,7 +311,7 @@ func (f *Polynomial) Normalize() *Polynomial {
 
 // Scale scales all coefficients of f by the field element c and returns the
 // result as a new polynomial.
-func (f *Polynomial) Scale(c *finitefield.Element) *Polynomial {
+func (f *Polynomial) Scale(c ff.Element) *Polynomial {
 	g := f.Copy()
 	for d := range g.coefs {
 		g.coefs[d] = g.coefs[d].Times(c)
@@ -321,7 +321,7 @@ func (f *Polynomial) Scale(c *finitefield.Element) *Polynomial {
 
 // ScaleInPlace scales all coefficients of f by the field element c and returns
 // f.
-func (f *Polynomial) ScaleInPlace(c *finitefield.Element) *Polynomial {
+func (f *Polynomial) ScaleInPlace(c ff.Element) *Polynomial {
 	for d := range f.coefs {
 		f.coefs[d].Mult(c)
 	}
@@ -335,7 +335,7 @@ func (f *Polynomial) ScaleInPlace(c *finitefield.Element) *Polynomial {
 func (f *Polynomial) Pow(n uint) *Polynomial {
 	const op = "Computing polynomial power"
 
-	out := f.baseRing.Polynomial(map[[2]uint]*finitefield.Element{
+	out := f.baseRing.Polynomial(map[[2]uint]ff.Element{
 		{0, 0}: f.BaseField().One(),
 	})
 	g := f.Copy()
@@ -376,7 +376,7 @@ func (f *Polynomial) Ld() [2]uint {
 }
 
 // Lc returns the leading coefficient of f.
-func (f *Polynomial) Lc() *finitefield.Element {
+func (f *Polynomial) Lc() ff.Element {
 	return f.Coef(f.Ld())
 }
 
@@ -428,7 +428,7 @@ func (f *Polynomial) String() string {
 		if i > 0 {
 			fmt.Fprint(&b, " + ")
 		}
-		if tmp := f.Coef(d); !tmp.One() || (d[0] == 0 && d[1] == 0) {
+		if tmp := f.Coef(d); !tmp.IsOne() || (d[0] == 0 && d[1] == 0) {
 			fmt.Fprintf(&b, "%v", tmp)
 		}
 		if d[0] == 1 {

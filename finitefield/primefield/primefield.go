@@ -153,7 +153,7 @@ func (f *Field) Element(val uint) *Element {
 	return &Element{field: f, val: val % f.char}
 }
 
-// Element defines a new element over f with value val.
+// ElementFromUnsigned defines a new element over f with value val.
 //
 // The returned element will automatically be reduced modulo the characteristic.
 func (f *Field) ElementFromUnsigned(val uint) ff.Element {

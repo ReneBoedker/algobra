@@ -2,7 +2,7 @@ package bivariate
 
 import (
 	"algobra/errors"
-	"algobra/finitefield"
+	"algobra/finitefield/ff"
 	"testing"
 )
 
@@ -14,7 +14,7 @@ func TestLagrangeBasis(t *testing.T) {
 
 	for rep := 0; rep < 100; rep++ {
 		const nPoints = 4
-		points := make([][2]*finitefield.Element, nPoints, nPoints)
+		points := make([][2]ff.Element, nPoints, nPoints)
 
 		nRuns := 0
 		for nRuns == 0 || !allDistinct(points) {
@@ -50,9 +50,9 @@ func TestLagrangeBasis(t *testing.T) {
 			for k, p := range points {
 				ev := f.Eval(p)
 				switch {
-				case i == k && !ev.One():
+				case i == k && !ev.IsOne():
 					t.Errorf("f(%v)=%v instead of 1 with f = %v", p, ev, f)
-				case i != k && ev.Nonzero():
+				case i != k && ev.IsNonzero():
 					t.Errorf("f(%v)=%v instead of 0 with f = %v", p, ev, f)
 				}
 			}
@@ -65,7 +65,7 @@ func TestInterpolation(t *testing.T) {
 	ring := DefRing(field, Lex(false))
 	for rep := 0; rep < 100; rep++ {
 		const nPoints = 4
-		points := make([][2]*finitefield.Element, nPoints, nPoints)
+		points := make([][2]ff.Element, nPoints, nPoints)
 
 		nRuns := 0
 		for nRuns == 0 || !allDistinct(points) {
@@ -80,7 +80,7 @@ func TestInterpolation(t *testing.T) {
 			}
 		}
 
-		values := make([]*finitefield.Element, nPoints, nPoints)
+		values := make([]ff.Element, nPoints, nPoints)
 		for i := 0; i < nPoints; i++ {
 			values[i] = field.ElementFromUnsigned(uint(prg.Uint32()))
 		}
@@ -91,7 +91,7 @@ func TestInterpolation(t *testing.T) {
 			t.Errorf("Interpolation returned error: %q", err)
 		} else {
 			// Test that all evaluations are correct
-			var testVals [nPoints]*finitefield.Element
+			var testVals [nPoints]ff.Element
 			overAllSuccess := true
 			for i, p := range points {
 				testVals[i] = f.Eval(p)
@@ -112,12 +112,12 @@ func TestInterpolationErrors(t *testing.T) {
 	field := defineField(13, t)
 	ring := DefRing(field, DegLex(true))
 
-	a := [2]*finitefield.Element{field.Zero(), field.Zero()}
-	b := [2]*finitefield.Element{field.Zero(), field.ElementFromUnsigned(5)}
+	a := [2]ff.Element{field.Zero(), field.Zero()}
+	b := [2]ff.Element{field.Zero(), field.ElementFromUnsigned(5)}
 
 	_, err := ring.Interpolate(
-		[][2]*finitefield.Element{a, b},
-		[]*finitefield.Element{field.Zero()})
+		[][2]ff.Element{a, b},
+		[]ff.Element{field.Zero()})
 	if err == nil {
 		t.Errorf("Interpolation did not return an error even though there " +
 			"were more points than values")
@@ -127,8 +127,8 @@ func TestInterpolationErrors(t *testing.T) {
 	}
 
 	_, err = ring.Interpolate(
-		[][2]*finitefield.Element{a, a},
-		[]*finitefield.Element{field.Zero(), field.Zero()})
+		[][2]ff.Element{a, a},
+		[]ff.Element{field.Zero(), field.Zero()})
 	if err == nil {
 		t.Errorf("Interpolation did not return an error even though input " +
 			"contains duplicate points")

@@ -94,6 +94,11 @@ func (f *Polynomial) Copy() *Polynomial {
 	return h
 }
 
+// EmbedIn embeds f in the ring r if possible. The input reduce determines if f
+// is reduced in the new ring.
+//
+// An InputIncompatible-error is returned if r and the polynomial ring of f are
+// not compatible.
 func (f *Polynomial) EmbedIn(r *QuotientRing, reduce bool) error {
 	const op = "Embedding polynomial in ring"
 
@@ -104,7 +109,7 @@ func (f *Polynomial) EmbedIn(r *QuotientRing, reduce bool) error {
 		)
 	}
 
-	f.baseRing.id = r.id
+	f.baseRing = r
 	if reduce {
 		f.reduce()
 	}

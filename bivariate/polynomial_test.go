@@ -1,7 +1,7 @@
 package bivariate
 
 import (
-	"algobra/finitefield"
+	"algobra/finitefield/ff"
 	"math/rand"
 	"testing"
 	"time"
@@ -62,14 +62,14 @@ func TestEval(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	evPoints := [][2]*finitefield.Element{
+	evPoints := [][2]ff.Element{
 		{field.ElementFromUnsigned(0), field.ElementFromUnsigned(0)},
 		{field.ElementFromUnsigned(1), field.ElementFromUnsigned(0)},
 		{field.ElementFromUnsigned(1), field.ElementFromUnsigned(2)},
 		{field.ElementFromUnsigned(1), field.ElementFromUnsigned(10)},
 		{field.ElementFromUnsigned(2), field.ElementFromUnsigned(5)},
 	}
-	expected := []*finitefield.Element{
+	expected := []ff.Element{
 		field.ElementFromSigned(-1),
 		field.ElementFromUnsigned(0),
 		field.ElementFromUnsigned(0),

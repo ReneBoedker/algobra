@@ -1,12 +1,12 @@
 package bivariate
 
 import (
-	"algobra/finitefield"
+	"algobra/finitefield/primefield"
 	"testing"
 )
 
-func defineField(char uint, t *testing.T) *finitefield.Field {
-	field, err := finitefield.Define(char)
+func defineField(char uint, t *testing.T) *primefield.Field {
+	field, err := primefield.Define(char)
 	if err != nil {
 		t.Fatalf("Failed to define finite field of %d elements", char)
 	}

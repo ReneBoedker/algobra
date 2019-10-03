@@ -2,7 +2,7 @@ package bivariate
 
 import (
 	"algobra/errors"
-	"algobra/finitefield"
+	"algobra/finitefield/ff"
 )
 
 func max(values ...uint) uint {
@@ -20,7 +20,7 @@ func monomialLcm(f, g *Polynomial) (lcm *Polynomial, ok bool) {
 		return nil, false
 	}
 	ldf, ldg := f.Ld(), g.Ld()
-	lcm = f.baseRing.Polynomial(map[[2]uint]*finitefield.Element{
+	lcm = f.baseRing.Polynomial(map[[2]uint]ff.Element{
 		{max(ldf[0], ldg[0]), max(ldf[1], ldg[1])}: f.BaseField().One(),
 	})
 	return lcm, true

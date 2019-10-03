@@ -2,12 +2,12 @@ package bivariate
 
 import (
 	"algobra/errors"
-	"algobra/finitefield"
+	"algobra/finitefield/ff"
 	"fmt"
 )
 
 type ring struct {
-	baseField *finitefield.Field
+	baseField ff.Field
 	ord       Order
 }
 
@@ -36,7 +36,7 @@ func (r *QuotientRing) String() string {
 
 // DefRing defines a new polynomial ring over the given field, using
 // the order function ord. It returns a new ring-object
-func DefRing(field *finitefield.Field, ord Order) *QuotientRing {
+func DefRing(field ff.Field, ord Order) *QuotientRing {
 	return &QuotientRing{
 		ring: &ring{
 			baseField: field,
@@ -50,7 +50,7 @@ func DefRing(field *finitefield.Field, ord Order) *QuotientRing {
 func (r *QuotientRing) Zero() *Polynomial {
 	return &Polynomial{
 		baseRing: r,
-		coefs:    map[[2]uint]*finitefield.Element{},
+		coefs:    map[[2]uint]ff.Element{},
 	}
 }
 
@@ -59,15 +59,15 @@ func (r *QuotientRing) Zero() *Polynomial {
 func (r *QuotientRing) zeroWithCap(cap int) *Polynomial {
 	return &Polynomial{
 		baseRing: r,
-		coefs:    map[[2]uint]*finitefield.Element{},
+		coefs:    map[[2]uint]ff.Element{},
 	}
 }
 
 // Polynomial defines a new polynomial with the given coefficients
-func (r *QuotientRing) Polynomial(coefs map[[2]uint]*finitefield.Element) *Polynomial {
-	m := make(map[[2]uint]*finitefield.Element, len(coefs))
+func (r *QuotientRing) Polynomial(coefs map[[2]uint]ff.Element) *Polynomial {
+	m := make(map[[2]uint]ff.Element, len(coefs))
 	for d, e := range coefs {
-		if e.Nonzero() {
+		if e.IsNonzero() {
 			m[d] = e
 		}
 	}
@@ -78,10 +78,10 @@ func (r *QuotientRing) Polynomial(coefs map[[2]uint]*finitefield.Element) *Polyn
 
 // PolynomialFromUnsigned defines a new polynomial with the given coefficients
 func (r *QuotientRing) PolynomialFromUnsigned(coefs map[[2]uint]uint) *Polynomial {
-	m := make(map[[2]uint]*finitefield.Element, len(coefs))
+	m := make(map[[2]uint]ff.Element, len(coefs))
 	for d, c := range coefs {
 		e := r.baseField.ElementFromUnsigned(c)
-		if e.Nonzero() {
+		if e.IsNonzero() {
 			m[d] = e
 		}
 	}
@@ -92,10 +92,10 @@ func (r *QuotientRing) PolynomialFromUnsigned(coefs map[[2]uint]uint) *Polynomia
 
 // PolynomialFromSigned defines a new polynomial with the given coefficients
 func (r *QuotientRing) PolynomialFromSigned(coefs map[[2]uint]int) *Polynomial {
-	m := make(map[[2]uint]*finitefield.Element, len(coefs))
+	m := make(map[[2]uint]ff.Element, len(coefs))
 	for d, c := range coefs {
 		e := r.baseField.ElementFromSigned(c)
-		if e.Nonzero() {
+		if e.IsNonzero() {
 			m[d] = e
 		}
 	}

@@ -3,7 +3,6 @@ package extfield
 import (
 	"algobra/errors"
 	"algobra/finitefield/ff"
-	"fmt"
 )
 
 // Add sets a to the sum of a and b. It then returns a.
@@ -220,7 +219,6 @@ func (a *Element) Inv() ff.Element {
 	i0 := a.field.polyRing.Zero()
 	i1 := a.field.polyRing.Polynomial([]ff.Element{a.val.Lc().Inv()})
 	for r1.IsNonzero() {
-		fmt.Println(r0, r1)
 		quo, rem, err := r0.QuoRem(r1)
 		if err != nil {
 			o := a.field.Zero()

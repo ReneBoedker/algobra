@@ -1,5 +1,6 @@
 package ff
 
+// Field defines the methods that a finite field must support
 type Field interface {
 	Card() uint
 	Char() uint
@@ -12,6 +13,7 @@ type Field interface {
 	Zero() Element
 }
 
+// Element defines the methods that an element of a finite field must support
 type Element interface {
 	Add(Element) Element
 	Copy() Element
