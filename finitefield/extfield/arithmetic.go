@@ -162,7 +162,7 @@ func (a *Element) SetNeg() ff.Element {
 func (a *Element) Pow(n uint) ff.Element {
 	if a.IsZero() {
 		if n == 0 {
-			return a.field.Element([]uint{1})
+			return a.field.element([]uint{1})
 		}
 		return a.field.Zero()
 	}
@@ -172,7 +172,7 @@ func (a *Element) Pow(n uint) ff.Element {
 		n = n % (a.field.Char() - 1)
 	}
 
-	out := a.field.Element([]uint{1})
+	out := a.field.element([]uint{1})
 	b := a.Copy()
 	for n > 0 {
 		if n%2 == 1 {

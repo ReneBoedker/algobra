@@ -111,7 +111,7 @@ func (f *Field) ComputeMultTable(maxMem ...uint) (err error) {
 // MultGenerator returns an element that generates the units of f.
 func (f *Field) MultGenerator() ff.Element {
 	// The field is defined from a Conway polynomial, so alpha is a generator
-	return f.Element([]uint{0, 1})
+	return f.element([]uint{0, 1})
 }
 
 // Elements returns a slice containing all elements of f.
@@ -149,10 +149,34 @@ func (f *Field) One() ff.Element {
 	}
 }
 
-// Element defines a new element over f with value specified by val.
+// Element defines a new element over f with value val, which must be either
+// uint, int, []uint or []int.
+//
+// If type of val is unsupported, the function returns an Input-error.
+func (f *Field) Element(val interface{}) (ff.Element, error) {
+	const op = "Defining element"
+
+	switch v := val.(type) {
+	case uint:
+		return f.ElementFromUnsigned(v), nil
+	case int:
+		return f.ElementFromSigned(v), nil
+	case []uint:
+		return f.ElementFromUnsignedSlice(v), nil
+	case []int:
+		return f.ElementFromSignedSlice(v), nil
+	default:
+		return nil, errors.New(
+			op, errors.Input,
+			"Cannot define element in %v from type %T", f, v,
+		)
+	}
+}
+
+// element defines a new element over f with value specified by val.
 //
 // The returned element will automatically be reduced modulo the characteristic.
-func (f *Field) Element(val []uint) *Element {
+func (f *Field) element(val []uint) *Element {
 	return &Element{
 		field: f,
 		val:   f.polyRing.PolynomialFromUnsigned(val),
@@ -162,7 +186,17 @@ func (f *Field) Element(val []uint) *Element {
 // ElementFromUnsigned defines a new element over f with value specified by val.
 //
 // The returned element will automatically be reduced modulo the characteristic.
-func (f *Field) ElementFromUnsigned(val []uint) ff.Element {
+func (f *Field) ElementFromUnsigned(val uint) ff.Element {
+	return &Element{
+		field: f,
+		val:   f.polyRing.PolynomialFromUnsigned([]uint{val}),
+	}
+}
+
+// ElementFromUnsignedSlice defines a new element over f with value specified by val.
+//
+// The returned element will automatically be reduced modulo the characteristic.
+func (f *Field) ElementFromUnsignedSlice(val []uint) ff.Element {
 	return &Element{
 		field: f,
 		val:   f.polyRing.PolynomialFromUnsigned(val),
@@ -174,7 +208,19 @@ func (f *Field) ElementFromUnsigned(val []uint) ff.Element {
 // The returned element will be reduced modulo the characteristic automatically.
 // Negative values are reduced to a positive remainder (as opposed to the
 // %-operator in Go).
-func (f *Field) ElementFromSigned(val []int) ff.Element {
+func (f *Field) ElementFromSigned(val int) ff.Element {
+	return &Element{
+		field: f,
+		val:   f.polyRing.PolynomialFromSigned([]int{val}),
+	}
+}
+
+// ElementFromSignedSlice defines a new element over f with values specified by val.
+//
+// The returned element will be reduced modulo the characteristic automatically.
+// Negative values are reduced to a positive remainder (as opposed to the
+// %-operator in Go).
+func (f *Field) ElementFromSignedSlice(val []int) ff.Element {
 	return &Element{
 		field: f,
 		val:   f.polyRing.PolynomialFromSigned(val),

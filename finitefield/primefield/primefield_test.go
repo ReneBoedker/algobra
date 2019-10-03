@@ -56,11 +56,11 @@ func TestNonPrimeInput(t *testing.T) {
 
 func TestEqual(t *testing.T) {
 	field := DefineField(23)
-	if !field.Element(20).Equal(field.ElementFromSigned(-3)) {
+	if !field.element(20).Equal(field.ElementFromSigned(-3)) {
 		t.Errorf("Reported 20!=20 (mod 23)")
 	}
 	field2 := DefineField(13)
-	if field.Element(7).Equal(field2.ElementFromSigned(7)) {
+	if field.element(7).Equal(field2.ElementFromSigned(7)) {
 		t.Errorf("Reported equality for elements from different fields")
 	}
 }
@@ -85,8 +85,8 @@ func TestArithmeticErrors(t *testing.T) {
 	fieldA := DefineField(11)
 	fieldB := DefineField(17)
 
-	a := fieldA.Element(0)
-	b := fieldB.Element(10)
+	a := fieldA.element(0)
+	b := fieldB.element(10)
 	// Cannot invert zero
 	if e := a.Inv(); e.Err() == nil {
 		t.Errorf("Inverting zero did not set error status")
@@ -122,16 +122,16 @@ func TestArithmeticErrors(t *testing.T) {
 
 func TestBools(t *testing.T) {
 	field := DefineField(47)
-	if field.Element(0).IsNonzero() {
+	if field.element(0).IsNonzero() {
 		t.Errorf("Element(0) element considered non-zero")
 	}
-	if !field.Element(0).IsZero() {
+	if !field.element(0).IsZero() {
 		t.Errorf("Element(0) element not considered zero")
 	}
-	if !field.Element(1).IsOne() {
+	if !field.element(1).IsOne() {
 		t.Errorf("Element(1) not considered as one")
 	}
-	if !field.Element(1).IsNonzero() {
+	if !field.element(1).IsNonzero() {
 		t.Errorf("Element(1) not considered non-zero")
 	}
 }
@@ -142,14 +142,14 @@ func TestConversion(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		val := uint(prg.Uint32())
 
-		a := field.Element(val)
+		a := field.element(val)
 		if a.Uint() != val%71 {
 			t.Errorf("Conversion to uint failed for a = %d. Received %d",
 				val, a.Uint(),
 			)
 		}
 
-		b := field.Element(0)
+		b := field.element(0)
 		b.SetUnsigned(val)
 		if b.Uint() != val%71 {
 			t.Errorf("Conversion to uint failed for b = %d. Received %d",
@@ -170,10 +170,10 @@ func TestPow(t *testing.T) {
 		{{0, 1}, {1, 4}, {2, 3}, {3, 12}},
 	}
 	for i, val := range elems {
-		elem := field.Element(val)
+		elem := field.element(val)
 		for _, j := range expectedPows[i] {
 			res := elem.Pow(j[0])
-			if !res.Equal(field.Element(j[1])) {
+			if !res.Equal(field.element(j[1])) {
 				t.Errorf("Pow failed: %v^%d = %v (Expected %v)", elem, j[0], res, j[1])
 			}
 		}
@@ -236,7 +236,7 @@ func TestProd(t *testing.T) {
 	field := DefineField(11)
 
 	test := func(field *Field) {
-		a := field.Element(0)
+		a := field.element(0)
 
 		prods := [][2]uint{
 			{2, 2},
@@ -257,7 +257,7 @@ func TestProd(t *testing.T) {
 			1,
 		}
 		for i, p := range prods {
-			if a.Prod(field.Element(p[0]), field.Element(p[1])); !a.Equal(field.Element(expected[i])) {
+			if a.Prod(field.element(p[0]), field.element(p[1])); !a.Equal(field.element(expected[i])) {
 				t.Errorf("Prod failed: a was set to %v for %v * %v (Expected %v)",
 					a, p[0], p[1], expected[i])
 			}
@@ -274,7 +274,7 @@ func TestProd(t *testing.T) {
 func TestGf2(t *testing.T) {
 	field := DefineField(2)
 	test := func(field *Field) {
-		elems := []*Element{field.Element(0), field.Element(1)}
+		elems := []*Element{field.element(0), field.element(1)}
 		sumTable := [][]*Element{
 			{elems[0], elems[1]},
 			{elems[1], elems[0]},
@@ -313,7 +313,7 @@ func TestGf2(t *testing.T) {
 func TestGf3(t *testing.T) {
 	field := DefineField(3)
 	test := func(field *Field) {
-		elems := []*Element{field.Element(0), field.Element(1), field.Element(2)}
+		elems := []*Element{field.element(0), field.element(1), field.element(2)}
 		sumTable := [][]*Element{
 			{elems[0], elems[1], elems[2]},
 			{elems[1], elems[2], elems[0]},
@@ -345,7 +345,7 @@ func TestGf3(t *testing.T) {
 				}
 			}
 		}
-		invList := []*Element{field.Element(1), field.Element(2)}
+		invList := []*Element{field.element(1), field.element(2)}
 		for i := 1; i < len(elems); i++ {
 			if t1 := elems[i].Inv(); !t1.Equal(invList[i-1]) {
 				t.Errorf("GF(3) failed: inv(%v) = %v (Expected %v)", elems[i], t1, invList[i])
@@ -363,8 +363,8 @@ func TestGf7(t *testing.T) {
 	field := DefineField(7)
 	test := func(field *Field) {
 		elems := []*Element{
-			field.Element(0), field.Element(1), field.Element(2), field.Element(3),
-			field.Element(4), field.Element(5), field.Element(6),
+			field.element(0), field.element(1), field.element(2), field.element(3),
+			field.element(4), field.element(5), field.element(6),
 		}
 		sumTable := [][]*Element{
 			{elems[0], elems[1], elems[2], elems[3], elems[4], elems[5], elems[6]},
@@ -410,7 +410,7 @@ func TestGf7(t *testing.T) {
 			}
 		}
 		invList := []*Element{
-			field.Element(1), field.Element(4), field.Element(5), field.Element(2), field.Element(3), field.Element(6),
+			field.element(1), field.element(4), field.element(5), field.element(2), field.element(3), field.element(6),
 		}
 		for i := 1; i < len(elems); i++ {
 			if t1 := elems[i].Inv(); !t1.Equal(invList[i-1]) {

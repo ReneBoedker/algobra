@@ -107,7 +107,7 @@ func (f *Field) MultGenerator() ff.Element {
 	var e *Element
 outer:
 	for i := uint(2); true; i++ {
-		e = f.Element(i)
+		e = f.element(i)
 		for _, p := range factors {
 			// We need to check if p is a non-trivial factor
 			if p != f.Card()-1 && e.Pow(p).IsOne() {
@@ -124,7 +124,7 @@ outer:
 func (f *Field) Elements() []ff.Element {
 	out := make([]ff.Element, f.Card(), f.Card())
 	for i := uint(0); i < f.Card(); i++ {
-		out[i] = f.Element(i)
+		out[i] = f.element(i)
 	}
 	return out
 }
@@ -146,10 +146,30 @@ func (f *Field) One() ff.Element {
 	return &Element{field: f, val: 1}
 }
 
-// Element defines a new element over f with value val.
+// Element defines a new element over f with value val, which must be either
+// uint or int.
+//
+// If type of val is unsupported, the function returns an Input-error.
+func (f *Field) Element(val interface{}) (ff.Element, error) {
+	const op = "Defining element"
+
+	switch v := val.(type) {
+	case uint:
+		return f.element(v), nil
+	case int:
+		return f.ElementFromSigned(v), nil
+	default:
+		return nil, errors.New(
+			op, errors.Input,
+			"Cannot define element in %v from type %T", f, v,
+		)
+	}
+}
+
+// element defines a new element over f with value val.
 //
 // The returned element will automatically be reduced modulo the characteristic.
-func (f *Field) Element(val uint) *Element {
+func (f *Field) element(val uint) *Element {
 	return &Element{field: f, val: val % f.char}
 }
 
@@ -157,7 +177,7 @@ func (f *Field) Element(val uint) *Element {
 //
 // The returned element will automatically be reduced modulo the characteristic.
 func (f *Field) ElementFromUnsigned(val uint) ff.Element {
-	return &Element{field: f, val: val % f.char}
+	return f.element(val)
 }
 
 // ElementFromSigned defines a new element over f with value val.
@@ -170,7 +190,7 @@ func (f *Field) ElementFromSigned(val int) ff.Element {
 	if val < 0 {
 		val += int(f.char)
 	}
-	return f.Element(uint(val))
+	return f.element(uint(val))
 }
 
 // Copy returns a copy of a.

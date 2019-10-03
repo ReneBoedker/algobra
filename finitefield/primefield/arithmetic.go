@@ -161,9 +161,9 @@ func (a *Element) SetNeg() ff.Element {
 func (a *Element) Pow(n uint) ff.Element {
 	if a.IsZero() {
 		if n == 0 {
-			return a.field.Element(1)
+			return a.field.element(1)
 		}
-		return a.field.Element(0)
+		return a.field.element(0)
 	}
 
 	if n >= a.field.Card() {
@@ -171,7 +171,7 @@ func (a *Element) Pow(n uint) ff.Element {
 		n = n % (a.field.Card() - 1)
 	}
 
-	out := a.field.Element(1)
+	out := a.field.element(1)
 	b := a.Copy()
 	for n > 0 {
 		if n%2 == 1 {
@@ -191,7 +191,7 @@ func (a *Element) Inv() ff.Element {
 	const op = "Inverting element"
 
 	if a.val == 0 {
-		out := a.field.Element(0)
+		out := a.field.element(0)
 		out.err = errors.New(
 			op, errors.InputValue,
 			"Cannot invert zero element",

@@ -4,6 +4,7 @@ package ff
 type Field interface {
 	Card() uint
 	Char() uint
+	//Element(interface{}) (Element, error)
 	ElementFromSigned(int) Element
 	ElementFromUnsigned(uint) Element
 	Elements() []Element

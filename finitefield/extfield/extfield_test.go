@@ -52,11 +52,11 @@ func TestNonPrimePowInput(t *testing.T) {
 
 func TestEqual(t *testing.T) {
 	field := DefineField(125)
-	if !field.Element([]uint{4, 3, 1}).Equal(field.ElementFromSigned([]int{-1, 3, -4})) {
+	if !field.element([]uint{4, 3, 1}).Equal(field.ElementFromSignedSlice([]int{-1, 3, -4})) {
 		t.Errorf("Reported 4+3α+α^2 != 4+3α+α^2 in finite field of 125 elements")
 	}
 	field2 := DefineField(25)
-	if field.Element([]uint{1, 2}).Equal(field2.Element([]uint{1, 2})) {
+	if field.element([]uint{1, 2}).Equal(field2.element([]uint{1, 2})) {
 		t.Errorf("Reported equality for elements from different fields")
 	}
 }
@@ -81,8 +81,8 @@ func TestArithmeticErrors(t *testing.T) {
 	fieldA := DefineField(8)
 	fieldB := DefineField(25)
 
-	a := fieldA.Element([]uint{0})
-	b := fieldB.Element([]uint{10})
+	a := fieldA.element([]uint{0})
+	b := fieldB.element([]uint{10})
 	// Cannot invert zero
 	if e := a.Inv(); e.Err() == nil {
 		t.Errorf("Inverting zero did not set error status")
@@ -118,16 +118,16 @@ func TestArithmeticErrors(t *testing.T) {
 
 func TestBools(t *testing.T) {
 	field := DefineField(49)
-	if field.Element([]uint{0}).IsNonzero() {
+	if field.element([]uint{0}).IsNonzero() {
 		t.Errorf("Element(0) element considered non-zero")
 	}
-	if !field.Element([]uint{0}).IsZero() {
+	if !field.element([]uint{0}).IsZero() {
 		t.Errorf("Element(0) element not considered zero")
 	}
-	if !field.Element([]uint{1}).IsOne() {
+	if !field.element([]uint{1}).IsOne() {
 		t.Errorf("Element(1) not considered as one")
 	}
-	if !field.Element([]uint{1}).IsNonzero() {
+	if !field.element([]uint{1}).IsNonzero() {
 		t.Errorf("Element(1) not considered non-zero")
 	}
 }
@@ -156,10 +156,10 @@ func TestGf4(t *testing.T) {
 	field := DefineField(4)
 	test := func(field *Field) {
 		elems := []*Element{
-			field.Element([]uint{0, 0}),
-			field.Element([]uint{1, 0}),
-			field.Element([]uint{0, 1}),
-			field.Element([]uint{1, 1}),
+			field.element([]uint{0, 0}),
+			field.element([]uint{1, 0}),
+			field.element([]uint{0, 1}),
+			field.element([]uint{1, 1}),
 		}
 		sumTable := [][]*Element{
 			{elems[0], elems[1], elems[2], elems[3]},
@@ -210,15 +210,15 @@ func TestGf9(t *testing.T) {
 	field := DefineField(9)
 	test := func(field *Field) {
 		elems := [9]*Element{
-			field.Element([]uint{0, 0}), //0
-			field.Element([]uint{1, 0}), //1
-			field.Element([]uint{2, 0}), //2
-			field.Element([]uint{0, 1}), //3
-			field.Element([]uint{0, 2}), //4
-			field.Element([]uint{1, 1}), //5
-			field.Element([]uint{2, 1}), //6
-			field.Element([]uint{1, 2}), //7
-			field.Element([]uint{2, 2}), //8
+			field.element([]uint{0, 0}), //0
+			field.element([]uint{1, 0}), //1
+			field.element([]uint{2, 0}), //2
+			field.element([]uint{0, 1}), //3
+			field.element([]uint{0, 2}), //4
+			field.element([]uint{1, 1}), //5
+			field.element([]uint{2, 1}), //6
+			field.element([]uint{1, 2}), //7
+			field.element([]uint{2, 2}), //8
 		}
 		sumTable := [][]*Element{
 			{elems[0], elems[1], elems[2], elems[3], elems[4], elems[5], elems[6], elems[7], elems[8]},
