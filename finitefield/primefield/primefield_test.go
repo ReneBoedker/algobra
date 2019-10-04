@@ -159,6 +159,26 @@ func TestConversion(t *testing.T) {
 	}
 }
 
+func TestParsing(t *testing.T) {
+	for _, card := range [...]uint{2, 3, 5, 7} {
+		field := DefineField(card)
+		for rep := 0; rep < 50; rep++ {
+			a := field.RandElement()
+			if b, err := field.ElementFromString(a.String()); err != nil {
+				t.Errorf("Reparsing (%v).String() returned error %q", a, err)
+			} else if !a.Equal(b) {
+				t.Errorf("Reparsing (%v).String() gave %v", a, b)
+			}
+
+			if b, err := field.ElementFromString("-" + a.String()); err != nil {
+				t.Errorf("Reparsing (-%v).String() returned error %q", a, err)
+			} else if !a.Neg().Equal(b) {
+				t.Errorf("Reparsing (-%v).String() gave %v", a, b)
+			}
+		}
+	}
+}
+
 func TestPow(t *testing.T) {
 	field := DefineField(13)
 	elems := []uint{0, 1, 2, 3, 4}

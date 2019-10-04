@@ -112,7 +112,7 @@ func parseExponent(s string) (uint, error) {
 func polynomialStringToSignedMap(s string) (map[[2]uint]int, error) {
 	const op = "Parsing polynomial from string"
 	matches := regexp.MustCompile(
-		`\s*(?P<sign>^|\+|-)\s*`+
+		`(?P<sign>\+|-)?\s*`+
 			`(?P<coef>[0-9]*)\s*\*?\s*`+
 			`(?P<var1>(?i:x|y))?\^?(?P<deg1>[0-9]*)\s*\*?\s*`+
 			`(?P<var2>(?i:x|y))?\^?(?P<deg2>[0-9]*)\s*`).FindAllStringSubmatch(s, -1)

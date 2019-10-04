@@ -72,7 +72,7 @@ func polynomialStringToSignedMap(s string, varName *string) (map[int]int, error)
 	const op = "Parsing polynomial from string"
 
 	pattern, err := regexp.Compile(
-		`\s*(?P<sign>^|\+|-)\s*` +
+		`\s*(?P<sign>\+|-)?\s*` +
 			`(?P<coef>[0-9]*)\s*\*?\s*` +
 			`(?:(?P<name>(?i:` + regexp.QuoteMeta(*varName) + `))\^?(?P<deg1>[0-9]*))?\s*`,
 	)

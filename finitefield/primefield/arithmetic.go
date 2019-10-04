@@ -153,7 +153,7 @@ func (a *Element) Neg() ff.Element {
 // SetNeg sets a to a scaled by negative one (modulo the characteristic). It
 // then returns a.
 func (a *Element) SetNeg() ff.Element {
-	a.val = a.field.char - a.val
+	a.val = (a.field.char - a.val) % a.field.char
 	return a
 }
 

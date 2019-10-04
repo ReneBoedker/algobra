@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/bits"
 	"math/rand"
+	"regexp"
 	"strconv"
 	"time"
 )
@@ -61,6 +62,10 @@ func Define(card uint) (*Field, error) {
 // String returns the string representation of f.
 func (f *Field) String() string {
 	return fmt.Sprintf("Finite field of %d elements", f.char)
+}
+
+func (f *Field) RegexElement() string {
+	return "[0-9]*"
 }
 
 // Char returns the characteristic of f.
@@ -176,6 +181,8 @@ func (f *Field) Element(val interface{}) (ff.Element, error) {
 		return f.element(v), nil
 	case int:
 		return f.ElementFromSigned(v), nil
+	case string:
+		return f.ElementFromString(v)
 	default:
 		return nil, errors.New(
 			op, errors.Input,
@@ -209,6 +216,45 @@ func (f *Field) ElementFromSigned(val int) ff.Element {
 		val += int(f.char)
 	}
 	return f.element(uint(val))
+}
+
+func (f *Field) ElementFromString(val string) (ff.Element, error) {
+	const op = "Defining element from string"
+
+	match := regexp.MustCompile(`(-)?([0-9]+)`).FindStringSubmatch(val)
+
+	// Check that the pattern matches the full string
+	if len(match[0]) != len(val) {
+		return nil, errors.New(
+			op, errors.Parsing,
+			"Pattern match %q is not the full input string %q", match[0], val,
+		)
+	}
+
+	switch {
+	case len(match[1]) == 1:
+		// The input contains a minus
+		tmp, err := strconv.ParseInt(match[0], 10, 0)
+		if err != nil {
+			return nil, errors.New(
+				op, errors.Parsing,
+				"Failed to convert input with error %q", err,
+			)
+		}
+
+		return f.ElementFromSigned(int(tmp)), nil
+	default:
+		// The input contains a minus
+		tmp, err := strconv.ParseUint(match[0], 10, 0)
+		if err != nil {
+			return nil, errors.New(
+				op, errors.Parsing,
+				"Failed to convert input with error %q", err,
+			)
+		}
+
+		return f.ElementFromUnsigned(uint(tmp)), nil
+	}
 }
 
 // Copy returns a copy of a.

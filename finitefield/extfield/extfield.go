@@ -135,6 +135,10 @@ func (f *Field) Elements() []ff.Element {
 	return out
 }
 
+func (f *Field) RegexElement() string {
+	return "(?:)"
+}
+
 // Element is the implementation of an element in a finite field.
 type Element struct {
 	field *Field
@@ -255,6 +259,20 @@ func (f *Field) ElementFromSignedSlice(val []int) ff.Element {
 		field: f,
 		val:   f.polyRing.PolynomialFromSigned(val),
 	}
+}
+
+func (f *Field) ElementFromString(val string) (ff.Element, error) {
+	const op = "Defining element from string"
+
+	v, err := f.polyRing.PolynomialFromString(val)
+	if err != nil {
+		return nil, errors.Wrap(op, errors.Parsing, err)
+	}
+
+	return &Element{
+		field: f,
+		val:   v,
+	}, nil
 }
 
 // Copy returns a copy of a.
