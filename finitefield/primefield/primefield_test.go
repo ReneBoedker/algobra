@@ -271,160 +271,147 @@ func TestProd(t *testing.T) {
 	test(field)
 }
 
-func TestGf2(t *testing.T) {
-	field := DefineField(2)
-	test := func(field *Field) {
-		elems := []*Element{field.element(0), field.element(1)}
-		sumTable := [][]*Element{
-			{elems[0], elems[1]},
-			{elems[1], elems[0]},
-		}
-		prodTable := [][]*Element{
-			{elems[0], elems[0]},
-			{elems[0], elems[1]},
-		}
+func hardcodedTableTest(
+	f *Field,
+	elems []*Element,
+	sumTable, diffTable, prodTable [][]*Element,
+	invList []*Element,
+	t *testing.T,
+) {
+	test := func(f *Field) {
 		for i := range elems {
 			for j := range elems {
 				if t1, t2 := elems[i].Plus(elems[j]), sumTable[i][j]; !t1.Equal(t2) {
-					t.Errorf("GF(2) failed: %v+%v=%v (Expected %v)",
-						elems[i], elems[j], t1, t2)
-				}
-				if t1, t2 := elems[i].Minus(elems[j]), sumTable[i][j]; !t1.Equal(t2) { // Note that Plus=Minus
-					t.Errorf("GF(2) failed: %v - %v = %v (Expected %v)",
-						elems[i], elems[j], t1, t2)
-				}
-				if t1, t2 := elems[i].Times(elems[j]), prodTable[i][j]; !t1.Equal(t2) {
-					t.Errorf("GF(2) failed: %v*%v=%v (Expected %v)",
-						elems[i], elems[j], t1, t2)
-				}
-			}
-		}
-		if t1 := elems[1].Inv(); !t1.Equal(elems[1]) {
-			t.Errorf("GF(2) failed: inv(1)=%v (Expected 1)", t1)
-		}
-	}
-	// Without tables
-	test(field)
-	// With tables
-	field.ComputeTables(true, true)
-	test(field)
-}
-
-func TestGf3(t *testing.T) {
-	field := DefineField(3)
-	test := func(field *Field) {
-		elems := []*Element{field.element(0), field.element(1), field.element(2)}
-		sumTable := [][]*Element{
-			{elems[0], elems[1], elems[2]},
-			{elems[1], elems[2], elems[0]},
-			{elems[2], elems[0], elems[1]},
-		}
-		diffTable := [][]*Element{
-			{elems[0], elems[2], elems[1]},
-			{elems[1], elems[0], elems[2]},
-			{elems[2], elems[1], elems[0]},
-		}
-		prodTable := [][]*Element{
-			{elems[0], elems[0], elems[0]},
-			{elems[0], elems[1], elems[2]},
-			{elems[0], elems[2], elems[1]},
-		}
-		for i := range elems {
-			for j := range elems {
-				if t1, t2 := elems[i].Plus(elems[j]), sumTable[i][j]; !t1.Equal(t2) {
-					t.Errorf("GF(3) failed: %v + %v = %v (Expected %v)",
-						elems[i], elems[j], t1, t2)
+					t.Errorf("GF(%d) failed: (%v) + (%v) = %v (Expected %v)",
+						f.Card(), elems[i], elems[j], t1, t2)
 				}
 				if t1, t2 := elems[i].Minus(elems[j]), diffTable[i][j]; !t1.Equal(t2) {
-					t.Errorf("GF(3) failed: %v - %v =%v (Expected %v)",
-						elems[i], elems[j], t1, t2)
+					t.Errorf("GF(%d) failed: (%v) - (%v) = %v (Expected %v)",
+						f.Card(), elems[i].val, elems[j].val, t1, t2)
 				}
 				if t1, t2 := elems[i].Times(elems[j]), prodTable[i][j]; !t1.Equal(t2) {
-					t.Errorf("GF(3) failed: %v * %v = %v (Expected %v)",
-						elems[i], elems[j], t1, t2)
+					t.Errorf("GF(%d) failed: (%v) * (%v) = %v (Expected %v)",
+						f.Card(), elems[i], elems[j], t1, t2)
 				}
 			}
 		}
-		invList := []*Element{field.element(1), field.element(2)}
-		for i := 1; i < len(elems); i++ {
-			if t1 := elems[i].Inv(); !t1.Equal(invList[i-1]) {
-				t.Errorf("GF(3) failed: inv(%v) = %v (Expected %v)", elems[i], t1, invList[i])
-			}
-		}
-	}
-	// Without tables
-	test(field)
-	// With tables
-	field.ComputeTables(true, true)
-	test(field)
-}
 
-func TestGf7(t *testing.T) {
-	field := DefineField(7)
-	test := func(field *Field) {
-		elems := []*Element{
-			field.element(0), field.element(1), field.element(2), field.element(3),
-			field.element(4), field.element(5), field.element(6),
-		}
-		sumTable := [][]*Element{
-			{elems[0], elems[1], elems[2], elems[3], elems[4], elems[5], elems[6]},
-			{elems[1], elems[2], elems[3], elems[4], elems[5], elems[6], elems[0]},
-			{elems[2], elems[3], elems[4], elems[5], elems[6], elems[0], elems[1]},
-			{elems[3], elems[4], elems[5], elems[6], elems[0], elems[1], elems[2]},
-			{elems[4], elems[5], elems[6], elems[0], elems[1], elems[2], elems[3]},
-			{elems[5], elems[6], elems[0], elems[1], elems[2], elems[3], elems[4]},
-			{elems[6], elems[0], elems[1], elems[2], elems[3], elems[4], elems[5]},
-		}
-		diffTable := [][]*Element{
-			{elems[0], elems[6], elems[5], elems[4], elems[3], elems[2], elems[1]},
-			{elems[1], elems[0], elems[6], elems[5], elems[4], elems[3], elems[2]},
-			{elems[2], elems[1], elems[0], elems[6], elems[5], elems[4], elems[3]},
-			{elems[3], elems[2], elems[1], elems[0], elems[6], elems[5], elems[4]},
-			{elems[4], elems[3], elems[2], elems[1], elems[0], elems[6], elems[5]},
-			{elems[5], elems[4], elems[3], elems[2], elems[1], elems[0], elems[6]},
-			{elems[6], elems[5], elems[4], elems[3], elems[2], elems[1], elems[0]},
-		}
-		prodTable := [][]*Element{
-			{elems[0], elems[0], elems[0], elems[0], elems[0], elems[0], elems[0]},
-			{elems[0], elems[1], elems[2], elems[3], elems[4], elems[5], elems[6]},
-			{elems[0], elems[2], elems[4], elems[6], elems[1], elems[3], elems[5]},
-			{elems[0], elems[3], elems[6], elems[2], elems[5], elems[1], elems[4]},
-			{elems[0], elems[4], elems[1], elems[5], elems[2], elems[6], elems[3]},
-			{elems[0], elems[5], elems[3], elems[1], elems[6], elems[4], elems[2]},
-			{elems[0], elems[6], elems[5], elems[4], elems[3], elems[2], elems[1]},
-		}
-		for i := range elems {
-			for j := range elems {
-				if t1, t2 := elems[i].Plus(elems[j]), sumTable[i][j]; !t1.Equal(t2) {
-					t.Errorf("GF(7) failed: %v + %v = %v (Expected %v)",
-						elems[i], elems[j], t1, t2)
-				}
-				if t1, t2 := elems[i].Minus(elems[j]), diffTable[i][j]; !t1.Equal(t2) {
-					t.Errorf("GF(7) failed: %v - %v = %v (Expected %v)",
-						elems[i], elems[j], t1, t2)
-				}
-				if t1, t2 := elems[i].Times(elems[j]), prodTable[i][j]; !t1.Equal(t2) {
-					t.Errorf("GF(7) failed: %v * %v = %v (Expected %v)",
-						elems[i], elems[j], t1, t2)
-				}
-			}
-		}
-		invList := []*Element{
-			field.element(1), field.element(4), field.element(5), field.element(2), field.element(3), field.element(6),
-		}
 		for i := 1; i < len(elems); i++ {
 			if t1 := elems[i].Inv(); !t1.Equal(invList[i-1]) {
-				t.Errorf("GF(7) failed: inv(%v) = %v (Expected %v)",
-					elems[i], t1, invList[i-1],
+				t.Errorf("GF(%d) failed: inv(%v) = %v (Expected %v)",
+					f.Card(), elems[i], t1, invList[i-1],
 				)
 			}
 		}
 	}
 	// Without tables
-	test(field)
+	test(f)
 	// With tables
-	field.ComputeTables(true, true)
-	test(field)
+	f.ComputeTables(true, true)
+	test(f)
+}
+
+func TestGf2(t *testing.T) {
+	field := DefineField(2)
+	elems := []*Element{field.element(0), field.element(1)}
+	sumTable := [][]*Element{
+		{elems[0], elems[1]},
+		{elems[1], elems[0]},
+	}
+	prodTable := [][]*Element{
+		{elems[0], elems[0]},
+		{elems[0], elems[1]},
+	}
+	invList := []*Element{elems[1]}
+
+	hardcodedTableTest(
+		field,
+		elems,
+		sumTable,
+		sumTable, // Note that addition and subtraction are equivalent
+		prodTable,
+		invList,
+		t,
+	)
+}
+
+func TestGf3(t *testing.T) {
+	field := DefineField(3)
+	elems := []*Element{field.element(0), field.element(1), field.element(2)}
+	sumTable := [][]*Element{
+		{elems[0], elems[1], elems[2]},
+		{elems[1], elems[2], elems[0]},
+		{elems[2], elems[0], elems[1]},
+	}
+	diffTable := [][]*Element{
+		{elems[0], elems[2], elems[1]},
+		{elems[1], elems[0], elems[2]},
+		{elems[2], elems[1], elems[0]},
+	}
+	prodTable := [][]*Element{
+		{elems[0], elems[0], elems[0]},
+		{elems[0], elems[1], elems[2]},
+		{elems[0], elems[2], elems[1]},
+	}
+	invList := []*Element{field.element(1), field.element(2)}
+
+	hardcodedTableTest(
+		field,
+		elems,
+		sumTable,
+		diffTable,
+		prodTable,
+		invList,
+		t,
+	)
+}
+
+func TestGf7(t *testing.T) {
+	field := DefineField(7)
+	elems := []*Element{
+		field.element(0), field.element(1), field.element(2), field.element(3),
+		field.element(4), field.element(5), field.element(6),
+	}
+	sumTable := [][]*Element{
+		{elems[0], elems[1], elems[2], elems[3], elems[4], elems[5], elems[6]},
+		{elems[1], elems[2], elems[3], elems[4], elems[5], elems[6], elems[0]},
+		{elems[2], elems[3], elems[4], elems[5], elems[6], elems[0], elems[1]},
+		{elems[3], elems[4], elems[5], elems[6], elems[0], elems[1], elems[2]},
+		{elems[4], elems[5], elems[6], elems[0], elems[1], elems[2], elems[3]},
+		{elems[5], elems[6], elems[0], elems[1], elems[2], elems[3], elems[4]},
+		{elems[6], elems[0], elems[1], elems[2], elems[3], elems[4], elems[5]},
+	}
+	diffTable := [][]*Element{
+		{elems[0], elems[6], elems[5], elems[4], elems[3], elems[2], elems[1]},
+		{elems[1], elems[0], elems[6], elems[5], elems[4], elems[3], elems[2]},
+		{elems[2], elems[1], elems[0], elems[6], elems[5], elems[4], elems[3]},
+		{elems[3], elems[2], elems[1], elems[0], elems[6], elems[5], elems[4]},
+		{elems[4], elems[3], elems[2], elems[1], elems[0], elems[6], elems[5]},
+		{elems[5], elems[4], elems[3], elems[2], elems[1], elems[0], elems[6]},
+		{elems[6], elems[5], elems[4], elems[3], elems[2], elems[1], elems[0]},
+	}
+	prodTable := [][]*Element{
+		{elems[0], elems[0], elems[0], elems[0], elems[0], elems[0], elems[0]},
+		{elems[0], elems[1], elems[2], elems[3], elems[4], elems[5], elems[6]},
+		{elems[0], elems[2], elems[4], elems[6], elems[1], elems[3], elems[5]},
+		{elems[0], elems[3], elems[6], elems[2], elems[5], elems[1], elems[4]},
+		{elems[0], elems[4], elems[1], elems[5], elems[2], elems[6], elems[3]},
+		{elems[0], elems[5], elems[3], elems[1], elems[6], elems[4], elems[2]},
+		{elems[0], elems[6], elems[5], elems[4], elems[3], elems[2], elems[1]},
+	}
+	invList := []*Element{
+		field.element(1), field.element(4), field.element(5), field.element(2), field.element(3), field.element(6),
+	}
+
+	hardcodedTableTest(
+		field,
+		elems,
+		sumTable,
+		diffTable,
+		prodTable,
+		invList,
+		t,
+	)
 }
 
 /* Copyright 2019 René Bødker Christensen

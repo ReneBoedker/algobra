@@ -162,17 +162,17 @@ func (a *Element) SetNeg() ff.Element {
 func (a *Element) Pow(n uint) ff.Element {
 	if a.IsZero() {
 		if n == 0 {
-			return a.field.element([]uint{1})
+			return a.field.One()
 		}
 		return a.field.Zero()
 	}
 
 	if n >= a.field.Card() {
 		// Use that a^(q-1)=1 for units
-		n = n % (a.field.Char() - 1)
+		n = n % (a.field.Card() - 1)
 	}
 
-	out := a.field.element([]uint{1})
+	out := a.field.One()
 	b := a.Copy()
 	for n > 0 {
 		if n%2 == 1 {

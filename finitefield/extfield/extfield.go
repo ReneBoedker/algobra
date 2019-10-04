@@ -3,7 +3,7 @@ package extfield
 import (
 	"algobra/basic"
 	"algobra/errors"
-	"algobra/finitefield/extfield/conway"
+	"algobra/finitefield/conway"
 	"algobra/finitefield/ff"
 	"algobra/finitefield/primefield"
 	"algobra/univariate"

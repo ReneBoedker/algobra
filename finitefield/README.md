@@ -1,4 +1,4 @@
-![coverage-badge](https://img.shields.io/badge/coverage-84.4%25-green?cacheSeconds=86400&style=flat)
+![coverage-badge](https://img.shields.io/badge/coverage-90.6%25-brightgreen?cacheSeconds=86400&style=flat)
 # Algobra: Finite Fields
 This package and its subpackages implement arithmetic in finite fields.
 
