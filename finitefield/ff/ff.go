@@ -11,6 +11,7 @@ type Field interface {
 	Elements() []Element
 	MultGenerator() Element
 	One() Element
+	RandElement() Element
 	String() string
 	Zero() Element
 }

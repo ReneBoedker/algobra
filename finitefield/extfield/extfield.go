@@ -8,7 +8,16 @@ import (
 	"algobra/finitefield/primefield"
 	"algobra/univariate"
 	"fmt"
+	"math/bits"
+	"math/rand"
+	"time"
 )
+
+func init() {
+	// Set a new seed for the pseudo-random generator.
+	// Note that this is not cryptographically safe.
+	rand.Seed(time.Now().UTC().UnixNano())
+}
 
 // Field is the implementation of a finite field.
 type Field struct {
@@ -147,6 +156,27 @@ func (f *Field) One() ff.Element {
 		field: f,
 		val:   f.polyRing.One(),
 	}
+}
+
+// RandElement returns a pseudo-random element in f.
+//
+// The pseudo-random generator used is not cryptographically safe.
+func (f *Field) RandElement() ff.Element {
+	prg := func() uint {
+		return uint(rand.Uint64())
+	}
+	if bits.UintSize == 32 {
+		prg = func() uint {
+			return uint(rand.Uint64())
+		}
+	}
+
+	coefs := make([]uint, f.extDeg, f.extDeg)
+	for i := range coefs {
+		coefs[i] = prg()
+	}
+
+	return f.ElementFromUnsignedSlice(coefs)
 }
 
 // Element defines a new element over f with value val, which must be either

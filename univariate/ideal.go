@@ -11,6 +11,7 @@ type Ideal struct {
 	generator *Polynomial
 }
 
+// Generator returns a copy of the generator of id.
 func (id *Ideal) Generator() *Polynomial {
 	return id.generator.Copy()
 }

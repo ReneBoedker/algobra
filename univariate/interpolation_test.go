@@ -8,33 +8,30 @@ import (
 )
 
 func TestLagrangeBasis(t *testing.T) {
+	//t.Fatalf("Skipped")
 	do := func(field ff.Field) {
-		if tmp := field.Card(); tmp <= 4 || tmp != field.Char() {
-			// TODO: This test only works for prime fields
-			return
-		}
-
 		ring := univariate.DefRing(field)
 
-		for rep := 0; rep < 100; rep++ {
+	outer:
+		for rep := 0; rep < 25; rep++ {
 			const nPoints = 4
 			points := make([]ff.Element, nPoints, nPoints)
 
 			nRuns := 0
 			for nRuns == 0 || !univariate.AllDistinct(points) {
 				for j := 0; j < nPoints; j++ {
-					points[j] = field.ElementFromUnsigned(uint(prg.Uint32()))
+					points[j] = field.RandElement()
 				}
 				nRuns++
 				if nRuns >= 100 {
 					t.Log("Skipping generation after 100 attempts")
-					break
+					continue outer
 				}
 			}
 
 			for j := range points {
 				// f evaluates to 1 in points[j] and 0 in other components of 0
-				f := ring.LagrangeBasis(points, j)
+				f := ring.LagrangeBasis(points, points[j])
 
 				if f.IsZero() {
 					t.Errorf("GF(%d): Lagrange basis is zero with points %v and index %d",
@@ -58,7 +55,7 @@ func TestLagrangeBasis(t *testing.T) {
 		}
 	}
 
-	fieldLoop(do)
+	fieldLoop(do, 4)
 }
 
 func TestInterpolation(t *testing.T) {
@@ -71,7 +68,7 @@ func TestInterpolation(t *testing.T) {
 		nRuns := 0
 		for nRuns == 0 || !univariate.AllDistinct(points) {
 			for j := 0; j < nPoints; j++ {
-				points[j] = field.ElementFromUnsigned(uint(prg.Uint32()))
+				points[j] = field.RandElement()
 			}
 			nRuns++
 			if nRuns >= 100 {
@@ -82,7 +79,7 @@ func TestInterpolation(t *testing.T) {
 
 		values := make([]ff.Element, nPoints, nPoints)
 		for i := 0; i < nPoints; i++ {
-			values[i] = field.ElementFromUnsigned(uint(prg.Uint32()))
+			values[i] = field.RandElement()
 		}
 
 		f, err := ring.Interpolate(points, values)

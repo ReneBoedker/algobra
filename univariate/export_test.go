@@ -21,6 +21,6 @@ func AllDistinct(points []ff.Element) bool {
 	return allDistinct(points)
 }
 
-func (r *QuotientRing) LagrangeBasis(points []ff.Element, index int) *Polynomial {
-	return r.lagrangeBasis(points, index)
+func (r *QuotientRing) LagrangeBasis(points []ff.Element, ignore ff.Element) *Polynomial {
+	return r.lagrangeBasis(points, ignore)
 }

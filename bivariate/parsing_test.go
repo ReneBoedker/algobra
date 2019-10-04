@@ -2,6 +2,7 @@ package bivariate
 
 import (
 	"algobra/errors"
+	"algobra/finitefield/ff"
 	"fmt"
 	"math"
 	"testing"
@@ -108,17 +109,17 @@ func TestParseOutput(t *testing.T) {
 	for rep := 0; rep < 1000; rep++ {
 		// Create random polynomial with up to 50 different terms
 		nDegs := (uint(prg.Uint32()) % 50) + 1
-		coefMap := make(map[[2]uint]uint)
-		coefMap[[2]uint{1, 1}] = 1 // Cover printing cases with degrees 1
+		coefMap := make(map[[2]uint]ff.Element)
+		coefMap[[2]uint{1, 1}] = field.One() // Cover printing cases with degrees 1
 		for i := uint(0); i < nDegs; i++ {
 			deg := [2]uint{
 				uint(prg.Uint32()),
 				uint(prg.Uint32()),
 			}
-			coef := uint(prg.Uint32()) % char
+			coef := field.RandElement()
 			coefMap[deg] = coef
 		}
-		f := ring.PolynomialFromUnsigned(coefMap)
+		f := ring.Polynomial(coefMap)
 
 		if g, err := ring.PolynomialFromString(f.String()); err != nil {
 			t.Errorf("Parsing formatted output of %v returns error %q", f, err)

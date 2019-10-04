@@ -28,13 +28,18 @@ func (r *QuotientRing) Interpolate(
 	if !allDistinct(points) {
 		return nil, errors.New(
 			op, errors.InputValue,
-			"Interpolation points must me distinct",
+			"Interpolation points must be distinct",
 		)
 	}
 
-	f := r.Zero()
-	for i := range points {
-		f = f.Plus(r.lagrangeBasis(points, i).Scale(values[i]))
+	f := r.zeroWithCap(len(points))
+	for i, p := range points {
+		if values[i].IsZero() {
+			// No need to compute the Lagrange basis polynomial since we will
+			// scale it by zero anyway
+			continue
+		}
+		f.Add(r.lagrangeBasis(points, p).Scale(values[i]))
 	}
 	return f, f.Err()
 }
@@ -54,21 +59,127 @@ func allDistinct(points []ff.Element) bool {
 // lagrangeBasis computes a "lagrange-type" basis element. That is, it computes
 // a polynomial that evaluates to 1 in point at index and to 0 in any other
 // point of points.
-func (r *QuotientRing) lagrangeBasis(points []ff.Element, index int) *Polynomial {
-	f := r.PolynomialFromUnsigned([]uint{1})
+// func (r *QuotientRing) lagrangeBasis(points []ff.Element, index int) *Polynomial {
+// 	f := r.PolynomialFromUnsigned([]uint{1})
 
+// 	for i, p := range points {
+// 		if i == index {
+// 			continue
+// 		}
+
+// 		f.Mult(r.Polynomial([]ff.Element{
+// 			p.Neg(),
+// 			r.baseField.One(),
+// 		})).Scale(points[index].Minus(p).Inv())
+// 	}
+
+// 	return f
+// }
+
+func (r *QuotientRing) lagrangeBasis(
+	points []ff.Element,
+	ignore ff.Element,
+) *Polynomial {
+	f := r.zeroWithCap(len(points))
+	denom := r.baseField.One()
+
+	// Find the index of ignore-element
+	ignoreIndex := 0
 	for i, p := range points {
-		if i == index {
-			continue
+		if p.Equal(ignore) {
+			ignoreIndex = i
 		}
-
-		f = f.Mult(r.Polynomial([]ff.Element{
-			p.Neg(),
-			r.baseField.One(),
-		})).Scale(points[index].Minus(p).Inv())
 	}
 
+	// Compute the coefficients directly
+	for k := 0; k < len(points); k++ {
+		f.SetCoef(
+			k,
+			r.coefK(points, ignoreIndex, len(points)-1-k),
+		)
+	}
+
+	// Compute the denominator
+	for i, p := range points {
+		if i == ignoreIndex {
+			continue
+		}
+		denom.Mult(ignore.Minus(p))
+	}
+
+	f = f.Scale(denom.Inv())
 	return f
+}
+
+// combinIter is an iterator for combinations.
+//
+// It will iterate over all possible ways to choose a given number of elements
+// from n elements. For instance, it will generate the sequence [0,1,2],
+// [0,1,3],..., [3,4,5] if defined with n=5 and k=3.
+type combinIter struct {
+	n     int
+	slice []int
+	atEnd bool
+}
+
+func newCombinIter(n, k int) *combinIter {
+	s := make([]int, k, k)
+	for i := range s {
+		s[i] = i
+	}
+	return &combinIter{
+		n:     n,
+		slice: s,
+	}
+}
+
+func (ci *combinIter) current() []int {
+	return ci.slice
+}
+
+func (ci *combinIter) active() bool {
+	return !ci.atEnd
+}
+
+func (ci *combinIter) next() {
+	for i := range ci.slice {
+		j := len(ci.slice) - 1 - i
+		if ci.slice[j] < (ci.n - i) {
+			ci.slice[j]++
+			for l := 1; l <= i; l++ {
+				ci.slice[j+l] = ci.slice[j] + l
+			}
+			return
+		}
+	}
+	ci.atEnd = true
+}
+
+// coefK computes the coefficient of X^k or Y^k in the numerator of a Lagrange
+// basis polynomial. Such polynomials have the form (X-p_1)(X-p_2)...(X-p_n),
+// where we skip the p_i corresponding to ignore.
+func (r *QuotientRing) coefK(points []ff.Element, ignore, k int) ff.Element {
+	out := r.baseField.Zero()
+	tmp := r.baseField.Zero()
+
+outer:
+	for ci := newCombinIter(len(points)-1, k); ci.active(); ci.next() {
+		tmp.SetUnsigned(1)
+
+		for _, i := range ci.current() {
+			if i == ignore {
+				continue outer
+			}
+			tmp.Mult(points[i])
+		}
+
+		out.Add(tmp)
+	}
+	if k%2 != 0 {
+		// (-1)^k == -1
+		out.SetNeg()
+	}
+	return out
 }
 
 /* Copyright 2019 René Bødker Christensen

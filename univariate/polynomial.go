@@ -120,7 +120,7 @@ func (f *Polynomial) EmbedIn(r *QuotientRing, reduce bool) error {
 func (f *Polynomial) Eval(point ff.Element) ff.Element {
 	out := f.BaseField().Zero()
 	for deg, c := range f.coefs {
-		out = out.Plus(c.Times(point.Pow(uint(deg))))
+		out.Add(point.Pow(uint(deg)).Mult(c))
 	}
 	return out
 }

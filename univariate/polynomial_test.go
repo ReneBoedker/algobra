@@ -21,8 +21,11 @@ func defineField(card uint) ff.Field {
 	return field
 }
 
-func fieldLoop(do func(field ff.Field)) {
-	for _, card := range [...]uint{2, 3, 4, 5, 9, 16, 25, 64} {
+func fieldLoop(do func(field ff.Field), minCard ...uint) {
+	for _, card := range [...]uint{2, 3, 4, 5, 9, 16, 25, 49, 64, 125} {
+		if len(minCard) > 0 && card < minCard[0] {
+			continue
+		}
 		field, err := finitefield.Define(card)
 		if err != nil {
 			// Error is in tests, so panic is OK

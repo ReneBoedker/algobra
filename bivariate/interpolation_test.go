@@ -6,8 +6,6 @@ import (
 	"testing"
 )
 
-// Pseudo-random generator prg defined in polynomial_test.go
-
 func TestLagrangeBasis(t *testing.T) {
 	field := defineField(17, t)
 	ring := DefRing(field, Lex(true))
@@ -19,8 +17,8 @@ func TestLagrangeBasis(t *testing.T) {
 		nRuns := 0
 		for nRuns == 0 || !allDistinct(points) {
 			for j := 0; j < nPoints; j++ {
-				points[j][0] = field.ElementFromUnsigned(uint(prg.Uint32()))
-				points[j][1] = field.ElementFromUnsigned(uint(prg.Uint32()))
+				points[j][0] = field.RandElement()
+				points[j][1] = field.RandElement()
 			}
 			nRuns++
 			if nRuns >= 100 {
@@ -70,8 +68,8 @@ func TestInterpolation(t *testing.T) {
 		nRuns := 0
 		for nRuns == 0 || !allDistinct(points) {
 			for j := 0; j < nPoints; j++ {
-				points[j][0] = field.ElementFromUnsigned(uint(prg.Uint32()))
-				points[j][1] = field.ElementFromUnsigned(uint(prg.Uint32()))
+				points[j][0] = field.RandElement()
+				points[j][1] = field.RandElement()
 			}
 			nRuns++
 			if nRuns >= 100 {
@@ -82,7 +80,7 @@ func TestInterpolation(t *testing.T) {
 
 		values := make([]ff.Element, nPoints, nPoints)
 		for i := 0; i < nPoints; i++ {
-			values[i] = field.ElementFromUnsigned(uint(prg.Uint32()))
+			values[i] = field.RandElement()
 		}
 
 		f, err := ring.Interpolate(points, values)

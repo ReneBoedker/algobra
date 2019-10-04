@@ -123,7 +123,7 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 				)
 				return h
 			}
-			h.SetCoef(degSum, h.Coef(degSum).Plus(cf.Times(cg)))
+			h.IncrementCoef(degSum, cf.Times(cg))
 		}
 	}
 	return h

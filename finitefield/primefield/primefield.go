@@ -6,8 +6,16 @@ import (
 	"algobra/finitefield/ff"
 	"fmt"
 	"math/bits"
+	"math/rand"
 	"strconv"
+	"time"
 )
+
+func init() {
+	// Set a new seed for the pseudo-random generator.
+	// Note that this is not cryptographically safe.
+	rand.Seed(time.Now().UTC().UnixNano())
+}
 
 // Field is the implementation of a finite field
 type Field struct {
@@ -144,6 +152,16 @@ func (f *Field) Zero() ff.Element {
 // One returns the multiplicative identity in f.
 func (f *Field) One() ff.Element {
 	return &Element{field: f, val: 1}
+}
+
+// RandElement returns a pseudo-random element in f.
+//
+// The pseudo-random generator used is not cryptographically safe.
+func (f *Field) RandElement() ff.Element {
+	if bits.UintSize == 32 {
+		return f.ElementFromUnsigned(uint(rand.Uint32()))
+	}
+	return f.ElementFromUnsigned(uint(rand.Uint64()))
 }
 
 // Element defines a new element over f with value val, which must be either
