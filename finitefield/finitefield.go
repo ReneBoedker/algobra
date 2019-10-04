@@ -1,3 +1,4 @@
+// Package finitefield implements convenient functions for defining finite fields
 package finitefield
 
 import (

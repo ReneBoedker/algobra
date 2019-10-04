@@ -1,10 +1,11 @@
+// Package ff contains the interfaces describing finite fields and their elements
 package ff
 
 // Field defines the methods that a finite field must support
 type Field interface {
 	Card() uint
 	Char() uint
-	//Element(interface{}) (Element, error)
+	Element(interface{}) (Element, error)
 	ElementFromSigned(int) Element
 	ElementFromUnsigned(uint) Element
 	Elements() []Element

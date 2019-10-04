@@ -1,22 +1,22 @@
 #!/bin/bash
 
-## Run from Magit
-unset GIT_LITERAL_PATHSPECS
-
-for subpkg in $(go list ./... | sed "s/algobra/./g")
-do	
+for subpkg in $(go list ./... | sed "s/algobra/./g") .
+do
 	## Run the coverage test
-	cover=$(go test -cover $subpkg | sed "s/.*coverage: \([0-9\.]\+\)%.*/\1/")
+	go test -coverprofile=$subpkg/coverage.out -coverpkg $subpkg/... $subpkg/... > /dev/null
+	cover=$(go tool cover -func=$subpkg/coverage.out | tail -n 1 | sed "s/^total:[^0-9]*\([0-9\.]\+\)%.*/\1/")
 
+	echo $subpkg: $cover
+	
 	if [[ $(echo $cover | tail -n1) == FAIL* ]]
 	then
 		## Test or build failed; abort commit
 		exit 1
 	fi
 
-	if [[ $cover == "?"* ]]
+	if [[ $cover == "?"* ]] || [ ! -f $subpkg/README.md ]
 	then
-		## If no tests are defined, skip
+		## If no tests are defined or README does not exist, skip
 		continue
 	fi
 

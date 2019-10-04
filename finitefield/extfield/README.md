@@ -1,4 +1,4 @@
-![coverage-badge](https://img.shields.io/badge/coverage-81.8%25-green?cacheSeconds=86400&style=flat)
+![coverage-badge](https://img.shields.io/badge/coverage-79.2%25-yellowgreen?cacheSeconds=86400&style=flat)
 # Algobra: Extension fields
 This package implements arithmetic in finite fields of any prime power cardinality.
 
