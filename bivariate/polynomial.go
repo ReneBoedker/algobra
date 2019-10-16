@@ -429,7 +429,11 @@ func (f *Polynomial) String() string {
 			fmt.Fprint(&b, " + ")
 		}
 		if tmp := f.Coef(d); !tmp.IsOne() || (d[0] == 0 && d[1] == 0) {
-			fmt.Fprintf(&b, "%v", tmp)
+			if tmp.NTerms() > 1 {
+				fmt.Fprintf(&b, "(%v)", tmp)
+			} else {
+				fmt.Fprintf(&b, "%v", tmp)
+			}
 		}
 		if d[0] == 1 {
 			fmt.Fprint(&b, "X")

@@ -1,16 +1,33 @@
 package bivariate
 
 import (
-	"algobra/finitefield/primefield"
+	"algobra/finitefield"
+	"algobra/finitefield/ff"
 	"testing"
 )
 
-func defineField(char uint, t *testing.T) *primefield.Field {
-	field, err := primefield.Define(char)
+func defineField(char uint, t *testing.T) ff.Field {
+	field, err := finitefield.Define(char)
 	if err != nil {
 		t.Fatalf("Failed to define finite field of %d elements", char)
 	}
 	return field
+}
+
+func fieldLoop(do func(field ff.Field), minCard ...uint) {
+	for _, card := range [...]uint{2, 3, 4, 5, 9, 16, 25, 49, 64, 125} {
+		if len(minCard) > 0 && card < minCard[0] {
+			continue
+		}
+		field, err := finitefield.Define(card)
+		if err != nil {
+			// Error is in tests, so panic is OK
+			panic(err)
+		}
+
+		do(field)
+	}
+	return
 }
 
 func TestReduce(t *testing.T) {

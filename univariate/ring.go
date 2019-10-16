@@ -67,6 +67,11 @@ func (r *QuotientRing) SetVarName(varName string) error {
 	return nil
 }
 
+// VarName returns the string used to represent the variable of r.
+func (r *QuotientRing) VarName() string {
+	return r.varName
+}
+
 // zeroWithCap returns a zero polynomial over the specified ring, where the
 // underlying representation has given capacity.
 // TODO: Check cap and write into Zero

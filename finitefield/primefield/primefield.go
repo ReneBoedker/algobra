@@ -64,8 +64,18 @@ func (f *Field) String() string {
 	return fmt.Sprintf("Finite field of %d elements", f.char)
 }
 
-func (f *Field) RegexElement() string {
-	return "[0-9]*"
+// NTerms returns the number of terms in the representation of a.
+func (a *Element) NTerms() uint {
+	return 1
+}
+
+func (f *Field) RegexElement(capture, requireParens bool) string {
+	const pattern = `[0-9]*`
+
+	if capture {
+		return `(` + pattern + `)`
+	}
+	return pattern
 }
 
 // Char returns the characteristic of f.

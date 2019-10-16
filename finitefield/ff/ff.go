@@ -7,11 +7,13 @@ type Field interface {
 	Char() uint
 	Element(interface{}) (Element, error)
 	ElementFromSigned(int) Element
+	ElementFromString(string) (Element, error)
 	ElementFromUnsigned(uint) Element
 	Elements() []Element
 	MultGenerator() Element
 	One() Element
 	RandElement() Element
+	RegexElement(bool, bool) string
 	String() string
 	Zero() Element
 }
@@ -29,6 +31,7 @@ type Element interface {
 	Minus(Element) Element
 	Mult(Element) Element
 	Neg() Element
+	NTerms() uint
 	Plus(Element) Element
 	Pow(uint) Element
 	Prod(Element, Element) Element

@@ -114,11 +114,11 @@ func (r *QuotientRing) PolynomialFromSigned(coefs map[[2]uint]int) *Polynomial {
 // If the string cannot be parsed, the function returns the zero polynomial and
 // a Parsing-error.
 func (r *QuotientRing) PolynomialFromString(s string) (*Polynomial, error) {
-	m, err := polynomialStringToSignedMap(s)
+	m, err := polynomialStringToMap(s, r.baseField)
 	if err != nil {
 		return r.Zero(), err
 	}
-	return r.PolynomialFromSigned(m), nil
+	return r.Polynomial(m), nil
 }
 
 // Quotient defines the quotient of the given ring modulo the input ideal.

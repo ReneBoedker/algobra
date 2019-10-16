@@ -103,30 +103,31 @@ func TestConversionErrors(t *testing.T) {
 }
 
 func TestParseOutput(t *testing.T) {
-	char := uint(13)
-	field := defineField(char, t)
-	ring := DefRing(field, Lex(false))
-	for rep := 0; rep < 1000; rep++ {
-		// Create random polynomial with up to 50 different terms
-		nDegs := (uint(prg.Uint32()) % 50) + 1
-		coefMap := make(map[[2]uint]ff.Element)
-		coefMap[[2]uint{1, 1}] = field.One() // Cover printing cases with degrees 1
-		for i := uint(0); i < nDegs; i++ {
-			deg := [2]uint{
-				uint(prg.Uint32()),
-				uint(prg.Uint32()),
+	do := func(field ff.Field) {
+		ring := DefRing(field, Lex(false))
+		for rep := 0; rep < 100; rep++ {
+			// Create random polynomial with up to 50 different terms
+			nDegs := (uint(prg.Uint32()) % 4) + 1
+			coefMap := make(map[[2]uint]ff.Element)
+			coefMap[[2]uint{1, 1}] = field.One() // Cover printing cases with degrees 1
+			for i := uint(0); i < nDegs; i++ {
+				deg := [2]uint{
+					uint(prg.Uint32()),
+					uint(prg.Uint32()),
+				}
+				coef := field.RandElement()
+				coefMap[deg] = coef
 			}
-			coef := field.RandElement()
-			coefMap[deg] = coef
-		}
-		f := ring.Polynomial(coefMap)
+			f := ring.Polynomial(coefMap)
 
-		if g, err := ring.PolynomialFromString(f.String()); err != nil {
-			t.Errorf("Parsing formatted output of %v returns error %q", f, err)
-		} else if !f.Equal(g) {
-			t.Errorf("Formatted output of %v is parsed as %v", f, g)
+			if g, err := ring.PolynomialFromString(f.String()); err != nil {
+				t.Errorf("Parsing formatted output of %v returns error %q", f, err)
+			} else if !f.Equal(g) {
+				t.Errorf("Formatted output of %v is parsed as %v", f, g)
+			}
 		}
 	}
+	fieldLoop(do)
 }
 
 /* Copyright 2019 René Bødker Christensen

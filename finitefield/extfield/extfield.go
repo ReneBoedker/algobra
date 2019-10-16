@@ -135,8 +135,26 @@ func (f *Field) Elements() []ff.Element {
 	return out
 }
 
-func (f *Field) RegexElement() string {
-	return "(?:)"
+func (f *Field) RegexElement(capture, requireParens bool) string {
+	termPattern := `(?:[0-9]*(?:` + f.polyRing.VarName() + `(?:\^?[0-9]+)?)|[0-9]+)`
+	moreTerms := `(?:` + // Optional group of additional terms consisting of
+		`\s*(?:\+|-)\s*` + // a sign
+		termPattern + // and a term
+		`)*`
+
+	var pattern string
+
+	if requireParens {
+		pattern = `(?:` + termPattern + `|` + // A single term, or
+			`\(\s*` + termPattern + moreTerms + `\s*\))` // several terms in parentheses
+	} else {
+		pattern = termPattern + moreTerms
+	}
+
+	if capture {
+		return `(` + pattern + `)`
+	}
+	return pattern
 }
 
 // Element is the implementation of an element in a finite field.
@@ -329,6 +347,11 @@ func (a *Element) IsOne() bool {
 // String returns the string representation of a.
 func (a *Element) String() string {
 	return a.val.String()
+}
+
+// NTerms returns the number of terms in the representation of a.
+func (a *Element) NTerms() uint {
+	return uint(len(a.val.Degrees()))
 }
 
 // checkErrAndCompatible is a wrapper for the two functions hasErr and

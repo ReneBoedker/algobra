@@ -2,28 +2,31 @@ package bivariate
 
 import (
 	"algobra/errors"
+	"algobra/finitefield/ff"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
 type monomialMatch struct {
-	sign string
-	coef string
-	vars [2]string
-	degs [2]string
+	field ff.Field
+	sign  string
+	coef  string
+	vars  [2]string
+	degs  [2]string
 }
 
-func newMonomialMatch(match []string, op errors.Op) (*monomialMatch, error) {
-	if len(match) != 7 {
+func newMonomialMatch(match []string, op errors.Op, field ff.Field) (*monomialMatch, error) {
+	if len(match) != 8 {
 		return nil, errors.New(
 			op, errors.Parsing,
-			"Regexp-match has unexpected form (%v)", match,
+			"Regexp-match has unexpected form (%q)", match,
 		)
 	}
 	out := &monomialMatch{
-		sign: match[1],
-		coef: match[2],
+		field: field,
+		sign:  match[1],
+		coef:  match[2] + match[7],
 		vars: [2]string{
 			strings.ToLower(match[3]),
 			strings.ToLower(match[5]),
@@ -76,18 +79,17 @@ func (m *monomialMatch) ensureVariableOrder(op errors.Op) error {
 	return nil
 }
 
-func (m *monomialMatch) degreesAndCoef(op errors.Op) (deg [2]uint, coef int, err error) {
+func (m *monomialMatch) degreesAndCoef(op errors.Op) (deg [2]uint, coef ff.Element, err error) {
 	if m.coef == "" {
-		coef = 1
+		coef = m.field.One()
 	} else {
-		tmp, err := strconv.ParseInt(m.coef, 10, 0)
+		coef, err = m.field.ElementFromString(strings.Trim(m.coef, "()"))
 		if err != nil {
 			return deg, coef, errors.Wrap(op, errors.Conversion, err)
 		}
-		coef = int(tmp)
 	}
 	if m.sign == "-" {
-		coef *= -1
+		coef.SetNeg()
 	}
 	for i := 0; i < 2; i++ {
 		if m.vars[i] != "" {
@@ -109,13 +111,21 @@ func parseExponent(s string) (uint, error) {
 	return uint(tmp), err
 }
 
-func polynomialStringToSignedMap(s string) (map[[2]uint]int, error) {
+func polynomialStringToMap(s string, field ff.Field) (map[[2]uint]ff.Element, error) {
 	const op = "Parsing polynomial from string"
-	matches := regexp.MustCompile(
-		`(?P<sign>\+|-)?\s*`+
-			`(?P<coef>[0-9]*)\s*\*?\s*`+
-			`(?P<var1>(?i:x|y))?\^?(?P<deg1>[0-9]*)\s*\*?\s*`+
-			`(?P<var2>(?i:x|y))?\^?(?P<deg2>[0-9]*)\s*`).FindAllStringSubmatch(s, -1)
+	pattern, err := regexp.Compile(
+		`(?P<sign>^|\+|-)\s*` +
+			`(?:` +
+			field.RegexElement(true, true) + `?\s*\*?\s*` +
+			`(?P<var1>(?i:x|y))\^?(?P<deg1>[0-9]*)(?:\s*\*?\s*` +
+			`(?P<var2>(?i:x|y))?\^?(?P<deg2>[0-9]*))?\s*` +
+			`|` + field.RegexElement(true, true) +
+			`\s*)`)
+	if err != nil {
+		return nil, errors.Wrap(op, errors.Parsing, err)
+	}
+
+	matches := pattern.FindAllStringSubmatch(s, -1)
 	// Check that total match length is the full input string
 	matchLen := 0
 	for _, m := range matches {
@@ -124,13 +134,13 @@ func polynomialStringToSignedMap(s string) (map[[2]uint]int, error) {
 	if matchLen != len(s) {
 		return nil, errors.New(
 			op, errors.Parsing,
-			"Cannot parse %s; lengths do not match (%d ≠ %d)",
-			s, matchLen, len(s),
+			"Cannot parse %s; lengths do not match (%d ≠ %d) %v",
+			s, matchLen, len(s), matches,
 		)
 	}
-	out := make(map[[2]uint]int)
+	out := make(map[[2]uint]ff.Element)
 	for _, m := range matches {
-		tmp, err := newMonomialMatch(m, op)
+		tmp, err := newMonomialMatch(m, op, field)
 		if err != nil {
 			return nil, err
 		}
@@ -141,7 +151,7 @@ func polynomialStringToSignedMap(s string) (map[[2]uint]int, error) {
 		if _, ok := out[deg]; !ok {
 			out[deg] = coef
 		} else {
-			out[deg] += coef
+			out[deg].Add(coef)
 		}
 	}
 	return out, nil
