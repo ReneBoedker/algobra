@@ -69,12 +69,9 @@ func (a *Element) NTerms() uint {
 	return 1
 }
 
-func (f *Field) RegexElement(capture, requireParens bool) string {
+func (f *Field) RegexElement(requireParens bool) string {
 	const pattern = `[0-9]*`
 
-	if capture {
-		return `(` + pattern + `)`
-	}
 	return pattern
 }
 

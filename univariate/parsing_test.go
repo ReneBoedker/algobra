@@ -2,6 +2,7 @@ package univariate_test
 
 import (
 	"algobra/errors"
+	"algobra/finitefield/ff"
 	"algobra/univariate"
 	"fmt"
 	"math"
@@ -98,27 +99,28 @@ func TestConversionErrors(t *testing.T) {
 }
 
 func TestParseOutput(t *testing.T) {
-	char := uint(13)
-	field := defineField(char)
-	ring := univariate.DefRing(field)
-	for _, varName := range []string{"X", "Y", "α", "\\beta", "e^i", "", "\t"} {
-		for rep := 0; rep < 200; rep++ {
+	do := func(field ff.Field) {
+		ring := univariate.DefRing(field)
+		for _, varName := range []string{"X", "Y", "α", "\\beta", "e^i", "", "\t"} {
 			ring.SetVarName(varName)
-			// Create random polynomial with up to 50 different terms
-			nDegs := (uint(prg.Uint32()) % 50) + 1
-			coefs := make([]uint, nDegs, nDegs)
-			for i := uint(0); i < nDegs; i++ {
-				coefs[i] = uint(prg.Uint32())
-			}
-			f := ring.PolynomialFromUnsigned(coefs)
+			for rep := 0; rep < 100; rep++ {
+				// Create random polynomial with up to 50 different terms
+				nDegs := (uint(prg.Uint32()) % 50) + 1
+				coefs := make([]ff.Element, nDegs, nDegs)
+				for i := uint(0); i < nDegs; i++ {
+					coefs[i] = field.RandElement()
+				}
+				f := ring.Polynomial(coefs)
 
-			if g, err := ring.PolynomialFromString(f.String()); err != nil {
-				t.Errorf("Parsing formatted output of %v returns error %q", f, err)
-			} else if !f.Equal(g) {
-				t.Errorf("Formatted output of %v is parsed as %v", f, g)
+				if g, err := ring.PolynomialFromString(f.String()); err != nil {
+					t.Errorf("Parsing formatted output of %v returns error %q", f, err)
+				} else if !f.Equal(g) {
+					t.Errorf("Formatted output of %v is parsed as %v", f, g)
+				}
 			}
 		}
 	}
+	fieldLoop(do)
 }
 
 func TestSetVarName(t *testing.T) {

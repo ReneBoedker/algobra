@@ -297,7 +297,11 @@ func (f *Polynomial) String() string {
 			fmt.Fprint(&b, " + ")
 		}
 		if tmp := f.Coef(d); !tmp.IsOne() || d == 0 {
-			fmt.Fprintf(&b, "%v", tmp)
+			if tmp.NTerms() > 1 {
+				fmt.Fprintf(&b, "(%v)", tmp)
+			} else {
+				fmt.Fprintf(&b, "%v", tmp)
+			}
 		}
 		if d == 1 {
 			fmt.Fprint(&b, f.baseRing.varName)

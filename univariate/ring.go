@@ -153,7 +153,7 @@ func (r *QuotientRing) PolynomialFromSigned(coefs []int) *Polynomial {
 func (r *QuotientRing) PolynomialFromString(s string) (*Polynomial, error) {
 	const op = "Defining polynomial from string"
 
-	m, err := polynomialStringToSignedMap(s, &r.varName)
+	m, err := polynomialStringToMap(s, &r.varName, r.baseField)
 	f := r.Zero()
 	if err != nil {
 		return f, errors.Wrap(op, errors.Inherit, err)
@@ -165,7 +165,7 @@ func (r *QuotientRing) PolynomialFromString(s string) (*Polynomial, error) {
 				"Input %q contains negative degree %d", s, deg,
 			)
 		}
-		f.SetCoef(deg, f.Coef(deg).Plus(r.baseField.ElementFromSigned(coef)))
+		f.SetCoef(deg, f.Coef(deg).Plus(coef))
 	}
 	return f, nil
 }

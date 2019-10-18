@@ -13,7 +13,7 @@ type Field interface {
 	MultGenerator() Element
 	One() Element
 	RandElement() Element
-	RegexElement(bool, bool) string
+	RegexElement(bool) string
 	String() string
 	Zero() Element
 }

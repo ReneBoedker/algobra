@@ -436,16 +436,16 @@ func (f *Polynomial) String() string {
 			}
 		}
 		if d[0] == 1 {
-			fmt.Fprint(&b, "X")
+			fmt.Fprint(&b, f.baseRing.VarNames()[0])
 		}
 		if d[0] > 1 {
-			fmt.Fprintf(&b, "X^%d", d[0])
+			fmt.Fprintf(&b, "%s^%d", f.baseRing.VarNames()[0], d[0])
 		}
 		if d[1] == 1 {
-			fmt.Fprint(&b, "Y")
+			fmt.Fprint(&b, f.baseRing.VarNames()[1])
 		}
 		if d[1] > 1 {
-			fmt.Fprintf(&b, "Y^%d", d[1])
+			fmt.Fprintf(&b, "%s^%d", f.baseRing.VarNames()[1], d[1])
 		}
 	}
 	return b.String()

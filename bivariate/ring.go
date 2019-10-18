@@ -4,10 +4,12 @@ import (
 	"algobra/errors"
 	"algobra/finitefield/ff"
 	"fmt"
+	"strings"
 )
 
 type ring struct {
 	baseField ff.Field
+	varNames  [2]string
 	ord       Order
 }
 
@@ -40,10 +42,39 @@ func DefRing(field ff.Field, ord Order) *QuotientRing {
 	return &QuotientRing{
 		ring: &ring{
 			baseField: field,
+			varNames:  [2]string{"X", "Y"},
 			ord:       ord,
 		},
 		id: nil,
 	}
+}
+
+// SetVarName sets the variable name to be used in the given quotient ring.
+//
+// Leading and trailing whitespace characters are removed before setting the
+// variable name. If the string consists solely of whitespace characters, an
+// InputValue-error is returned.
+// TODO: Do more strings have to be disallowed (eg. +, -)?
+func (r *QuotientRing) SetVarNames(varNames [2]string) error {
+	const op = "Setting variable name"
+
+	for i, v := range varNames {
+		varName := strings.TrimSpace(v)
+		if len(varName) == 0 {
+			return errors.New(
+				op, errors.InputValue,
+				"Cannot use whitespace characters as variable name",
+			)
+		}
+		r.varNames[i] = varName
+	}
+
+	return nil
+}
+
+// VarName returns the string used to represent the variable of r.
+func (r *QuotientRing) VarNames() [2]string {
+	return r.varNames
 }
 
 // Zero returns a zero polynomial over the specified ring.
@@ -114,7 +145,7 @@ func (r *QuotientRing) PolynomialFromSigned(coefs map[[2]uint]int) *Polynomial {
 // If the string cannot be parsed, the function returns the zero polynomial and
 // a Parsing-error.
 func (r *QuotientRing) PolynomialFromString(s string) (*Polynomial, error) {
-	m, err := polynomialStringToMap(s, r.baseField)
+	m, err := polynomialStringToMap(s, &r.varNames, r)
 	if err != nil {
 		return r.Zero(), err
 	}

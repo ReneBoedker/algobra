@@ -9,14 +9,14 @@ import (
 )
 
 type monomialMatch struct {
-	field ff.Field
-	sign  string
-	coef  string
-	vars  [2]string
-	degs  [2]string
+	qr   *QuotientRing
+	sign string
+	coef string
+	vars [2]string
+	degs [2]string
 }
 
-func newMonomialMatch(match []string, op errors.Op, field ff.Field) (*monomialMatch, error) {
+func newMonomialMatch(match []string, op errors.Op, qr *QuotientRing) (*monomialMatch, error) {
 	if len(match) != 8 {
 		return nil, errors.New(
 			op, errors.Parsing,
@@ -24,9 +24,9 @@ func newMonomialMatch(match []string, op errors.Op, field ff.Field) (*monomialMa
 		)
 	}
 	out := &monomialMatch{
-		field: field,
-		sign:  match[1],
-		coef:  match[2] + match[7],
+		qr:   qr,
+		sign: match[1],
+		coef: match[2] + match[7],
 		vars: [2]string{
 			strings.ToLower(match[3]),
 			strings.ToLower(match[5]),
@@ -62,10 +62,15 @@ func newMonomialMatch(match []string, op errors.Op, field ff.Field) (*monomialMa
 }
 
 func (m *monomialMatch) ensureVariableOrder(op errors.Op) error {
+	varLower := [2]string{
+		strings.ToLower(m.qr.varNames[0]),
+		strings.ToLower(m.qr.varNames[1]),
+	}
+
 	switch {
-	case m.vars[0] == "x" && (m.vars[1] == "y" || m.vars[1] == ""):
+	case m.vars[0] == varLower[0] && (m.vars[1] == varLower[1] || m.vars[1] == ""):
 		// Correct; do nothing
-	case m.vars[0] == "y" && (m.vars[1] == "x" || m.vars[1] == ""):
+	case m.vars[0] == varLower[1] && (m.vars[1] == varLower[0] || m.vars[1] == ""):
 		m.vars[0], m.vars[1] = m.vars[1], m.vars[0]
 		m.degs[0], m.degs[1] = m.degs[1], m.degs[0]
 	case m.vars[0] == "" && m.vars[1] == "":
@@ -81,9 +86,9 @@ func (m *monomialMatch) ensureVariableOrder(op errors.Op) error {
 
 func (m *monomialMatch) degreesAndCoef(op errors.Op) (deg [2]uint, coef ff.Element, err error) {
 	if m.coef == "" {
-		coef = m.field.One()
+		coef = m.qr.baseField.One()
 	} else {
-		coef, err = m.field.ElementFromString(strings.Trim(m.coef, "()"))
+		coef, err = m.qr.baseField.ElementFromString(strings.Trim(m.coef, "()"))
 		if err != nil {
 			return deg, coef, errors.Wrap(op, errors.Conversion, err)
 		}
@@ -111,18 +116,23 @@ func parseExponent(s string) (uint, error) {
 	return uint(tmp), err
 }
 
-func polynomialStringToMap(s string, field ff.Field) (map[[2]uint]ff.Element, error) {
+func polynomialStringToMap(s string, varNames *[2]string, qr *QuotientRing) (map[[2]uint]ff.Element, error) {
 	const op = "Parsing polynomial from string"
+	xOrY := regexp.QuoteMeta((*varNames)[0]) + `|` + regexp.QuoteMeta((*varNames)[1])
 	pattern, err := regexp.Compile(
 		`(?P<sign>^|\+|-)\s*` +
 			`(?:` +
-			field.RegexElement(true, true) + `?\s*\*?\s*` +
-			`(?P<var1>(?i:x|y))\^?(?P<deg1>[0-9]*)(?:\s*\*?\s*` +
-			`(?P<var2>(?i:x|y))?\^?(?P<deg2>[0-9]*))?\s*` +
-			`|` + field.RegexElement(true, true) +
+			`(?P<coef>` + qr.baseField.RegexElement(true) + `)?` + `\s*\*?\s*` +
+			`(?P<var1>(?i:` + xOrY + `))\^?(?P<deg1>[0-9]*)(?:\s*\*?\s*` +
+			`(?P<var2>(?i:` + xOrY + `))?\^?(?P<deg2>[0-9]*))?\s*` +
+			`|(?P<coefOnly>` + qr.baseField.RegexElement(true) + `)` +
 			`\s*)`)
 	if err != nil {
-		return nil, errors.Wrap(op, errors.Parsing, err)
+		return nil, errors.New(
+			op, errors.Internal,
+			"Failed to compile regular expression using variable names %q and %q",
+			varNames[0], varNames[1],
+		)
 	}
 
 	matches := pattern.FindAllStringSubmatch(s, -1)
@@ -140,7 +150,7 @@ func polynomialStringToMap(s string, field ff.Field) (map[[2]uint]ff.Element, er
 	}
 	out := make(map[[2]uint]ff.Element)
 	for _, m := range matches {
-		tmp, err := newMonomialMatch(m, op, field)
+		tmp, err := newMonomialMatch(m, op, qr)
 		if err != nil {
 			return nil, err
 		}

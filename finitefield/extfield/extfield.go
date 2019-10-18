@@ -135,7 +135,7 @@ func (f *Field) Elements() []ff.Element {
 	return out
 }
 
-func (f *Field) RegexElement(capture, requireParens bool) string {
+func (f *Field) RegexElement(requireParens bool) string {
 	termPattern := `(?:[0-9]*(?:` + f.polyRing.VarName() + `(?:\^?[0-9]+)?)|[0-9]+)`
 	moreTerms := `(?:` + // Optional group of additional terms consisting of
 		`\s*(?:\+|-)\s*` + // a sign
@@ -151,9 +151,6 @@ func (f *Field) RegexElement(capture, requireParens bool) string {
 		pattern = termPattern + moreTerms
 	}
 
-	if capture {
-		return `(` + pattern + `)`
-	}
 	return pattern
 }
 
