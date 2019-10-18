@@ -2,7 +2,7 @@
 package finitefield
 
 import (
-	"algobra/basic"
+	"algobra/auxmath"
 	"algobra/errors"
 	"algobra/finitefield/extfield"
 	"algobra/finitefield/ff"
@@ -15,7 +15,7 @@ import (
 func Define(card uint) (ff.Field, error) {
 	const op = "Defining finite field"
 
-	_, extDeg, err := basic.FactorizePrimePower(card)
+	_, extDeg, err := auxmath.FactorizePrimePower(card)
 	if err != nil {
 		return nil, errors.Wrap(op, errors.InputValue, err)
 	}

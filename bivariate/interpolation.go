@@ -1,6 +1,7 @@
 package bivariate
 
 import (
+	"algobra/auxmath"
 	"algobra/errors"
 	"algobra/finitefield/ff"
 )
@@ -137,50 +138,6 @@ func (r *QuotientRing) lagrangeBasis(
 	return f
 }
 
-// combinIter is an iterator for combinations.
-//
-// It will iterate over all possible ways to choose a given number of elements
-// from n elements. For instance, it will generate the sequence [0,1,2],
-// [0,1,3],..., [3,4,5] if defined with n=5 and k=3.
-type combinIter struct {
-	n     int
-	slice []int
-	atEnd bool
-}
-
-func newCombinIter(n, k int) *combinIter {
-	s := make([]int, k, k)
-	for i := range s {
-		s[i] = i
-	}
-	return &combinIter{
-		n:     n,
-		slice: s,
-	}
-}
-
-func (ci *combinIter) current() []int {
-	return ci.slice
-}
-
-func (ci *combinIter) active() bool {
-	return !ci.atEnd
-}
-
-func (ci *combinIter) next() {
-	for i := range ci.slice {
-		j := len(ci.slice) - 1 - i
-		if ci.slice[j] < (ci.n - i) {
-			ci.slice[j]++
-			for l := 1; l <= i; l++ {
-				ci.slice[j+l] = ci.slice[j] + l
-			}
-			return
-		}
-	}
-	ci.atEnd = true
-}
-
 // coefK computes the coefficient of X^k or Y^k in the numerator of a Lagrange
 // basis polynomial. Such polynomials have the form (X-p_1)(X-p_2)...(X-p_n),
 // where we skip the p_i corresponding to ignore.
@@ -189,10 +146,10 @@ func (r *QuotientRing) coefK(points []ff.Element, ignore, k int) ff.Element {
 	tmp := r.baseField.Zero()
 
 outer:
-	for ci := newCombinIter(len(points)-1, k); ci.active(); ci.next() {
+	for ci := auxmath.NewCombinIter(len(points), k); ci.Active(); ci.Next() {
 		tmp.SetUnsigned(1)
 
-		for _, i := range ci.current() {
+		for _, i := range ci.Current() {
 			if i == ignore {
 				continue outer
 			}

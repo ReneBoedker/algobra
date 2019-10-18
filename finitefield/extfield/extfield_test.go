@@ -3,7 +3,7 @@ package extfield
 import (
 	"algobra/errors"
 	"algobra/finitefield/ff"
-	"fmt"
+
 	"math/bits"
 	"math/rand"
 	"testing"
@@ -91,8 +91,7 @@ func TestConstructors(t *testing.T) {
 	c, _ := field.Element(-1)
 	d, _ := field.Element([]int{-1})
 	e, _ := field.ElementFromString("4")
-	f, err := field.ElementFromString("-1")
-	fmt.Println(err)
+	f, _ := field.ElementFromString("-1")
 	g := field.Zero()
 	g.SetUnsigned(4)
 

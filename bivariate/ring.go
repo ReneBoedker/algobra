@@ -49,11 +49,12 @@ func DefRing(field ff.Field, ord Order) *QuotientRing {
 	}
 }
 
-// SetVarName sets the variable name to be used in the given quotient ring.
+// SetVarNames sets the variable names to be used in the given quotient ring.
 //
 // Leading and trailing whitespace characters are removed before setting the
-// variable name. If the string consists solely of whitespace characters, an
-// InputValue-error is returned.
+// variable name. If the one of the strings consists solely of whitespace
+// characters, an InputValue-error is returned.
+//
 // TODO: Do more strings have to be disallowed (eg. +, -)?
 func (r *QuotientRing) SetVarNames(varNames [2]string) error {
 	const op = "Setting variable name"
@@ -72,7 +73,7 @@ func (r *QuotientRing) SetVarNames(varNames [2]string) error {
 	return nil
 }
 
-// VarName returns the string used to represent the variable of r.
+// VarNames returns the strings used to represent the variables of r.
 func (r *QuotientRing) VarNames() [2]string {
 	return r.varNames
 }
