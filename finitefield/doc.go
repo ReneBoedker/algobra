@@ -37,12 +37,12 @@
 // implemented constructors are available.
 //
 // The following examples illustrate how elements are constructed.
-//  a := gf7.ElementFromUnsigned(3)	// a = 3
-//  b := gf7.ElementFromSigned(-2)	// b = 5
+//  a := gf7.ElementFromUnsigned(3) // a = 3
+//  b := gf7.ElementFromSigned(-2)  // b = 5
 //
 //  gf9, _ := finitefield.Define(9)
-//  c, err := gf9.Element([]int{1,2})	// c = 1 + α
-//  d := gf9.Zero()						// d = 0
+//  c, err := gf9.Element([]int{1,2})   // c = 1 + α
+//  d := gf9.Zero()                     // d = 0
 //
 // Arithmetic operations
 //
@@ -56,8 +56,8 @@
 // operation are destructive, whereas those named after the mathematical sign
 // are non-destructive.
 //
-//  e := a.Plus(b)	// Returns a new element e with value a + b = 1
-//  e.Add(b)		// Alters e to have value e + b = 6
+//  e := a.Plus(b)  // Returns a new element e with value a + b = 1
+//  e.Add(b)        // Alters e to have value e + b = 6
 //
 //  e := a.Times(b).Minus(gf7.One())
 //  // e now has value (a * b) - 1 = 0
