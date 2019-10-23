@@ -153,8 +153,10 @@ func (f *Field) RegexElement(requireParens bool) string {
 	var pattern string
 
 	if requireParens {
-		pattern = `(?:` + termPattern + `|` + // A single term, or
-			`\(\s*` + termPattern + moreTerms + `\s*\))` // several terms in parentheses
+		pattern = `(?:\(\s*` + termPattern + moreTerms + `\s*\)|` + // several
+			// terms in parentheses
+			termPattern + `)` // Or single term
+
 	} else {
 		pattern = termPattern + moreTerms
 	}

@@ -6,6 +6,7 @@ import (
 
 	"math/bits"
 	"math/rand"
+	"regexp"
 	"testing"
 	"time"
 )
@@ -210,6 +211,61 @@ func TestGenerator(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestRegexElement(t *testing.T) {
+	for _, card := range []uint{2, 4, 9, 25, 49, 64} {
+		field := defineField(card)
+
+		pattern, err := regexp.Compile(field.RegexElement(false))
+		if err != nil {
+			t.Fatalf("Failed to compile regular expression %q", field.RegexElement(false))
+		}
+
+		patternParens, err := regexp.Compile(field.RegexElement(true))
+		if err != nil {
+			t.Fatalf("Failed to compile regular expression %q", field.RegexElement(true))
+		}
+
+		for rep := 0; rep < 50; rep++ {
+			a := field.RandElement()
+
+			s := a.String()
+			if tmp := pattern.FindString(s); tmp != s {
+				// The pattern without parentheses must match the entire string
+				t.Errorf(
+					"%q was matched as %q without requiring parentheses",
+					s, tmp,
+				)
+			}
+			if tmp := pattern.FindString("(" + s + ")"); tmp != s {
+				// If the pattern does not require parentheses, these should be
+				// ignored when matching
+				t.Errorf(
+					"(%q) was matched as %q when requiring parentheses",
+					s, tmp,
+				)
+			}
+
+			if tmp := patternParens.FindString(s); a.NTerms() > 1 && tmp == s {
+				// Matching without parentheses is only allowed for single terms
+				// when parentheses are required
+				t.Errorf(
+					"%q was matched as %q even though parentheses were required",
+					s, tmp,
+				)
+			}
+			if tmp := patternParens.FindString("(" + s + ")"); tmp != "("+s+")" {
+				// If parentheses are in the string and required in the search
+				// pattern, the match must contain them
+				t.Errorf(
+					"\"(%s)\" was matched as %q when requiring parentheses",
+					s, tmp,
+				)
+			}
+		}
+	}
+
 }
 
 func hardcodedTableTest(
