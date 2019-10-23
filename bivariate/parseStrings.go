@@ -148,6 +148,7 @@ func polynomialStringToMap(s string, varNames *[2]string, qr *QuotientRing) (map
 			s, matchLen, len(s), matches,
 		)
 	}
+
 	out := make(map[[2]uint]ff.Element)
 	for _, m := range matches {
 		tmp, err := newMonomialMatch(m, op, qr)
@@ -164,6 +165,7 @@ func polynomialStringToMap(s string, varNames *[2]string, qr *QuotientRing) (map
 			out[deg].Add(coef)
 		}
 	}
+
 	return out, nil
 }
 

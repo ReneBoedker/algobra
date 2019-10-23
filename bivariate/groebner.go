@@ -15,15 +15,19 @@ func max(values ...uint) uint {
 	return m
 }
 
-func monomialLcm(f, g *Polynomial) (lcm *Polynomial, ok bool) {
+// monomialLcm returns the least common multiple of two monomials.
+//
+// If either of the inputs is not a monomial, or they are defined over different
+// rings, nil is returned
+func monomialLcm(f, g *Polynomial) (lcm *Polynomial) {
 	if !f.IsMonomial() || !g.IsMonomial() || f.baseRing != g.baseRing {
-		return nil, false
+		return nil
 	}
 	ldf, ldg := f.Ld(), g.Ld()
 	lcm = f.baseRing.Polynomial(map[[2]uint]ff.Element{
 		{max(ldf[0], ldg[0]), max(ldf[1], ldg[1])}: f.BaseField().One(),
 	})
-	return lcm, true
+	return lcm
 }
 
 // SPolynomial computes the S-polynomial of f and g.
@@ -32,15 +36,14 @@ func monomialLcm(f, g *Polynomial) (lcm *Polynomial, ok bool) {
 // rings.
 func SPolynomial(f, g *Polynomial) (*Polynomial, error) {
 	const op = "Computing S-polynomial"
-	if f.baseRing != g.baseRing {
-		return nil, errors.New(
-			op, errors.ArithmeticIncompat,
-			"Inputs are defined over different rings",
-		)
+
+	if tmp := checkErrAndCompatible(op, f, g); tmp != nil {
+		return nil, tmp.Err()
 	}
-	lcm, _ := monomialLcm(f.Lt(), g.Lt())
-	q1, _ := lcm.QuoRem(f.Lt())
-	q2, _ := lcm.QuoRem(g.Lt())
+
+	lcm := monomialLcm(f.Lt(), g.Lt()) // Ignore error since Lt() is monomial
+	q1, _, _ := lcm.QuoRem(f.Lt())     // Remainder always zero, err has been checked
+	q2, _, _ := lcm.QuoRem(g.Lt())     // (as above)
 	return q1[0].Mult(f).Minus(q2[0].Mult(g)), nil
 }
 
@@ -51,6 +54,7 @@ func (id *Ideal) GroebnerBasis() *Ideal {
 	for i, g := range id.generators {
 		gb[i] = g.Copy()
 	}
+
 	for true {
 		newGens := make([]*Polynomial, 0)
 		for i, f := range gb {
@@ -70,6 +74,7 @@ func (id *Ideal) GroebnerBasis() *Ideal {
 		}
 		gb = append(gb, newGens...)
 	}
+
 	return &Ideal{
 		ring:       id.ring,
 		generators: gb,
@@ -85,25 +90,29 @@ func (id *Ideal) GroebnerBasis() *Ideal {
 // InputValue-error.
 func (id *Ideal) MinimizeBasis() error {
 	const op = "Minimizing Gröbner basis"
+
 	if id.isGroebner != 1 {
 		return errors.New(
 			op, errors.InputValue,
 			"Given ideal is not a Gröbner basis.",
 		)
 	}
+
 	lts := make([]*Polynomial, len(id.generators))
 	for i := range id.generators {
 		id.generators[i] = id.generators[i].Normalize()
 		lts[i] = id.generators[i].Lt()
 	}
+
 	for i := 0; i < len(id.generators); {
-		if _, r := lts[i].quoRemWithIgnore(i, lts...); r.IsZero() {
+		if _, r, _ := lts[i].quoRemWithIgnore(i, lts...); r.IsZero() {
 			id.generators = append(id.generators[:i], id.generators[i+1:]...)
 			lts = append(lts[:i], lts[i+1:]...)
 		} else {
 			i++
 		}
 	}
+
 	id.isMinimal = 1
 	return nil
 }
@@ -124,9 +133,11 @@ func (id *Ideal) ReduceBasis() error {
 	if id.isMinimal != 1 {
 		_ = id.MinimizeBasis()
 	}
+
 	for i := range id.generators {
-		_, id.generators[i] = id.generators[i].quoRemWithIgnore(i, id.generators...)
+		_, id.generators[i], _ = id.generators[i].quoRemWithIgnore(i, id.generators...)
 	}
+
 	id.isReduced = 1
 	return nil
 }
@@ -147,6 +158,7 @@ func (f *Polynomial) monomialDivideBy(g *Polynomial) (q *Polynomial, ok bool, er
 			"Input %v is not a monomial", g,
 		)
 	}
+
 	ldf, ldg := f.Ld(), g.Ld()
 	if d, ok := subtractDegs(ldf, ldg); ok {
 		h := f.baseRing.Zero()

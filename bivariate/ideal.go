@@ -36,6 +36,7 @@ func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 		isMinimal:  0,
 		isReduced:  0,
 	}
+
 	for _, g := range generators {
 		if g.baseRing != r {
 			return nil, errors.New(
@@ -49,12 +50,14 @@ func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 		}
 		id.generators = append(id.generators, g.Copy())
 	}
+
 	if len(id.generators) == 0 {
 		return nil, errors.New(
 			op, errors.InputValue,
 			"Generators %v define an empty ideal", generators,
 		)
 	}
+
 	return id, nil
 }
 
@@ -64,6 +67,7 @@ func (id *Ideal) Copy() *Ideal {
 	for i, g := range id.generators {
 		generators[i] = g.Copy()
 	}
+
 	return &Ideal{
 		ring:       id.ring,
 		generators: generators,
@@ -76,44 +80,6 @@ func (id *Ideal) Copy() *Ideal {
 // Reduce sets f to f modulo id
 func (id *Ideal) Reduce(f *Polynomial) {
 	// TODO: Ought id to be a Gröbner basis here?
-	_, r := f.QuoRem(id.generators...)
-	*f = *r // For some reason using pointers alone is not enough
-}
-
-// QuoRem return the polynomial quotient and remainder under division by the
-// given list of polynomials.
-func (f *Polynomial) QuoRem(list ...*Polynomial) (q []*Polynomial, r *Polynomial) {
-	return f.quoRemWithIgnore(-1, list...)
-}
-
-func (f *Polynomial) quoRemWithIgnore(ignoreIndex int, list ...*Polynomial) (q []*Polynomial, r *Polynomial) {
-	r = f.baseRing.Zero()
-	p := f.Copy()
-
-	q = make([]*Polynomial, len(list), len(list))
-	for i := range list {
-		q[i] = f.baseRing.Zero()
-	}
-outer:
-	for p.IsNonzero() {
-		for i, g := range list {
-			if i == ignoreIndex {
-				continue
-			}
-			// Below, err is ignored since both p and g are nonzero (so both
-			// leading terms are well defined, and monomialDivideBy will not
-			// return an error)
-			if mquo, ok, _ := p.Lt().monomialDivideBy(g.Lt()); ok {
-				// Lt(g) divides p.Lt()
-				q[i] = q[i].Plus(mquo)
-				p = p.Minus(g.multNoReduce(mquo))
-				continue outer
-			}
-		}
-		// No generators divide
-		tmp := p.Lt()
-		r = r.Plus(tmp)
-		p = p.Minus(tmp)
-	}
-	return q, r
+	_, r, _ := f.QuoRem(id.generators...)
+	*f = *r
 }

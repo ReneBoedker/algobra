@@ -63,8 +63,7 @@
 //  // e now has value (a * b) - 1 = 0
 //  // The values of a and b are unchanged
 //
-// Additional functions such as Neg, SetNeg, and Pow are also defined. For
-// details, please refer to the documentation.
+// Additional functions such as Neg, SetNeg, and Pow are also defined.
 //
 // Equality testing
 //

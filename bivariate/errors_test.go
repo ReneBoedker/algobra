@@ -96,10 +96,9 @@ func TestNotMonomials(t *testing.T) {
 	f := ring.PolynomialFromUnsigned(map[[2]uint]uint{{2, 0}: 1})
 	g := ring.PolynomialFromUnsigned(map[[2]uint]uint{{1, 2}: 1, {0, 0}: 4})
 
-	if _, ok := monomialLcm(f, g); ok {
+	if tmp := monomialLcm(f, g); tmp != nil {
 		t.Errorf(
-			"monomialLcm returned positive ok status, even though one input " +
-				"was not a monomial.",
+			"monomialLcm returned nil, even though one input was not a monomial.",
 		)
 	}
 

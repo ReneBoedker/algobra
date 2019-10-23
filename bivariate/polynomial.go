@@ -8,6 +8,81 @@ import (
 	"strings"
 )
 
+// Zero returns a zero polynomial over the specified ring.
+func (r *QuotientRing) Zero() *Polynomial {
+	return &Polynomial{
+		baseRing: r,
+		coefs:    map[[2]uint]ff.Element{},
+	}
+}
+
+// zeroWithCap returns a zero polynomial over the specified ring where the
+// underlying map has given capacity.
+func (r *QuotientRing) zeroWithCap(cap int) *Polynomial {
+	return &Polynomial{
+		baseRing: r,
+		coefs:    map[[2]uint]ff.Element{},
+	}
+}
+
+// Polynomial defines a new polynomial with the given coefficients
+func (r *QuotientRing) Polynomial(coefs map[[2]uint]ff.Element) *Polynomial {
+	m := make(map[[2]uint]ff.Element, len(coefs))
+	for d, e := range coefs {
+		if e.IsNonzero() {
+			m[d] = e
+		}
+	}
+	out := &Polynomial{baseRing: r, coefs: m}
+	out.reduce()
+	return out
+}
+
+// PolynomialFromUnsigned defines a new polynomial with the given coefficients
+func (r *QuotientRing) PolynomialFromUnsigned(coefs map[[2]uint]uint) *Polynomial {
+	m := make(map[[2]uint]ff.Element, len(coefs))
+	for d, c := range coefs {
+		e := r.baseField.ElementFromUnsigned(c)
+		if e.IsNonzero() {
+			m[d] = e
+		}
+	}
+	out := &Polynomial{baseRing: r, coefs: m}
+	out.reduce()
+	return out
+}
+
+// PolynomialFromSigned defines a new polynomial with the given coefficients
+func (r *QuotientRing) PolynomialFromSigned(coefs map[[2]uint]int) *Polynomial {
+	m := make(map[[2]uint]ff.Element, len(coefs))
+	for d, c := range coefs {
+		e := r.baseField.ElementFromSigned(c)
+		if e.IsNonzero() {
+			m[d] = e
+		}
+	}
+	out := &Polynomial{baseRing: r, coefs: m}
+	out.reduce()
+	return out
+}
+
+// PolynomialFromString defines a polynomial by parsing s.
+//
+// The string s must use 'X' and 'Y' as variable names, but lowercase letters are
+// accepted. Multiplication symbol '*' is allowed, but not necessary.
+// Additionally, Singular-style exponents are allowed, meaning that "X2Y3" is
+// interpreted as "X^2Y^3".
+//
+// If the string cannot be parsed, the function returns the zero polynomial and
+// a Parsing-error.
+func (r *QuotientRing) PolynomialFromString(s string) (*Polynomial, error) {
+	m, err := polynomialStringToMap(s, &r.varNames, r)
+	if err != nil {
+		return r.Zero(), err
+	}
+	return r.Polynomial(m), nil
+}
+
 // addDegs computes the component-wise sum of deg1 and deg2
 //
 // If either component overflows the size of the uint type, the function returns
@@ -71,6 +146,28 @@ func (f *Polynomial) SetCoef(deg [2]uint, val ff.Element) {
 	}
 }
 
+// EmbedIn embeds f in the ring r if possible. The input reduce determines if f
+// is reduced in the new ring.
+//
+// An InputIncompatible-error is returned if r and the polynomial ring of f are
+// not compatible.
+func (f *Polynomial) EmbedIn(r *QuotientRing, reduce bool) error {
+	const op = "Embedding polynomial in ring"
+
+	if f.baseRing.ring != r.ring {
+		return errors.New(
+			op, errors.InputIncompatible,
+			"Cannot embed polynomial over %v in %v", f.baseRing, r,
+		)
+	}
+
+	f.baseRing = r
+	if reduce {
+		f.reduce()
+	}
+	return nil
+}
+
 // SetCoefPtr sets the coefficient of the monomial with degree deg in f to ptr
 // as a pointer. To set coefficient as a value, use SetCoef instead.
 func (f *Polynomial) SetCoefPtr(deg [2]uint, ptr ff.Element) {
@@ -97,21 +194,6 @@ func (f *Polynomial) IncrementCoef(deg [2]uint, val ff.Element) {
 	}
 }
 
-// SetCoef sets the coefficient of the monomial with degree deg in f to ptr.
-// func (f *Polynomial) IncrementCoefPtr(deg [2]uint, val ff.Element) {
-// 	if val.Zero() {
-// 		return
-// 	}
-// 	if c, ok := f.coefs[deg]; ok {
-// 		c.Add(val)
-// 		if c.Zero() {
-// 			delete(f.coefs, deg)
-// 		}
-// 	} else {
-// 		f.coefs[deg] = val
-// 	}
-// }
-
 // Copy returns a new polynomial object over the same ring and with the same
 // coefficients as f.
 func (f *Polynomial) Copy() *Polynomial {
@@ -122,6 +204,7 @@ func (f *Polynomial) Copy() *Polynomial {
 	return h
 }
 
+// clean removes any zero coefficients from the underlying map of f.
 func (f *Polynomial) clean() {
 	for d, c := range f.coefs {
 		if c.IsZero() {
@@ -139,65 +222,6 @@ func (f *Polynomial) Eval(point [2]ff.Element) ff.Element {
 	return out
 }
 
-// Plus returns the sum of the two polynomials f and g.
-//
-// If f and g are defined over different rings, a new polynomial is returned
-// with an ArithmeticIncompat-error as error status.
-//
-// When f or g has a non-nil error status, its error is wrapped and the same
-// polynomial is returned.
-func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
-	const op = "Adding polynomials"
-
-	if tmp := hasErr(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	if tmp := checkCompatible(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	h := f.Copy()
-	for deg, c := range g.coefs {
-		h.IncrementCoef(deg, c)
-	}
-	return h
-}
-
-// Add sets f to the sum of the two polynomials f and g and returns f.
-//
-// If f and g are defined over different rings, a new polynomial is returned
-// with an ArithmeticIncompat-error as error status.
-//
-// When f or g has a non-nil error status, its error is wrapped and the same
-// polynomial is returned.
-func (f *Polynomial) Add(g *Polynomial) *Polynomial {
-	const op = "Adding polynomials"
-
-	if tmp := hasErr(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	if tmp := checkCompatible(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	for deg, c := range g.coefs {
-		f.IncrementCoef(deg, c)
-	}
-	return f
-}
-
-// Neg returns the polynomial obtained by scaling f by -1 (modulo the
-// characteristic).
-func (f *Polynomial) Neg() *Polynomial {
-	g := f.baseRing.zeroWithCap(len(f.coefs))
-	for deg, c := range f.coefs {
-		g.coefs[deg] = c.Neg()
-	}
-	return g
-}
-
 // Equal determines whether two polynomials are equal. That is, whether they are
 // defined over the same ring, and have the same coefficients.
 func (f *Polynomial) Equal(g *Polynomial) bool {
@@ -213,146 +237,6 @@ func (f *Polynomial) Equal(g *Polynomial) bool {
 		}
 	}
 	return true
-}
-
-// Minus returns polynomial difference f-g.
-//
-// If f and g are defined over different rings, a new polynomial is returned
-// with an ArithmeticIncompat-error as error status.
-//
-// When f or g has a non-nil error status, its error is wrapped and the same
-// polynomial is returned.
-func (f *Polynomial) Minus(g *Polynomial) *Polynomial {
-	const op = "Subtracting polynomials"
-
-	if tmp := hasErr(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	if tmp := checkCompatible(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	return f.Plus(g.Neg())
-}
-
-// Internal method. Multiplies the two polynomials f and g, but does not reduce
-// the result according to the specified ring.
-func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
-	const op = "Multiplying polynomials"
-
-	if tmp := hasErr(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	if tmp := checkCompatible(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	h := f.baseRing.zeroWithCap(len(f.coefs) * len(g.coefs))
-	tmp := f.BaseField().One()
-	for degf, cf := range f.coefs {
-		for degg, cg := range g.coefs {
-			degSum, err := addDegs(degf, degg)
-			if err != nil {
-				h = f.baseRing.Zero()
-				h.err = errors.Wrap(op, errors.Inherit, err)
-				return h
-			}
-			tmp.Prod(cf, cg)
-			h.IncrementCoef(degSum, tmp)
-		}
-	}
-	return h
-}
-
-// Times returns the product of the polynomials f and g
-//
-// If f and g are defined over different rings, a new polynomial is returned
-// with an ArithmeticIncompat-error as error status.
-//
-// When f or g has a non-nil error status, its error is wrapped and the same
-// polynomial is returned.
-func (f *Polynomial) Times(g *Polynomial) *Polynomial {
-	h := f.multNoReduce(g)
-	if h.Err() != nil {
-		return h
-	}
-	h.reduce()
-	return h
-}
-
-// Mult sets f to the product of the polynomials f and g and returns f.
-//
-// If f and g are defined over different rings, a new polynomial is returned
-// with an ArithmeticIncompat-error as error status.
-//
-// When f or g has a non-nil error status, its error is wrapped and the same
-// polynomial is returned.
-func (f *Polynomial) Mult(g *Polynomial) *Polynomial {
-	*f = *f.multNoReduce(g)
-	if f.Err() != nil {
-		return f
-	}
-	f.reduce()
-	return f
-}
-
-// Normalize creates a new polynomial obtained by normalizing f. That is,
-// f.Normalize() multiplied by f.Lc() is f.
-//
-// If f is the zero polynomial, a copy of f is returned.
-func (f *Polynomial) Normalize() *Polynomial {
-	if f.IsZero() {
-		return f.Copy()
-	}
-	return f.Scale(f.Lc().Inv())
-}
-
-// Scale scales all coefficients of f by the field element c and returns the
-// result as a new polynomial.
-func (f *Polynomial) Scale(c ff.Element) *Polynomial {
-	g := f.Copy()
-	for d := range g.coefs {
-		g.coefs[d] = g.coefs[d].Times(c)
-	}
-	return g
-}
-
-// ScaleInPlace scales all coefficients of f by the field element c and returns
-// f.
-func (f *Polynomial) ScaleInPlace(c ff.Element) *Polynomial {
-	for d := range f.coefs {
-		f.coefs[d].Mult(c)
-	}
-	return f
-}
-
-// Pow raises f to the power of n.
-//
-// If the computation causes the degree of f to overflow, the returned
-// polynomial has an Overflow-error as error status.
-func (f *Polynomial) Pow(n uint) *Polynomial {
-	const op = "Computing polynomial power"
-
-	out := f.baseRing.Polynomial(map[[2]uint]ff.Element{
-		{0, 0}: f.BaseField().One(),
-	})
-	g := f.Copy()
-
-	for n > 0 {
-		if n%2 == 1 {
-			out.Mult(g)
-			if out.Err() != nil {
-				out = f.baseRing.Zero()
-				out.err = errors.Wrap(op, errors.Inherit, out.Err())
-				return out
-			}
-		}
-		n /= 2
-		g.Mult(g)
-	}
-	return out
 }
 
 // SortedDegrees returns a list containing the degrees is the support of f.
@@ -451,25 +335,42 @@ func (f *Polynomial) String() string {
 	return b.String()
 }
 
+// checkErrAndCompatible is a wrapper for the two functions hasErr and
+// checkCompatible. It is used in arithmetic functions to check that the inputs
+// are 'good' to use.
+func checkErrAndCompatible(op errors.Op, f *Polynomial, g ...*Polynomial) *Polynomial {
+	if tmp := hasErr(op, f, g...); tmp != nil {
+		return tmp
+	}
+
+	if tmp := checkCompatible(op, f, g...); tmp != nil {
+		return tmp
+	}
+
+	return nil
+}
+
 // hasErr is an internal method for checking if f or g has a non-nil error
 // field.
 //
 // It returns the first polynomial with non-nil error status after wrapping the
 // error. The new error inherits the kind from the old.
-func hasErr(op errors.Op, f, g *Polynomial) *Polynomial {
-	switch {
-	case f.err != nil:
+func hasErr(op errors.Op, f *Polynomial, g ...*Polynomial) *Polynomial {
+	if f.err != nil {
 		f.err = errors.Wrap(
 			op, errors.Inherit,
 			f.err,
 		)
 		return f
-	case g.err != nil:
-		g.err = errors.Wrap(
-			op, errors.Inherit,
-			g.err,
-		)
-		return g
+	}
+	for _, h := range g {
+		if h.err != nil {
+			h.err = errors.Wrap(
+				op, errors.Inherit,
+				h.err,
+			)
+			return h
+		}
 	}
 	return nil
 }
@@ -479,14 +380,16 @@ func hasErr(op errors.Op, f, g *Polynomial) *Polynomial {
 //
 // If not, the return value is an element with error status set to
 // ArithmeticIncompat.
-func checkCompatible(op errors.Op, f, g *Polynomial) *Polynomial {
-	if f.baseRing != g.baseRing {
-		out := f.baseRing.Zero()
-		out.err = errors.New(
-			op, errors.ArithmeticIncompat,
-			"%v and %v defined over different rings", f, g,
-		)
-		return out
+func checkCompatible(op errors.Op, f *Polynomial, g ...*Polynomial) *Polynomial {
+	for _, h := range g {
+		if f.baseRing != h.baseRing {
+			out := f.baseRing.Zero()
+			out.err = errors.New(
+				op, errors.ArithmeticIncompat,
+				"%v and %v defined over different rings", f, g,
+			)
+			return out
+		}
 	}
 	return nil
 }

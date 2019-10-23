@@ -199,46 +199,6 @@ func (r *QuotientRing) Quotient(id *Ideal) (*QuotientRing, error) {
 	return qr, nil
 }
 
-// QuoRem return the polynomial quotient and remainder under division by the
-// given list of polynomials.
-//
-// Loosely based on [GG; Algorithm 2.5].
-func (f *Polynomial) QuoRem(list ...*Polynomial) (q []*Polynomial, r *Polynomial, err error) {
-	const op = "Computing polynomial quotient and remainder"
-
-	if tmp := checkErrAndCompatible(op, f, list...); tmp != nil {
-		err = tmp.Err()
-		return
-	}
-
-	r = f.baseRing.Zero()
-	p := f.Copy()
-
-	q = make([]*Polynomial, len(list), len(list))
-	for i := range list {
-		q[i] = f.baseRing.Zero()
-	}
-outer:
-	for p.IsNonzero() {
-		for i, g := range list {
-			if p.Ld() >= g.Ld() {
-				tmp := f.baseRing.Zero()
-				tmp.SetCoef(
-					p.Ld()-g.Ld(),
-					p.Lc().Times(g.Lc().Inv()),
-				)
-				q[i].Add(tmp)
-				p.Sub(tmp.multNoReduce(g))
-				continue outer
-			}
-		}
-		// No polynomials divide the leading term of f
-		r.Add(p.Lt())
-		p.Sub(p.Lt())
-	}
-	return q, r, nil
-}
-
 /* Copyright 2019 René Bødker Christensen
  *
  * Redistribution and use in source and binary forms, with or without

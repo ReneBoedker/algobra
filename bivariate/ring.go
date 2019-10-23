@@ -70,87 +70,21 @@ func (r *QuotientRing) SetVarNames(varNames [2]string) error {
 		r.varNames[i] = varName
 	}
 
+	if strings.ToLower(r.varNames[0]) == strings.ToLower(r.varNames[1]) {
+		return errors.New(
+			op, errors.InputValue,
+			"Variable names %q and %q are considered identical. Parsing from "+
+				"strings is unlikely to work.",
+			r.varNames[0], r.varNames[1],
+		)
+	}
+
 	return nil
 }
 
 // VarNames returns the strings used to represent the variables of r.
 func (r *QuotientRing) VarNames() [2]string {
 	return r.varNames
-}
-
-// Zero returns a zero polynomial over the specified ring.
-func (r *QuotientRing) Zero() *Polynomial {
-	return &Polynomial{
-		baseRing: r,
-		coefs:    map[[2]uint]ff.Element{},
-	}
-}
-
-// zeroWithCap returns a zero polynomial over the specified ring where the
-// underlying map has given capacity.
-func (r *QuotientRing) zeroWithCap(cap int) *Polynomial {
-	return &Polynomial{
-		baseRing: r,
-		coefs:    map[[2]uint]ff.Element{},
-	}
-}
-
-// Polynomial defines a new polynomial with the given coefficients
-func (r *QuotientRing) Polynomial(coefs map[[2]uint]ff.Element) *Polynomial {
-	m := make(map[[2]uint]ff.Element, len(coefs))
-	for d, e := range coefs {
-		if e.IsNonzero() {
-			m[d] = e
-		}
-	}
-	out := &Polynomial{baseRing: r, coefs: m}
-	out.reduce()
-	return out
-}
-
-// PolynomialFromUnsigned defines a new polynomial with the given coefficients
-func (r *QuotientRing) PolynomialFromUnsigned(coefs map[[2]uint]uint) *Polynomial {
-	m := make(map[[2]uint]ff.Element, len(coefs))
-	for d, c := range coefs {
-		e := r.baseField.ElementFromUnsigned(c)
-		if e.IsNonzero() {
-			m[d] = e
-		}
-	}
-	out := &Polynomial{baseRing: r, coefs: m}
-	out.reduce()
-	return out
-}
-
-// PolynomialFromSigned defines a new polynomial with the given coefficients
-func (r *QuotientRing) PolynomialFromSigned(coefs map[[2]uint]int) *Polynomial {
-	m := make(map[[2]uint]ff.Element, len(coefs))
-	for d, c := range coefs {
-		e := r.baseField.ElementFromSigned(c)
-		if e.IsNonzero() {
-			m[d] = e
-		}
-	}
-	out := &Polynomial{baseRing: r, coefs: m}
-	out.reduce()
-	return out
-}
-
-// PolynomialFromString defines a polynomial by parsing s.
-//
-// The string s must use 'X' and 'Y' as variable names, but lowercase letters are
-// accepted. Multiplication symbol '*' is allowed, but not necessary.
-// Additionally, Singular-style exponents are allowed, meaning that "X2Y3" is
-// interpreted as "X^2Y^3".
-//
-// If the string cannot be parsed, the function returns the zero polynomial and
-// a Parsing-error.
-func (r *QuotientRing) PolynomialFromString(s string) (*Polynomial, error) {
-	m, err := polynomialStringToMap(s, &r.varNames, r)
-	if err != nil {
-		return r.Zero(), err
-	}
-	return r.Polynomial(m), nil
 }
 
 // Quotient defines the quotient of the given ring modulo the input ideal.
@@ -185,14 +119,14 @@ func (r *QuotientRing) Quotient(id *Ideal) (*QuotientRing, error) {
 
 	qr := &QuotientRing{
 		ring: r.ring,
-		id:   nil,
+		id:   id,
 	}
-	idConv := id.Copy()
-	// Mark the generators as 'belonging' to the new ring
-	for i := range idConv.generators {
-		idConv.generators[i].baseRing = qr
+
+	// Mark the generators as belonging to the new ring, but do not reduce
+	for _, g := range qr.id.generators {
+		g.EmbedIn(qr, false)
 	}
-	qr.id = idConv
+
 	return qr, nil
 }
 
