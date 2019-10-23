@@ -76,8 +76,10 @@ func TestTableMemory(t *testing.T) {
 	if err := f.ComputeTables(true, false); err == nil {
 		t.Errorf("No error returned")
 	} else if !errors.Is(errors.InputTooLarge, err) {
-		t.Errorf("Error returned has wrong kind. Expected errors.InputTooLarge, "+
-			"but received error %q", err.Error())
+		t.Errorf(
+			"Error returned has wrong kind. Expected errors.InputTooLarge, "+
+				"but received error %q", err.Error(),
+		)
 	}
 }
 
@@ -278,8 +280,10 @@ func TestProd(t *testing.T) {
 		}
 		for i, p := range prods {
 			if a.Prod(field.element(p[0]), field.element(p[1])); !a.Equal(field.element(expected[i])) {
-				t.Errorf("Prod failed: a was set to %v for %v * %v (Expected %v)",
-					a, p[0], p[1], expected[i])
+				t.Errorf(
+					"Prod failed: a was set to %v for %v * %v (Expected %v)",
+					a, p[0], p[1], expected[i],
+				)
 			}
 		}
 
@@ -302,23 +306,30 @@ func hardcodedTableTest(
 		for i := range elems {
 			for j := range elems {
 				if t1, t2 := elems[i].Plus(elems[j]), sumTable[i][j]; !t1.Equal(t2) {
-					t.Errorf("GF(%d) failed: (%v) + (%v) = %v (Expected %v)",
-						f.Card(), elems[i], elems[j], t1, t2)
+					t.Errorf(
+						"GF(%d) failed: (%v) + (%v) = %v (Expected %v)",
+						f.Card(), elems[i], elems[j], t1, t2,
+					)
 				}
 				if t1, t2 := elems[i].Minus(elems[j]), diffTable[i][j]; !t1.Equal(t2) {
-					t.Errorf("GF(%d) failed: (%v) - (%v) = %v (Expected %v)",
-						f.Card(), elems[i].val, elems[j].val, t1, t2)
+					t.Errorf(
+						"GF(%d) failed: (%v) - (%v) = %v (Expected %v)",
+						f.Card(), elems[i].val, elems[j].val, t1, t2,
+					)
 				}
 				if t1, t2 := elems[i].Times(elems[j]), prodTable[i][j]; !t1.Equal(t2) {
-					t.Errorf("GF(%d) failed: (%v) * (%v) = %v (Expected %v)",
-						f.Card(), elems[i], elems[j], t1, t2)
+					t.Errorf(
+						"GF(%d) failed: (%v) * (%v) = %v (Expected %v)",
+						f.Card(), elems[i], elems[j], t1, t2,
+					)
 				}
 			}
 		}
 
 		for i := 1; i < len(elems); i++ {
 			if t1 := elems[i].Inv(); !t1.Equal(invList[i-1]) {
-				t.Errorf("GF(%d) failed: inv(%v) = %v (Expected %v)",
+				t.Errorf(
+					"GF(%d) failed: inv(%v) = %v (Expected %v)",
 					f.Card(), elems[i], t1, invList[i-1],
 				)
 			}

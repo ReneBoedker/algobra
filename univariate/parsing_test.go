@@ -25,9 +25,11 @@ func TestParsingWellFormed(t *testing.T) {
 	}
 	for i, err := range testErrs {
 		if err != nil {
-			t.Errorf("Failed to parse polynomial %s. Received error %v",
+			t.Errorf(
+				"Failed to parse polynomial %s. Received error %v",
 				testStrings[i],
-				err)
+				err,
+			)
 		}
 	}
 	testPolys = append(testPolys, ring.PolynomialFromSigned([]int{-5, 3, 0, 1, 4}))
@@ -36,7 +38,8 @@ func TestParsingWellFormed(t *testing.T) {
 			if !f.Equal(testPolys[j]) {
 				t.Errorf(
 					"The two polynomials f_%d=%v and f_%d=%v are not equal (but they should be)",
-					i, f, j, testPolys[j])
+					i, f, j, testPolys[j],
+				)
 			}
 		}
 	}
@@ -62,11 +65,15 @@ func TestParsingIllFormed(t *testing.T) {
 
 	for i, err := range testErrs {
 		if err == nil {
-			t.Errorf("Parsing %q returned polynomial %v instead of an error",
-				testStrings[i], testPolys[i])
+			t.Errorf(
+				"Parsing %q returned polynomial %v instead of an error",
+				testStrings[i], testPolys[i],
+			)
 		} else if !errors.Is(errors.Parsing, err) {
-			t.Errorf("Expected errors.Parsing while parsing %q, but received error %q",
-				testStrings[i], err.Error())
+			t.Errorf(
+				"Expected errors.Parsing while parsing %q, but received error %q",
+				testStrings[i], err.Error(),
+			)
 		}
 	}
 }
@@ -89,11 +96,15 @@ func TestConversionErrors(t *testing.T) {
 
 	for i, err := range testErrs {
 		if err == nil {
-			t.Errorf("Parsing %q returned polynomial %v instead of an error",
-				testStrings[i], testPolys[i])
+			t.Errorf(
+				"Parsing %q returned polynomial %v instead of an error",
+				testStrings[i], testPolys[i],
+			)
 		} else if !errors.Is(errors.Conversion, err) {
-			t.Errorf("Expected errors.Conversion while parsing %q, but received error %q",
-				testStrings[i], err.Error())
+			t.Errorf(
+				"Expected errors.Conversion while parsing %q, but received error %q",
+				testStrings[i], err.Error(),
+			)
 		}
 	}
 }
@@ -143,8 +154,10 @@ func TestSetVarName(t *testing.T) {
 		if err := ring.SetVarName(varName); err == nil {
 			t.Errorf("No error was returned for varName = %q", varName)
 		} else if !errors.Is(errors.InputValue, err) {
-			t.Errorf("An error was returned for varName = %q, but it was of "+
-				"unexpected type.", varName)
+			t.Errorf(
+				"An error was returned for varName = %q, but it was of "+
+					"unexpected type.", varName,
+			)
 		}
 	}
 }

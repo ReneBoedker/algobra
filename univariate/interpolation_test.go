@@ -34,10 +34,13 @@ func TestLagrangeBasis(t *testing.T) {
 				f := ring.LagrangeBasis(points, points[j])
 
 				if f.IsZero() {
-					t.Errorf("GF(%d): Lagrange basis is zero with points %v and index %d",
-						field.Card(), points, j)
+					t.Errorf(
+						"GF(%d): Lagrange basis is zero with points %v and index %d",
+						field.Card(), points, j,
+					)
 				} else if ld := f.Ld(); ld > (nPoints - 1) {
-					t.Errorf("GF(%d): Lagrange basis has too large total degree (%d) with point %v",
+					t.Errorf(
+						"GF(%d): Lagrange basis has too large total degree (%d) with point %v",
 						field.Card(), ld, points[j],
 					)
 				}
@@ -114,23 +117,29 @@ func TestInterpolationErrors(t *testing.T) {
 
 	_, err := ring.Interpolate(
 		[]ff.Element{a, b},
-		[]ff.Element{field.Zero()})
+		[]ff.Element{field.Zero()},
+	)
 	if err == nil {
 		t.Errorf("Interpolation did not return an error even though there " +
 			"were more points than values")
 	} else if !errors.Is(errors.InputValue, err) {
-		t.Errorf("Interpolation returned an error on different length inputs, "+
-			"but it was of unexpected kind (err = %v)", err)
+		t.Errorf(
+			"Interpolation returned an error on different length inputs, "+
+				"but it was of unexpected kind (err = %v)", err,
+		)
 	}
 
 	_, err = ring.Interpolate(
 		[]ff.Element{a, a},
-		[]ff.Element{field.Zero(), field.Zero()})
+		[]ff.Element{field.Zero(), field.Zero()},
+	)
 	if err == nil {
 		t.Errorf("Interpolation did not return an error even though input " +
 			"contains duplicate points")
 	} else if !errors.Is(errors.InputValue, err) {
-		t.Errorf("Interpolation returned an error when input contains duplicate"+
-			" points, but it was of unexpected kind (err = %v)", err)
+		t.Errorf(
+			"Interpolation returned an error when input contains duplicate"+
+				" points, but it was of unexpected kind (err = %v)", err,
+		)
 	}
 }

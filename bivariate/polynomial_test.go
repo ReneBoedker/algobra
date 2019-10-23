@@ -21,15 +21,21 @@ func TestAddAndSubDegs(t *testing.T) {
 		tmp, ok := subtractDegs([2]uint{a, b}, [2]uint{c, d})
 		switch {
 		case (a < c || b < d) && ok:
-			t.Errorf("subtractDegs({%d,%d},{%d,%d}) signalled no error (Expected ok=false)",
-				a, b, c, d)
+			t.Errorf(
+				"subtractDegs({%d,%d},{%d,%d}) signalled no error (Expected ok=false)",
+				a, b, c, d,
+			)
 		case (a >= c && b >= d) && !ok:
-			t.Errorf("subtractDegs({%d,%d},{%d,%d}) signalled an error (Expected ok=true)",
-				a, b, c, d)
+			t.Errorf(
+				"subtractDegs({%d,%d},{%d,%d}) signalled an error (Expected ok=true)",
+				a, b, c, d,
+			)
 		}
 		if tmp != [2]uint{a - c, b - d} && ok {
-			t.Errorf("subtractDegs({%d,%d},{%d,%d})=%v, err (Expected {%d,%d})",
-				a, b, c, d, tmp, a-c, b-d)
+			t.Errorf(
+				"subtractDegs({%d,%d},{%d,%d})=%v, err (Expected {%d,%d})",
+				a, b, c, d, tmp, a-c, b-d,
+			)
 		}
 	}
 }

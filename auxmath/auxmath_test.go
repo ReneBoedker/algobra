@@ -34,8 +34,10 @@ func TestFactorizePower(t *testing.T) {
 			return
 		}
 		if p != expected[i][0] || n != expected[i][1] {
-			t.Errorf("FactorizePrimePower(%d)=(%d, %d, nil), but expected (%d, %d, nil)",
-				q, p, n, expected[i][0], expected[i][1])
+			t.Errorf(
+				"FactorizePrimePower(%d)=(%d, %d, nil), but expected (%d, %d, nil)",
+				q, p, n, expected[i][0], expected[i][1],
+			)
 		}
 	}
 
@@ -94,8 +96,10 @@ func TestFactorize(t *testing.T) {
 		}
 		for j, f := range p {
 			if f != expected[i][0][j] || n[j] != expected[i][1][j] {
-				t.Errorf("Factorize(%d) gave factor %d^%d but expected %d^%d",
-					q, f, n[j], expected[i][0][j], expected[i][1][j])
+				t.Errorf(
+					"Factorize(%d) gave factor %d^%d but expected %d^%d",
+					q, f, n[j], expected[i][0][j], expected[i][1][j],
+				)
 			}
 		}
 	}

@@ -36,13 +36,17 @@ func TestIs(t *testing.T) {
 				continue
 			}
 			if Is(i, err) {
-				t.Errorf("Following error had unexpected kind: %q",
-					err.Error())
+				t.Errorf(
+					"Following error had unexpected kind: %q",
+					err.Error(),
+				)
 			}
 		}
 		if !Is(k, errWrap) {
-			t.Errorf("Following wrapped error had unexpected kind: %q",
-				errWrap.Error())
+			t.Errorf(
+				"Following wrapped error had unexpected kind: %q",
+				errWrap.Error(),
+			)
 		}
 	}
 }

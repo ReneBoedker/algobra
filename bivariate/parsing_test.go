@@ -24,9 +24,10 @@ func TestParsingWellFormed(t *testing.T) {
 	}
 	for i, err := range testErrs {
 		if err != nil {
-			t.Errorf("Failed to parse polynomial %s. Received error %v",
-				testStrings[i],
-				err)
+			t.Errorf(
+				"Failed to parse polynomial %s. Received error %v",
+				testStrings[i], err,
+			)
 		}
 	}
 	testPolys = append(testPolys, ring.PolynomialFromUnsigned(map[[2]uint]uint{
@@ -40,7 +41,8 @@ func TestParsingWellFormed(t *testing.T) {
 			if !f.Equal(testPolys[j]) {
 				t.Errorf(
 					"The two polynomials f_%d=%v and f_%d=%v are not equal (but they should be)",
-					i, f, j, testPolys[j])
+					i, f, j, testPolys[j],
+				)
 			}
 		}
 	}
@@ -66,11 +68,15 @@ func TestParsingIllFormed(t *testing.T) {
 
 	for i, err := range testErrs {
 		if err == nil {
-			t.Errorf("Parsing %q returned polynomial %v instead of an error",
-				testStrings[i], testPolys[i])
+			t.Errorf(
+				"Parsing %q returned polynomial %v instead of an error",
+				testStrings[i], testPolys[i],
+			)
 		} else if !errors.Is(errors.Parsing, err) {
-			t.Errorf("Expected errors.Parsing while parsing %q, but received error %q",
-				testStrings[i], err.Error())
+			t.Errorf(
+				"Expected errors.Parsing while parsing %q, but received error %q",
+				testStrings[i], err.Error(),
+			)
 		}
 	}
 }
@@ -93,11 +99,15 @@ func TestConversionErrors(t *testing.T) {
 
 	for i, err := range testErrs {
 		if err == nil {
-			t.Errorf("Parsing %q returned polynomial %v instead of an error",
-				testStrings[i], testPolys[i])
+			t.Errorf(
+				"Parsing %q returned polynomial %v instead of an error",
+				testStrings[i], testPolys[i],
+			)
 		} else if !errors.Is(errors.Conversion, err) {
-			t.Errorf("Expected errors.Conversion while parsing %q, but received error %q",
-				testStrings[i], err.Error())
+			t.Errorf(
+				"Expected errors.Conversion while parsing %q, but received error %q",
+				testStrings[i], err.Error(),
+			)
 		}
 	}
 }

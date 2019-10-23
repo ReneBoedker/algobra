@@ -48,7 +48,7 @@ func (t *table) lookupReverse(i uint) *Element {
 // estimateMemory gives an estimate on the memory required to store a table.
 // This estimate ignores overhead from the map. Return value is in KiB
 func estimateMemory(f *Field) uint {
-	const keySize = uint(1) // Map keys are uint8 == 1 byte
+	const keySize uint = 1 // Map keys are uint8 == 1 byte
 	elemSize := f.extDeg * bits.UintSize / 8
 	b := (f.Card() - 1) * (keySize + elemSize)
 	return b >> 10

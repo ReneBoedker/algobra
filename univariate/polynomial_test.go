@@ -414,8 +414,10 @@ func TestGcd(t *testing.T) {
 		t.Errorf("Gcd returned no error even though polynomials are defined " +
 			"over different rings")
 	} else if !errors.Is(errors.InputIncompatible, err) {
-		t.Errorf("Gcd returned an error (%s) but different kind than expected\n"+
-			"err = %v", err.Error(), err)
+		t.Errorf(
+			"Gcd returned an error (%s) but different kind than expected\n"+
+				"err = %v", err.Error(), err,
+		)
 	}
 }
 

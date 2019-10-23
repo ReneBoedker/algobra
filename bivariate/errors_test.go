@@ -16,16 +16,20 @@ func TestHasErr(t *testing.T) {
 	if tmp.Err() == nil {
 		t.Errorf("hasErr returned polynomial with nil error status")
 	} else if !errors.Is(errors.Internal, tmp.Err()) {
-		t.Errorf("hasErr returned polynomial with error status of unexpected "+
-			"kind(err = %v)", tmp.Err())
+		t.Errorf(
+			"hasErr returned polynomial with error status of unexpected "+
+				"kind (err = %v)", tmp.Err(),
+		)
 	}
 
 	tmp = hasErr("", ring.Zero(), f)
 	if tmp.Err() == nil {
 		t.Errorf("hasErr returned polynomial with nil error status")
 	} else if !errors.Is(errors.Internal, tmp.Err()) {
-		t.Errorf("hasErr returned polynomial with error status of unexpected "+
-			"kind(err = %v)", tmp.Err())
+		t.Errorf(
+			"hasErr returned polynomial with error status of unexpected "+
+				"kind (err = %v)", tmp.Err(),
+		)
 	}
 }
 
@@ -68,8 +72,10 @@ func TestDiffRings(t *testing.T) {
 		if err == nil {
 			t.Errorf("Function %d did not return an error", i+1)
 		} else if !errors.Is(errors.ArithmeticIncompat, err) && !errors.Is(errors.InputIncompatible, err) {
-			t.Errorf("Function %d returned an error, but unexpected kind "+
-				"(err = %v)", i+1, err)
+			t.Errorf(
+				"Function %d returned an error, but unexpected kind (err = %v)",
+				i+1, err,
+			)
 		}
 	}
 }
@@ -85,7 +91,8 @@ func TestEmptyIdeal(t *testing.T) {
 	} else if !errors.Is(errors.InputValue, err) {
 		t.Errorf(
 			"Ideal definition returned an error, but not of the expected "+
-				"kind (err = %v)", err)
+				"kind (err = %v)", err,
+		)
 	}
 }
 
@@ -118,8 +125,10 @@ func TestNotMonomials(t *testing.T) {
 		if err == nil {
 			t.Errorf("Function %d did not return an error", i+1)
 		} else if !errors.Is(errors.InputValue, err) {
-			t.Errorf("Function %d returned an error, but unexpected kind "+
-				"(err = %v)", i+1, err)
+			t.Errorf(
+				"Function %d returned an error, but unexpected kind (err = %v)",
+				i+1, err,
+			)
 		}
 	}
 }
