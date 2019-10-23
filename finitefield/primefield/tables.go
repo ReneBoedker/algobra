@@ -1,8 +1,9 @@
 package primefield
 
 import (
-	"algobra/errors"
 	"math/bits"
+
+	"algobra/errors"
 )
 
 // DefaultMaxMem is the default maximal memory consumption for addition and

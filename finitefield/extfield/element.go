@@ -1,12 +1,12 @@
 package extfield
 
 import (
+	"math/bits"
+	"math/rand"
+
 	"algobra/errors"
 	"algobra/finitefield/ff"
 	"algobra/univariate"
-
-	"math/bits"
-	"math/rand"
 )
 
 // Element is the implementation of an element in a finite field.

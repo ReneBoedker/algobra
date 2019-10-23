@@ -1,16 +1,16 @@
 package extfield
 
 import (
+	"fmt"
+	"math/rand"
+	"time"
+
 	"algobra/auxmath"
 	"algobra/errors"
 	"algobra/finitefield/conway"
 	"algobra/finitefield/ff"
 	"algobra/finitefield/primefield"
 	"algobra/univariate"
-
-	"fmt"
-	"math/rand"
-	"time"
 )
 
 func init() {

@@ -1,11 +1,12 @@
 package bivariate
 
 import (
-	"algobra/errors"
-	"algobra/finitefield/ff"
 	"fmt"
 	"sort"
 	"strings"
+
+	"algobra/errors"
+	"algobra/finitefield/ff"
 )
 
 // Zero returns a zero polynomial over the specified ring.
@@ -184,6 +185,7 @@ func (f *Polynomial) IncrementCoef(deg [2]uint, val ff.Element) {
 	if val.IsZero() {
 		return
 	}
+
 	if c, ok := f.coefs[deg]; ok {
 		c.Add(val)
 		if c.IsZero() {
@@ -199,19 +201,19 @@ func (f *Polynomial) IncrementCoef(deg [2]uint, val ff.Element) {
 func (f *Polynomial) Copy() *Polynomial {
 	h := f.baseRing.zeroWithCap(len(f.coefs))
 	for deg, c := range f.coefs {
-		h.coefs[deg] = c.Copy()
+		h.SetCoef(deg, c)
 	}
 	return h
 }
 
 // clean removes any zero coefficients from the underlying map of f.
-func (f *Polynomial) clean() {
-	for d, c := range f.coefs {
-		if c.IsZero() {
-			delete(f.coefs, d)
-		}
-	}
-}
+// func (f *Polynomial) clean() {
+// 	for d, c := range f.coefs {
+// 		if c.IsZero() {
+// 			delete(f.coefs, d)
+// 		}
+// 	}
+// }
 
 // Eval evaluates f at the given point.
 func (f *Polynomial) Eval(point [2]ff.Element) ff.Element {

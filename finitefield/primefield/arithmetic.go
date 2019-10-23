@@ -19,7 +19,7 @@ func (a *Element) Add(b ff.Element) ff.Element {
 	if !ok {
 		a.err = errors.New(
 			op, errors.InputIncompatible,
-			"Something...",
+			"Cannot add %v (%[1]T) and %v (%[2]T)", a, b,
 		)
 	}
 
@@ -58,21 +58,21 @@ func (a *Element) Plus(b ff.Element) ff.Element {
 func (a *Element) Sub(b ff.Element) ff.Element {
 	const op = "Subtracting elements"
 
-	c, ok := b.(*Element)
+	bb, ok := b.(*Element)
 	if !ok {
 		a.err = errors.New(
 			op, errors.InputIncompatible,
-			"Something...",
+			"Cannot subtract %v (%[1]T) from %v (%[2]T)", b, a,
 		)
 	}
 
-	if tmp := checkErrAndCompatible(op, a, c); tmp != nil {
+	if tmp := checkErrAndCompatible(op, a, bb); tmp != nil {
 		a = tmp
 		return a
 	}
 
 	a.val = (a.field.Char() - a.val) % a.field.Char()
-	a.Add(c)
+	a.Add(bb)
 	a.val = (a.field.Char() - a.val) % a.field.Char()
 	return a
 }
@@ -103,7 +103,7 @@ func (a *Element) Prod(b, c ff.Element) ff.Element {
 	if !okB || !okC {
 		a.err = errors.New(
 			op, errors.InputIncompatible,
-			"Something...",
+			"Cannot set type %T to product of %v (%[1]T) and %v (%[2]T)", a, b, c,
 		)
 	}
 

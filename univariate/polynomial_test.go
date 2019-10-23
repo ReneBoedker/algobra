@@ -1,13 +1,14 @@
 package univariate_test
 
 import (
+	"math/rand"
+	"testing"
+	"time"
+
 	"algobra/errors"
 	"algobra/finitefield"
 	"algobra/finitefield/ff"
 	"algobra/univariate"
-	"math/rand"
-	"testing"
-	"time"
 )
 
 var prg = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))

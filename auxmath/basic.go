@@ -2,8 +2,9 @@
 package auxmath
 
 import (
-	"algobra/errors"
 	"math/bits"
+
+	"algobra/errors"
 )
 
 // BoundSqrt returns an upper bound on the square root of n.

@@ -1,9 +1,10 @@
 package bivariate
 
 import (
+	"testing"
+
 	"algobra/finitefield"
 	"algobra/finitefield/ff"
-	"testing"
 )
 
 func defineField(char uint, t *testing.T) ff.Field {

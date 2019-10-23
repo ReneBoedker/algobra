@@ -1,10 +1,11 @@
 package univariate
 
 import (
-	"algobra/errors"
-	"algobra/finitefield/ff"
 	"fmt"
 	"strings"
+
+	"algobra/errors"
+	"algobra/finitefield/ff"
 )
 
 // Polynomial denotes a bivariate polynomial.

@@ -19,7 +19,7 @@ func (a *Element) Add(b ff.Element) ff.Element {
 	if !ok {
 		a.err = errors.New(
 			op, errors.InputIncompatible,
-			"Something...",
+			"Cannot add %v (%[1]T) and %v (%[2]T)", a, b,
 		)
 	}
 
@@ -58,7 +58,7 @@ func (a *Element) Sub(b ff.Element) ff.Element {
 	if !ok {
 		a.err = errors.New(
 			op, errors.InputIncompatible,
-			"Something...",
+			"Cannot subtract %v (%[1]T) from %v (%[2]T)", b, a,
 		)
 	}
 
@@ -97,7 +97,7 @@ func (a *Element) Prod(b, c ff.Element) ff.Element {
 	if !okB || !okC {
 		a.err = errors.New(
 			op, errors.InputIncompatible,
-			"Something...",
+			"Cannot set type %T to product of %v (%[1]T) and %v (%[2]T)", a, b, c,
 		)
 	}
 

@@ -1,11 +1,13 @@
 package primefield
 
 import (
-	"algobra/errors"
 	"math/bits"
 	"math/rand"
+	"regexp"
 	"testing"
 	"time"
+
+	"algobra/errors"
 )
 
 var prg = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
@@ -135,6 +137,30 @@ func TestBools(t *testing.T) {
 	}
 	if !field.element(1).IsNonzero() {
 		t.Errorf("Element(1) not considered non-zero")
+	}
+}
+
+func TestRegexElement(t *testing.T) {
+	for _, card := range []uint{2, 3, 5, 7, 11, 13} {
+		field := DefineField(card)
+
+		pattern, err := regexp.Compile(field.RegexElement(false))
+		if err != nil {
+			t.Fatalf("Failed to compile regular expression %q", field.RegexElement(false))
+		}
+
+		for rep := 0; rep < 50; rep++ {
+			a := field.RandElement()
+
+			s := a.String()
+			if tmp := pattern.FindString(s); tmp != s {
+				// The pattern without parentheses must match the entire string
+				t.Errorf(
+					"%q was matched as %q without requiring parentheses",
+					s, tmp,
+				)
+			}
+		}
 	}
 }
 

@@ -1,12 +1,13 @@
 package univariate_test
 
 import (
-	"algobra/errors"
-	"algobra/finitefield/ff"
-	"algobra/univariate"
 	"fmt"
 	"math"
 	"testing"
+
+	"algobra/errors"
+	"algobra/finitefield/ff"
+	"algobra/univariate"
 )
 
 func TestParsingWellFormed(t *testing.T) {

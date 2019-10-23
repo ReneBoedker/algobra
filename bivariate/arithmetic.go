@@ -145,9 +145,13 @@ func (f *Polynomial) Normalize() *Polynomial {
 // Scale scales all coefficients of f by the field element c and returns the
 // result as a new polynomial.
 func (f *Polynomial) Scale(c ff.Element) *Polynomial {
+	if c.IsZero() {
+		return f.baseRing.Zero()
+	}
+
 	g := f.Copy()
 	for d := range g.coefs {
-		g.coefs[d] = g.coefs[d].Times(c)
+		g.coefs[d].Mult(c)
 	}
 	return g
 }
@@ -155,6 +159,10 @@ func (f *Polynomial) Scale(c ff.Element) *Polynomial {
 // ScaleInPlace scales all coefficients of f by the field element c and returns
 // f.
 func (f *Polynomial) ScaleInPlace(c ff.Element) *Polynomial {
+	if c.IsZero() {
+		return f.baseRing.Zero()
+	}
+
 	for d := range f.coefs {
 		f.coefs[d].Mult(c)
 	}

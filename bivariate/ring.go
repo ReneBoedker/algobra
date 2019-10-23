@@ -1,10 +1,11 @@
 package bivariate
 
 import (
-	"algobra/errors"
-	"algobra/finitefield/ff"
 	"fmt"
 	"strings"
+
+	"algobra/errors"
+	"algobra/finitefield/ff"
 )
 
 type ring struct {

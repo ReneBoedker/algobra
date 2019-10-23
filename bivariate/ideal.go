@@ -1,9 +1,10 @@
 package bivariate
 
 import (
-	"algobra/errors"
 	"fmt"
 	"strings"
+
+	"algobra/errors"
 )
 
 // Ideal is the implementation of a polynomial ideal.

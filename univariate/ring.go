@@ -1,10 +1,11 @@
 package univariate
 
 import (
-	"algobra/errors"
-	"algobra/finitefield/ff"
 	"fmt"
 	"strings"
+
+	"algobra/errors"
+	"algobra/finitefield/ff"
 )
 
 type ring struct {
@@ -73,10 +74,15 @@ func (r *QuotientRing) VarName() string {
 }
 
 // zeroWithCap returns a zero polynomial over the specified ring, where the
-// underlying representation has given capacity.
-// TODO: Check cap and write into Zero
+// underlying representation has given capacity. If cap is negative, the default
+// map capacity is used.
 func (r *QuotientRing) zeroWithCap(cap int) *Polynomial {
-	coefs := make([]ff.Element, 1, cap)
+	var coefs []ff.Element
+	if cap < 0 {
+		coefs = make([]ff.Element, 1)
+	} else {
+		coefs = make([]ff.Element, 1, cap)
+	}
 	coefs[0] = r.baseField.Zero()
 	return &Polynomial{
 		baseRing: r,
@@ -86,12 +92,7 @@ func (r *QuotientRing) zeroWithCap(cap int) *Polynomial {
 
 // Zero returns a zero polynomial over the specified ring.
 func (r *QuotientRing) Zero() *Polynomial {
-	coefs := make([]ff.Element, 1)
-	coefs[0] = r.baseField.Zero()
-	return &Polynomial{
-		baseRing: r,
-		coefs:    coefs,
-	}
+	return r.zeroWithCap(-1)
 }
 
 // One returns the degree zero polynomial over the specified ring with

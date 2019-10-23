@@ -1,14 +1,14 @@
 package primefield
 
 import (
-	"algobra/auxmath"
-	"algobra/errors"
-	"algobra/finitefield/ff"
-
 	"fmt"
 	"math/bits"
 	"math/rand"
 	"time"
+
+	"algobra/auxmath"
+	"algobra/errors"
+	"algobra/finitefield/ff"
 )
 
 func init() {

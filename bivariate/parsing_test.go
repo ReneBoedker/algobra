@@ -1,11 +1,12 @@
 package bivariate
 
 import (
-	"algobra/errors"
-	"algobra/finitefield/ff"
 	"fmt"
 	"math"
 	"testing"
+
+	"algobra/errors"
+	"algobra/finitefield/ff"
 )
 
 func TestParsingWellFormed(t *testing.T) {

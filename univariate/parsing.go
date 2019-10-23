@@ -1,11 +1,12 @@
 package univariate
 
 import (
-	"algobra/errors"
-	"algobra/finitefield/ff"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"algobra/errors"
+	"algobra/finitefield/ff"
 )
 
 type monomialMatch struct {

@@ -1,14 +1,14 @@
 package extfield
 
 import (
-	"algobra/errors"
-	"algobra/finitefield/ff"
-
 	"math/bits"
 	"math/rand"
 	"regexp"
 	"testing"
 	"time"
+
+	"algobra/errors"
+	"algobra/finitefield/ff"
 )
 
 var prg = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
@@ -267,7 +267,6 @@ func TestRegexElement(t *testing.T) {
 			}
 		}
 	}
-
 }
 
 func hardcodedTableTest(

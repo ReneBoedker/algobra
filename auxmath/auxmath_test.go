@@ -1,10 +1,11 @@
 package auxmath
 
 import (
-	"algobra/errors"
 	"fmt"
 	"math/big"
 	"testing"
+
+	"algobra/errors"
 )
 
 func TestFactorizePower(t *testing.T) {

@@ -1,10 +1,11 @@
 package bivariate
 
 import (
-	"algobra/finitefield/ff"
 	"math/rand"
 	"testing"
 	"time"
+
+	"algobra/finitefield/ff"
 )
 
 var prg = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))

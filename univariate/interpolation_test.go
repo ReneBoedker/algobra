@@ -1,10 +1,11 @@
 package univariate_test
 
 import (
+	"testing"
+
 	"algobra/errors"
 	"algobra/finitefield/ff"
 	"algobra/univariate"
-	"testing"
 )
 
 func TestLagrangeBasis(t *testing.T) {
