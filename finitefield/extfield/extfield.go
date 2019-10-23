@@ -93,7 +93,10 @@ func (f *Field) Char() uint {
 
 // Card returns the cardinality of f.
 func (f *Field) Card() uint {
-	return auxmath.Pow(f.Char(), f.extDeg)
+	// Error can be ignored since cardinality was given as uint when
+	// constructing the field
+	tmp, _ := auxmath.Pow(f.Char(), f.extDeg)
+	return tmp
 }
 
 // ComputeMultTable will precompute the table of discrete logarithms for the

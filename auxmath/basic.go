@@ -2,15 +2,16 @@
 package auxmath
 
 import (
+	"algobra/errors"
 	"math/bits"
 )
 
 // BoundSqrt returns an upper bound on the square root of n.
-func BoundSqrt(n uint) uint {
-	if n == 0 {
+func BoundSqrt(a uint) uint {
+	if a == 0 {
 		return 0
 	}
-	b := uint(bits.Len(n))
+	b := uint(bits.Len(a))
 	if b%2 == 0 {
 		b = b >> 1
 	} else {
@@ -19,13 +20,38 @@ func BoundSqrt(n uint) uint {
 	return 1 << b
 }
 
+// boundLog2 returns an upper bound on the logarithm of a in base 2.
+//
+//
+func boundLog2(a uint) uint {
+	if a == 0 {
+		return 0
+	}
+
+	if bits.OnesCount(a) == 1 {
+		// In this case, we can compute Log2 exactly
+		return uint(bits.Len(a)) - 1
+	}
+	return uint(bits.Len(a))
+}
+
 // Pow returns a to the power of n
-func Pow(a, n uint) uint {
+func Pow(a, n uint) (uint, error) {
+	const op = "Computing power of unsigned integer"
+
+	// Ensure that this will not overflow
+	if a > 0 && boundLog2(a)*n >= bits.UintSize {
+		return 0, errors.New(
+			op, errors.Overflow,
+			"%d^%d is likely to overflow uint", a, n,
+		)
+	}
+
 	res := uint(1)
 	for ; n > 0; n-- {
 		res *= a
 	}
-	return res
+	return res, nil
 }
 
 // Gcd computes the greatest common divisor between a and b.

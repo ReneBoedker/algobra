@@ -1,6 +1,7 @@
 package auxmath
 
 import (
+	"algobra/errors"
 	"fmt"
 	"math/big"
 	"testing"
@@ -37,10 +38,33 @@ func TestFactorizePower(t *testing.T) {
 				q, p, n, expected[i][0], expected[i][1])
 		}
 	}
+
+	// Check that non prime powers return an error
+	testsErr := []uint{
+		0,
+		1,
+		14,
+		100,
+		40320,
+	}
+	for _, q := range testsErr {
+		if _, _, err := FactorizePrimePower(q); err == nil {
+			t.Errorf(
+				"FactorizePrimePower(%d) returned no error, but %[1]d is not a prime power",
+				q,
+			)
+		} else if !errors.Is(errors.InputValue, err) {
+			t.Errorf(
+				"FactorizePrimePower(%d) returned error, but not of kind InputValue",
+				q,
+			)
+		}
+	}
 }
 
 func TestFactorize(t *testing.T) {
 	tests := []uint{
+		0,
 		75,
 		139,
 		444,
@@ -48,6 +72,7 @@ func TestFactorize(t *testing.T) {
 		952875,
 	}
 	expected := [][2][]uint{
+		{{}, {}},
 		{{3, 5}, {1, 2}},
 		{{139}, {1}},
 		{{2, 3, 37}, {2, 1, 1}},
@@ -72,6 +97,47 @@ func TestFactorize(t *testing.T) {
 				t.Errorf("Factorize(%d) gave factor %d^%d but expected %d^%d",
 					q, f, n[j], expected[i][0][j], expected[i][1][j])
 			}
+		}
+	}
+}
+
+func TestPow(t *testing.T) {
+	tests := [][3]uint{
+		{0, 0, 1},
+		{0, 4, 0},
+		{2, 5, 32},
+		{5, 20, 95367431640625},
+		{10, 7, 10000000},
+		{17, 6, 24137569},
+	}
+	for _, n := range tests {
+		tmp, err := Pow(n[0], n[1])
+		if tmp != n[2] {
+			t.Errorf("Pow(%d, %d) = %d, but expected %d", n[0], n[1], tmp, n[2])
+		}
+		if err != nil {
+			t.Errorf("Pow(%d, %d) returned error %q", n[0], n[1], err)
+		}
+	}
+
+	// Check that overflow detection works
+	testsErr := [][2]uint{
+		{2, 64},
+		{5, 28},
+		{10, 20},
+		{17, 16},
+	}
+	for _, n := range testsErr {
+		if _, err := Pow(n[0], n[1]); err == nil {
+			t.Errorf(
+				"Pow(%d, %d) returned no error, but overflow was expected",
+				n[0], n[1],
+			)
+		} else if !errors.Is(errors.Overflow, err) {
+			t.Errorf(
+				"Pow(%d, %d) returned an error, but not of kind Overflow",
+				n[0], n[1],
+			)
 		}
 	}
 }

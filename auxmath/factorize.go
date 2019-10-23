@@ -36,9 +36,11 @@ func FactorizePrimePower(q uint) (p uint, n uint, err error) {
 	}
 	for q > 1 {
 		if q%p != 0 {
+			// Restore the original value of q for the error message
+			tmp, _ := Pow(p, n) // Ignore errors since p^n smaller than input q
 			return 0, 0, errors.New(
 				op, errors.InputValue,
-				"%d does not seem to be a prime power.", q*Pow(p, n),
+				"%d does not seem to be a prime power.", q*tmp,
 			)
 		}
 		q /= p
@@ -55,10 +57,7 @@ func Factorize(n uint) (factors, exponents []uint, err error) {
 
 	switch n {
 	case 0:
-		return nil, nil, errors.New(
-			op, errors.InputValue,
-			"Cannot factorize 0",
-		)
+		return []uint{}, []uint{}, nil
 	case 1:
 		// Factorization is the empty sum
 		return
