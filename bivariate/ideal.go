@@ -79,8 +79,15 @@ func (id *Ideal) Copy() *Ideal {
 }
 
 // Reduce sets f to f modulo id
-func (id *Ideal) Reduce(f *Polynomial) {
+func (id *Ideal) Reduce(f *Polynomial) error {
 	// TODO: Ought id to be a Gröbner basis here?
-	_, r, _ := f.QuoRem(id.generators...)
+	const op = "Reducing polynomial"
+
+	_, r, err := f.QuoRem(id.generators...)
+	if err != nil {
+		return errors.Wrap(op, errors.Inherit, err)
+	}
+
 	*f = *r
+	return nil
 }

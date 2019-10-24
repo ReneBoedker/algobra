@@ -295,10 +295,21 @@ func (f *Polynomial) IsMonomial() bool {
 	return false
 }
 
-// Reduces f in-place
+// Reduces f in-place and sets its error state if needed
 func (f *Polynomial) reduce() {
-	if f.baseRing.id != nil {
-		f.baseRing.id.Reduce(f)
+	const op = "Reducing polynomial"
+
+	if tmp := hasErr(op, f); tmp != nil {
+		return
+	}
+
+	if f.baseRing.id == nil {
+		return
+	}
+
+	err := f.baseRing.id.Reduce(f)
+	if err != nil {
+		f.err = err
 	}
 }
 
@@ -341,7 +352,11 @@ func (f *Polynomial) String() string {
 // checkCompatible. It is used in arithmetic functions to check that the inputs
 // are 'good' to use.
 func checkErrAndCompatible(op errors.Op, f *Polynomial, g ...*Polynomial) *Polynomial {
-	if tmp := hasErr(op, f, g...); tmp != nil {
+	if tmp := hasErr(op, f); tmp != nil {
+		return tmp
+	}
+
+	if tmp := hasErr(op, g...); tmp != nil {
 		return tmp
 	}
 
@@ -352,26 +367,19 @@ func checkErrAndCompatible(op errors.Op, f *Polynomial, g ...*Polynomial) *Polyn
 	return nil
 }
 
-// hasErr is an internal method for checking if f or g has a non-nil error
-// field.
+// hasErr is an internal method for checking if one of the given polynomials has
+// a non-nil error field.
 //
 // It returns the first polynomial with non-nil error status after wrapping the
 // error. The new error inherits the kind from the old.
-func hasErr(op errors.Op, f *Polynomial, g ...*Polynomial) *Polynomial {
-	if f.err != nil {
-		f.err = errors.Wrap(
-			op, errors.Inherit,
-			f.err,
-		)
-		return f
-	}
-	for _, h := range g {
-		if h.err != nil {
-			h.err = errors.Wrap(
+func hasErr(op errors.Op, f ...*Polynomial) *Polynomial {
+	for _, g := range f {
+		if g.err != nil {
+			g.err = errors.Wrap(
 				op, errors.Inherit,
-				h.err,
+				g.err,
 			)
-			return h
+			return g
 		}
 	}
 	return nil
