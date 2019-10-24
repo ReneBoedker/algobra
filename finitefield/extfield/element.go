@@ -9,6 +9,9 @@ import (
 	"algobra/univariate"
 )
 
+// Ensure that Element implements the ff.Element interface
+var _ ff.Element = &Element{}
+
 // Element is the implementation of an element in a finite field.
 type Element struct {
 	field *Field

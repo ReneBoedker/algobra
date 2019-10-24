@@ -10,6 +10,9 @@ import (
 	"algobra/finitefield/ff"
 )
 
+// Ensure that Element implements the ff.Element interface
+var _ ff.Element = &Element{}
+
 // Element is the implementation of a finite field element.
 type Element struct {
 	field *Field
