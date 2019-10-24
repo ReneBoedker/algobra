@@ -9,8 +9,7 @@
 // Basic usage
 //
 // To use the package, simply define the field -- or fields -- that you want to
-// work:
-//
+// work over:
 //  gf7, err := finitefield.Define(7)
 //  if err != nil {
 //      // Define returns an error if the characteristic is not a prime power (or too large)
@@ -22,7 +21,7 @@
 // guaranteed to never return an error. The same holds true for the convenient
 // Zero and One methods, which return the additive and multiplicative
 // identities. ElementFromString parses a string and returns the corresponding
-// element if the parsing succeeds &ndash; otherwise an error is returned.
+// element if the parsing succeeds -- otherwise an error is returned.
 //
 // Each field also has a general method Element which will call the
 // appropriate constructor based on the input type. The accepted types depends
