@@ -119,15 +119,31 @@ func parseExponent(s string) (uint, error) {
 
 func polynomialStringToMap(s string, varNames *[2]string, qr *QuotientRing) (map[[2]uint]ff.Element, error) {
 	const op = "Parsing polynomial from string"
+
 	xOrY := regexp.QuoteMeta((*varNames)[0]) + `|` + regexp.QuoteMeta((*varNames)[1])
+
+	// Construct a regular expression that captures each term of a bivariate
+	// polynomial
 	pattern, err := regexp.Compile(
-		`(?P<sign>^|\+|-)\s*` +
-			`(?:` +
-			`(?P<coef>` + qr.baseField.RegexElement(true) + `)?` + `\s*\*?\s*` +
-			`(?P<var1>(?i:` + xOrY + `))\^?(?P<deg1>[0-9]*)(?:\s*\*?\s*` +
-			`(?P<var2>(?i:` + xOrY + `))?\^?(?P<deg2>[0-9]*))?\s*` +
-			`|(?P<coefOnly>` + qr.baseField.RegexElement(true) + `)` +
-			`\s*)`)
+		`(?P<sign>^|\+|-)\s*` + // A sign (or start of string)
+			`(?:` + // Begin group of alternatives
+
+			// First alternative: Term contains a variable
+			`(?P<coef>` + qr.baseField.RegexElement(true) + `)?` + // A coefficient
+			`\s*\*?\s*` + // Optional multiplication sign
+			`(?P<var1>(?i:` + xOrY + `))\^?(?P<deg1>[0-9]*)` + // Variable and optional degree
+			`(?:` + // Begin optional second variable
+			`\s*\*?\s*` + // Optional multiplication sign
+			`(?P<var2>(?i:` + xOrY + `))?\^?(?P<deg2>[0-9]*)` +
+			`)?\s*` + // End optional second variable
+
+			`|` +
+
+			// Second alternative: Term is only a coefficient
+			`(?P<coefOnly>` + qr.baseField.RegexElement(true) + `)\s*` +
+
+			`)`, // End group of alternatives
+	)
 	if err != nil {
 		return nil, errors.New(
 			op, errors.Internal,
