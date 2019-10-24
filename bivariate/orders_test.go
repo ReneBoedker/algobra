@@ -18,24 +18,32 @@ func TestOrders(t *testing.T) {
 		Lex(false),
 		DegLex(true),
 		DegLex(false),
+		DegRevLex(true),
+		DegRevLex(false),
 		WDegLex(3, 4, true),
 		WDegLex(3, 4, false),
+		WDegRevLex(3, 4, true),
+		WDegRevLex(3, 4, false),
 	}
 	ordStr := []string{
 		"Lex (X>Y)",
 		"Lex (Y>X)",
 		"DegLex (X>Y)",
 		"DegLex (Y>X)",
+		"DegRevLex (X>Y)",
+		"DegRevLex (Y>X)",
 		"WDegLex(3,4) (X>Y)",
 		"WDegLex(3,4) (Y>X)",
+		"WDegRevLex(3,4) (X>Y)",
+		"WDegRevLex(3,4) (Y>X)",
 	}
-	expectedOrd := [][]int{ // First entry X>Y; second entry Y>X
-		{0, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 1, 1},
-		{1, -1, 1, -1, -1, -1},
-		{-1, 1, 1, 1, 1, 1},
-		{1, -1, 1, -1, -1, -1},
-		{1, -1, 1, 1, 1, -1},
+	expectedOrd := [][]int{
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+		{1, -1, 1, -1, 1, -1, -1, -1, -1, -1},
+		{-1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+		{1, -1, 1, -1, 1, -1, -1, -1, -1, -1},
+		{1, -1, 1, 1, 1, 1, 1, -1, 1, -1},
 	}
 
 	for i, d := range degrees {
