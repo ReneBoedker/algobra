@@ -27,7 +27,8 @@ func degCompare(xWeight, yWeight uint, tiebreak Order) Order {
 
 // WDegLex returns the weighted degree lexicographical ordering.
 //
-// The resulting order will break ties using the lexicographical ordering. The
+// The resulting order will first compare the weighted degree using the given
+// weights. Then it will break any ties using the lexicographical ordering. The
 // boolean xGtY indicates whether X is greater than Y.
 func WDegLex(xWeight, yWeight uint, xGtY bool) Order {
 	return degCompare(
@@ -39,11 +40,12 @@ func WDegLex(xWeight, yWeight uint, xGtY bool) Order {
 
 // WDegRevLex returns the weighted degree reverse lexicographical ordering.
 //
-// The resulting order will break ties using the lexicographical ordering, but
-// the smaller degree with respect to the lexicographical ordering is considered
-// as the larger degree with respect to the reverse ordering. In addition, the
-// order of the variables is reversed when performing the lexicographical
-// comparison.
+// The resulting order will first compare the weighted degree using the given
+// weights. Then it will break any ties using the lexicographical ordering.
+// However, the smaller degree with respect to the lexicographical ordering is
+// considered as the larger degree with respect to the reverse ordering. In
+// addition, the order of the variables is reversed when performing the
+// lexicographical comparison.
 //
 // The boolean xGtY indicates whether X is greater than Y.
 func WDegRevLex(xWeight, yWeight uint, xGtY bool) Order {
@@ -56,21 +58,22 @@ func WDegRevLex(xWeight, yWeight uint, xGtY bool) Order {
 	)
 }
 
-// DegLex returns the total degree ordering.
+// DegLex returns the total degree lexicographical ordering.
 //
-// The resulting order will break ties using the lexicographical ordering. The
-// boolean xGtY indicates whether X is greater than Y.
+// The resulting order will first compare the total degree and then break any
+// ties using the lexicographical ordering. The boolean xGtY indicates whether X
+// is greater than Y.
 func DegLex(xGtY bool) Order {
 	return WDegLex(1, 1, xGtY)
 }
 
-// DegRevLex returns the total degree reverse ordering.
+// DegRevLex returns the total degree reverse lexicographical ordering.
 //
-// The resulting order will break ties using the lexicographical ordering, but
-// the smaller degree with respect to the lexicographical ordering is considered
-// as the larger degree with respect to the reverse ordering. In addition, the
-// order of the variables is reversed when performing the lexicographical
-// comparison.
+// The resulting order will first compare the total degree and then break any
+// ties using the lexicographical ordering. However, the smaller degree with
+// respect to the lexicographical ordering is considered as the larger degree
+// with respect to the reverse ordering. In addition, the order of the variables
+// is reversed when performing the lexicographical comparison.
 //
 // The boolean xGtY indicates whether X is greater than Y.
 func DegRevLex(xGtY bool) Order {
@@ -79,7 +82,7 @@ func DegRevLex(xGtY bool) Order {
 
 // Lex returns the lexicographical ordering.
 //
-// xGtY indicates whether X is greater than Y.
+// The boolean xGtY indicates whether X is greater than Y.
 func Lex(xGtY bool) Order {
 	f := func(deg1, deg2 [2]uint) (out int) {
 		switch {

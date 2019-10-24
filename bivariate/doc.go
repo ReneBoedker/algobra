@@ -24,11 +24,15 @@
 //
 // In addition to the polynomial definition from maps as above, it is also
 // possible to define polynomials from strings in a natural way by using
-// PolynomialFromString. When doing so, the variable names must be 'X' and 'Y'
-// -- but not necessarily capitalized -- and each monomial can contain at most
-// one of each variable. The order of the variables does not matter. Using * to
-// indicate multiplication is optional. In addition, the parser supports
-// _Singular-style_ exponents, meaning that '5X2Y3' is interpreted as '5X^2Y^3'.
+// PolynomialFromString. When doing so, each monomial can contain at most one of
+// each variable. The order of the variables does not matter, and capitalization
+// is ignored. Using * to indicate multiplication is optional. In addition, the
+// parser supports _Singular-style_ exponents, meaning that '5X2Y3' is
+// interpreted as '5X^2Y^3'.
+//
+// By default, the variable names 'X' and 'Y' are used, but this can be changed
+// via the method SetVarNames. The current variable names can be obtained from
+// the VarNames method.
 //
 // Ideals
 //

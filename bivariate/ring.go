@@ -21,12 +21,12 @@ type QuotientRing struct {
 	id *Ideal
 }
 
-// String returns the string representation of r
+// String returns the string representation of r.
 func (r *ring) String() string {
 	return fmt.Sprintf("Bivariate polynomial ring over %v", r.baseField)
 }
 
-// String returns the string representation of r
+// String returns the string representation of r.
 func (r *QuotientRing) String() string {
 	if r.id == nil {
 		return r.ring.String()
@@ -38,7 +38,7 @@ func (r *QuotientRing) String() string {
 }
 
 // DefRing defines a new polynomial ring over the given field, using
-// the order function ord. It returns a new ring-object
+// the order function ord. It returns a new ring-object.
 func DefRing(field ff.Field, ord Order) *QuotientRing {
 	return &QuotientRing{
 		ring: &ring{
@@ -56,8 +56,10 @@ func DefRing(field ff.Field, ord Order) *QuotientRing {
 // variable name. If the one of the strings consists solely of whitespace
 // characters, an InputValue-error is returned.
 //
-// TODO: Do more strings have to be disallowed (eg. +, -)?
+// If the two variable names are identical when ignoring leading and trailing
+// whitespace and capitalization, an InputValue-error is returned.
 func (r *QuotientRing) SetVarNames(varNames [2]string) error {
+	// TODO: Do more strings have to be disallowed (eg. +, -)?
 	const op = "Setting variable name"
 
 	for i, v := range varNames {
@@ -90,7 +92,7 @@ func (r *QuotientRing) VarNames() [2]string {
 
 // Quotient defines the quotient of the given ring modulo the input ideal.
 //
-// The return type is a new ring-object
+// The return type is a new QuotientRing-object
 func (r *QuotientRing) Quotient(id *Ideal) (*QuotientRing, error) {
 	const op = "Define quotient ring"
 	if r.id != nil {

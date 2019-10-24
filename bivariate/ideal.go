@@ -26,7 +26,9 @@ func (id *Ideal) String() string {
 }
 
 // NewIdeal returns a new polynomial ideal over the given ring. If the
-// generators are not defined over the given ring, the function panics.
+// generators are not defined over the given ring, the function returns an
+// InputIncompatible-error.
+//
 // Internally, this function computes a reduced Gröbner basis.
 func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 	const op = "Defining ideal"
@@ -63,20 +65,20 @@ func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 }
 
 // Copy creates a copy of id.
-func (id *Ideal) Copy() *Ideal {
-	generators := make([]*Polynomial, len(id.generators), len(id.generators))
-	for i, g := range id.generators {
-		generators[i] = g.Copy()
-	}
+// func (id *Ideal) Copy() *Ideal {
+// 	generators := make([]*Polynomial, len(id.generators), len(id.generators))
+// 	for i, g := range id.generators {
+// 		generators[i] = g.Copy()
+// 	}
 
-	return &Ideal{
-		ring:       id.ring,
-		generators: generators,
-		isGroebner: id.isGroebner,
-		isMinimal:  id.isMinimal,
-		isReduced:  id.isReduced,
-	}
-}
+// 	return &Ideal{
+// 		ring:       id.ring,
+// 		generators: generators,
+// 		isGroebner: id.isGroebner,
+// 		isMinimal:  id.isMinimal,
+// 		isReduced:  id.isReduced,
+// 	}
+// }
 
 // Reduce sets f to f modulo id
 func (id *Ideal) Reduce(f *Polynomial) error {

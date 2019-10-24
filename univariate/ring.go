@@ -54,9 +54,10 @@ func DefRing(field ff.Field) *QuotientRing {
 // Leading and trailing whitespace characters are removed before setting the
 // variable name. If the string consists solely of whitespace characters, an
 // InputValue-error is returned.
-// TODO: Do more strings have to be disallowed (eg. +, -)?
 func (r *QuotientRing) SetVarName(varName string) error {
+	// TODO: Do more strings have to be disallowed (eg. +, -)?
 	const op = "Setting variable name"
+
 	varName = strings.TrimSpace(varName)
 	if len(varName) == 0 {
 		return errors.New(

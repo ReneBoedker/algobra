@@ -9,6 +9,23 @@ import (
 	"algobra/finitefield/ff"
 )
 
+// Polynomial implements bivariate polynomials.
+type Polynomial struct {
+	baseRing *QuotientRing
+	coefs    map[[2]uint]ff.Element
+	err      error
+}
+
+// BaseField returns the field over which the coefficients of f are defined.
+func (f *Polynomial) BaseField() ff.Field {
+	return f.baseRing.baseField
+}
+
+// Err returns the error status of f.
+func (f *Polynomial) Err() error {
+	return f.err
+}
+
 // Zero returns a zero polynomial over the specified ring.
 func (r *QuotientRing) Zero() *Polynomial {
 	return &Polynomial{
@@ -26,7 +43,7 @@ func (r *QuotientRing) zeroWithCap(cap int) *Polynomial {
 	}
 }
 
-// Polynomial defines a new polynomial with the given coefficients
+// Polynomial defines a new polynomial with the given coefficients.
 func (r *QuotientRing) Polynomial(coefs map[[2]uint]ff.Element) *Polynomial {
 	m := make(map[[2]uint]ff.Element, len(coefs))
 	for d, e := range coefs {
@@ -39,7 +56,7 @@ func (r *QuotientRing) Polynomial(coefs map[[2]uint]ff.Element) *Polynomial {
 	return out
 }
 
-// PolynomialFromUnsigned defines a new polynomial with the given coefficients
+// PolynomialFromUnsigned defines a new polynomial with the given coefficients.
 func (r *QuotientRing) PolynomialFromUnsigned(coefs map[[2]uint]uint) *Polynomial {
 	m := make(map[[2]uint]ff.Element, len(coefs))
 	for d, c := range coefs {
@@ -53,7 +70,7 @@ func (r *QuotientRing) PolynomialFromUnsigned(coefs map[[2]uint]uint) *Polynomia
 	return out
 }
 
-// PolynomialFromSigned defines a new polynomial with the given coefficients
+// PolynomialFromSigned defines a new polynomial with the given coefficients.
 func (r *QuotientRing) PolynomialFromSigned(coefs map[[2]uint]int) *Polynomial {
 	m := make(map[[2]uint]ff.Element, len(coefs))
 	for d, c := range coefs {
@@ -69,8 +86,8 @@ func (r *QuotientRing) PolynomialFromSigned(coefs map[[2]uint]int) *Polynomial {
 
 // PolynomialFromString defines a polynomial by parsing s.
 //
-// The string s must use 'X' and 'Y' as variable names, but lowercase letters are
-// accepted. Multiplication symbol '*' is allowed, but not necessary.
+// The string s must use the variable names specified by r, but capitalization
+// is ignored. Multiplication symbol '*' is allowed, but not necessary.
 // Additionally, Singular-style exponents are allowed, meaning that "X2Y3" is
 // interpreted as "X^2Y^3".
 //
@@ -109,23 +126,6 @@ func subtractDegs(deg1, deg2 [2]uint) (deg [2]uint, ok bool) {
 		return [2]uint{deg1[0] - deg2[0], deg1[1] - deg2[1]}, true
 	}
 	return deg, false
-}
-
-// Polynomial denotes a bivariate polynomial.
-type Polynomial struct {
-	baseRing *QuotientRing
-	coefs    map[[2]uint]ff.Element
-	err      error
-}
-
-// BaseField returns the field over which the coefficients of f are defined.
-func (f *Polynomial) BaseField() ff.Field {
-	return f.baseRing.baseField
-}
-
-// Err returns the error status of f.
-func (f *Polynomial) Err() error {
-	return f.err
 }
 
 // Coef returns the coefficient of the monomial with degree specified by the
@@ -313,8 +313,8 @@ func (f *Polynomial) reduce() {
 	}
 }
 
-// String returns the string representation of f. Variables are named 'X' and
-// 'Y'.
+// String returns the string representation of f. Variables are 'X' and 'Y' by
+// default. To change this, see the SetVarNames method.
 func (f *Polynomial) String() string {
 	degs := f.SortedDegrees()
 	if len(degs) == 0 {
