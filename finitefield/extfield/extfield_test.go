@@ -22,6 +22,14 @@ func defineField(card uint) *Field {
 	return f
 }
 
+func assertError(t *testing.T, err error, k errors.Kind, desc string, args ...interface{}) {
+	if err == nil {
+		t.Errorf(desc+" returned no error", args)
+	} else if !errors.Is(k, err) {
+		t.Errorf(desc+" returned an error but not of the correct type", args)
+	}
+}
+
 func TestOverflowDetection(t *testing.T) {
 	var bigPrime uint
 	if bits.UintSize == 32 {
@@ -30,30 +38,14 @@ func TestOverflowDetection(t *testing.T) {
 		bigPrime = uint(4294967311)
 	}
 	_, err := Define(bigPrime)
-	if err == nil {
-		t.Errorf(
-			"Define succeeded for bit size %d even though p=%d",
-			bits.UintSize, bigPrime,
-		)
-	} else if !errors.Is(errors.InputTooLarge, err) {
-		t.Errorf("Define failed, but the error kind was unexpected")
-	}
+	assertError(t, err, errors.InputTooLarge, "Define(%d)", bigPrime)
 }
 
 func TestNonPrimePowInput(t *testing.T) {
 	testCases := []uint{0, 1, 10, 77, 100}
 	for _, char := range testCases {
-		if _, err := Define(char); err == nil {
-			t.Errorf(
-				"Defining field with characteristic %d did not return an error",
-				char,
-			)
-		} else if !errors.Is(errors.InputValue, err) {
-			t.Errorf(
-				"Defining field with characteristic %d returned error, but wrong kind",
-				char,
-			)
-		}
+		_, err := Define(char)
+		assertError(t, err, errors.InputValue, "Define(%d)", char)
 	}
 }
 
@@ -76,14 +68,8 @@ func TestTableMemory(t *testing.T) {
 		bigPrimePow = uint(22188041) // 281^3
 	}
 	f := defineField(bigPrimePow)
-	if err := f.ComputeMultTable(); err == nil {
-		t.Errorf("No error returned")
-	} else if !errors.Is(errors.InputTooLarge, err) {
-		t.Errorf(
-			"Error returned has wrong kind. Expected errors.InputTooLarge, "+
-				"but received error %q", err.Error(),
-		)
-	}
+	err := f.ComputeMultTable()
+	assertError(t, err, errors.InputTooLarge, "ComputeMultTable")
 }
 
 func TestConstructors(t *testing.T) {
@@ -123,10 +109,8 @@ func TestArithmeticErrors(t *testing.T) {
 	a := fieldA.element([]uint{0})
 	b := fieldB.element([]uint{10})
 	// Cannot invert zero
-	if e := a.Inv(); e.Err() == nil {
-		t.Errorf("Inverting zero did not set error status")
-	} else if !errors.Is(errors.InputValue, e.Err()) {
-		t.Errorf("Inverting zero set error status, but not InputValue-error")
+	if e := a.Inv(); true {
+		assertError(t, e.Err(), errors.InputValue, "Inverting zero")
 	}
 
 	// Cannot use elements from different fields
@@ -141,17 +125,13 @@ func TestArithmeticErrors(t *testing.T) {
 	}
 
 	// Error is passed on to last result
-	if e := b.Plus(b.Minus(a.Inv())); e.Err() == nil {
-		t.Errorf("Last result in b+b-a^(-1) did not have error status")
-	} else if !errors.Is(errors.InputValue, e.Err()) {
+	if e := b.Plus(b.Minus(a.Inv())); true {
 		// Inverting gives InputValue-error. This should be the last kind as well
-		t.Errorf("Last result did not retain the original error status")
+		assertError(t, e.Err(), errors.InputValue, "b+b-a^(-1)")
 	}
-	if e := b.Minus(b).Inv().Times(b); e.Err() == nil {
-		t.Errorf("Last result in b-b^(-1)*b did not have error status")
-	} else if !errors.Is(errors.InputValue, e.Err()) {
+	if e := b.Minus(b).Inv().Times(b); true {
 		// Inverting gives InputValue-error. This should be the last kind as well
-		t.Errorf("Last result did not retain the original error status")
+		assertError(t, e.Err(), errors.InputValue, "b+b-a^(-1)")
 	}
 }
 
@@ -176,6 +156,14 @@ func TestPow(t *testing.T) {
 		if tmp := a.Pow(n); !tmp.Equal(expected) {
 			t.Errorf("(%v)^%d = %v, but expected %v", a, n, tmp, expected)
 		}
+	}
+
+	// Check the zero cases separately
+	if tmp := field.Zero().Pow(0); !tmp.IsOne() {
+		t.Errorf("0^0 = %v, but expected 1", tmp)
+	}
+	if tmp := field.Zero().Pow(1); !tmp.IsZero() {
+		t.Errorf("0^1 = %v, but expected 0", tmp)
 	}
 }
 

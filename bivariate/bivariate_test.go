@@ -3,6 +3,7 @@ package bivariate
 import (
 	"testing"
 
+	"algobra/errors"
 	"algobra/finitefield"
 	"algobra/finitefield/ff"
 )
@@ -13,6 +14,14 @@ func defineField(char uint, t *testing.T) ff.Field {
 		t.Fatalf("Failed to define finite field of %d elements", char)
 	}
 	return field
+}
+
+func assertError(t *testing.T, err error, k errors.Kind, desc string, args ...interface{}) {
+	if err == nil {
+		t.Errorf(desc+" returned no error", args)
+	} else if !errors.Is(k, err) {
+		t.Errorf(desc+" returned an error but not of the correct type", args...)
+	}
 }
 
 func fieldLoop(do func(field ff.Field), minCard ...uint) {
@@ -46,11 +55,7 @@ func TestReduce(t *testing.T) {
 	f := qr.PolynomialFromUnsigned(map[[2]uint]uint{
 		{12, 3}: 1,
 	})
-	// mod.QuoRem(id)
-	// fmt.Print("\n\n")
-	// id.reduce(mod)
-	// fmt.Println(mod)
-	//fmt.Printf("q: %v\nr: %v\n", quo, rem)
+
 	if f.Ld() != [2]uint{4, 3} {
 		t.Errorf("Reduce failed: Got %v", f.Ld())
 	}
@@ -60,23 +65,23 @@ func TestGroebner1(t *testing.T) {
 	field := defineField(7, t)
 	r := DefRing(field, Lex(true))
 	id, _ := r.NewIdeal(
-		r.PolynomialFromUnsigned(map[[2]uint]uint{
+		r.PolynomialFromSigned(map[[2]uint]int{
 			{1, 2}: 1,
-			{0, 3}: 6,
+			{0, 3}: -1,
 		}),
-		r.PolynomialFromUnsigned(map[[2]uint]uint{
+		r.PolynomialFromSigned(map[[2]uint]int{
 			{0, 3}: 1,
-			{0, 2}: 6,
+			{0, 2}: -1,
 		}),
 	)
 	expectedGens := []*Polynomial{
-		r.PolynomialFromUnsigned(map[[2]uint]uint{
+		r.PolynomialFromSigned(map[[2]uint]int{
 			{1, 2}: 1,
-			{0, 2}: 6,
+			{0, 2}: -1,
 		}),
-		r.PolynomialFromUnsigned(map[[2]uint]uint{
+		r.PolynomialFromSigned(map[[2]uint]int{
 			{0, 3}: 1,
-			{0, 2}: 6,
+			{0, 2}: -1,
 		}),
 	}
 	id = id.GroebnerBasis()
@@ -89,17 +94,31 @@ func TestGroebner1(t *testing.T) {
 	}
 }
 
-func TestLexOrder(t *testing.T) {
-	ord := Lex(true)
-	degrees := [][2][2]uint{
-		{{1, 0}, {0, 1}}, {{0, 1}, {0, 2}}, {{2, 1}, {2, 1}}, {{3, 4}, {2, 7}},
+func TestQuotientErrors(t *testing.T) {
+	field1 := defineField(49, t)
+	field2 := defineField(25, t)
+
+	ring1 := DefRing(field1, Lex(true))
+	ring2 := DefRing(field2, Lex(false))
+
+	id, err := ring1.NewIdeal(ring1.PolynomialFromSigned(map[[2]uint]int{
+		{2, 0}: 1,
+		{0, 1}: 2,
+	}))
+	if err != nil {
+		t.Fatalf("Could not create initial ideal")
 	}
-	expectedOrd := []int{
-		1, -1, 0, 1,
+
+	qr, err := ring1.Quotient(id)
+	if err != nil {
+		t.Fatalf("Could not create initial quotient ring")
 	}
-	for i, d := range degrees {
-		if tmp := ord(d[0], d[1]); tmp != expectedOrd[i] {
-			t.Errorf("Lex(%v, %v)=%d (Expected %d)", d[0], d[1], tmp, expectedOrd[i])
-		}
+
+	if _, err := qr.Quotient(id); true {
+		assertError(t, err, errors.InputValue, "Constructing quotient of ring with non-nil ideal")
+	}
+
+	if _, err := ring2.Quotient(id); true {
+		assertError(t, err, errors.InputIncompatible, "Constructing quotient with ideal from different ring")
 	}
 }

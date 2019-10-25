@@ -111,14 +111,15 @@ func (r *QuotientRing) Quotient(id *Ideal) (*QuotientRing, error) {
 			"Input argument not ideal of ring '%v'", r,
 		)
 	}
-	for _, f := range id.generators {
-		if f.baseRing != r {
-			return nil, errors.New(
-				op, errors.InputIncompatible,
-				"Ideal member %v not in ring", f,
-			)
-		}
-	}
+	// This is tested when the ideal is created
+	// for _, f := range id.generators {
+	// 	if f.baseRing != r {
+	// 		return nil, errors.New(
+	// 			op, errors.InputIncompatible,
+	// 			"Ideal member %v not in ring", f,
+	// 		)
+	// 	}
+	// }
 
 	qr := &QuotientRing{
 		ring: r.ring,

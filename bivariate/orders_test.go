@@ -57,3 +57,18 @@ func TestOrders(t *testing.T) {
 		}
 	}
 }
+
+// func TestLexOrder(t *testing.T) {
+// 	ord := Lex(true)
+// 	degrees := [][2][2]uint{
+// 		{{1, 0}, {0, 1}}, {{0, 1}, {0, 2}}, {{2, 1}, {2, 1}}, {{3, 4}, {2, 7}},
+// 	}
+// 	expectedOrd := []int{
+// 		1, -1, 0, 1,
+// 	}
+// 	for i, d := range degrees {
+// 		if tmp := ord(d[0], d[1]); tmp != expectedOrd[i] {
+// 			t.Errorf("Lex(%v, %v)=%d (Expected %d)", d[0], d[1], tmp, expectedOrd[i])
+// 		}
+// 	}
+// }

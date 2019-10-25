@@ -46,15 +46,6 @@ func newMonomialMatch(match []string, op errors.Op, qr *QuotientRing) (*monomial
 		)
 	}
 
-	// Check that all exponents correspond to a variable (e.g. preventing 2^4)
-	for i := 0; i < 2; i++ {
-		if out.vars[i] == "" && out.degs[i] != "" {
-			return nil, errors.New(
-				op, errors.Parsing,
-				"Found empty variable, but non-empty exponent %q", out.degs[i],
-			)
-		}
-	}
 	err := out.ensureVariableOrder(op)
 	if err != nil {
 		return nil, err

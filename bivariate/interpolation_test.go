@@ -121,29 +121,13 @@ func TestInterpolationErrors(t *testing.T) {
 		[][2]ff.Element{a, b},
 		[]ff.Element{field.Zero()},
 	)
-	if err == nil {
-		t.Errorf("Interpolation did not return an error even though there " +
-			"were more points than values")
-	} else if !errors.Is(errors.InputValue, err) {
-		t.Errorf(
-			"Interpolation returned an error on different length inputs, "+
-				"but it was of unexpected kind (err = %v)", err,
-		)
-	}
+	assertError(t, err, errors.InputValue, "Interpolation with more points than values")
 
 	_, err = ring.Interpolate(
 		[][2]ff.Element{a, a},
 		[]ff.Element{field.Zero(), field.Zero()},
 	)
-	if err == nil {
-		t.Errorf("Interpolation did not return an error even though input " +
-			"contains duplicate points")
-	} else if !errors.Is(errors.InputValue, err) {
-		t.Errorf(
-			"Interpolation returned an error when input contains duplicate"+
-				" points, but it was of unexpected kind (err = %v)", err,
-		)
-	}
+	assertError(t, err, errors.InputValue, "Interpolation on duplicate points")
 }
 
 // func TestIter(t *testing.T) {

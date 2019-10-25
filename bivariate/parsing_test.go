@@ -58,6 +58,7 @@ func TestParsingIllFormed(t *testing.T) {
 		"X^2-+Y^3",
 		"X^^4Y^5",
 		"a^3y^4",
+		"2X^2X^3+ 4X^3Y2",
 	}
 
 	testPolys := make([]*Polynomial, len(testStrings), len(testStrings))
@@ -110,6 +111,20 @@ func TestConversionErrors(t *testing.T) {
 				testStrings[i], err.Error(),
 			)
 		}
+	}
+}
+
+func TestBadVarNames(t *testing.T) {
+	field := defineField(13, t)
+	ring := DefRing(field, Lex(true))
+	badNames := [...][2]string{
+		{" ", "X"},
+		{"Y", " Y	"},
+		{"X", "x"},
+	}
+	for _, v := range badNames {
+		err := ring.SetVarNames(v)
+		assertError(t, err, errors.InputValue, "Setting variable names to %v", v)
 	}
 }
 
