@@ -36,7 +36,7 @@ type Element interface {
 	Pow(uint) Element
 	Prod(Element, Element) Element
 	SetNeg() Element
-	SetUnsigned(uint)
+	SetUnsigned(uint) Element
 	String() string
 	Sub(Element) Element
 	Times(Element) Element

@@ -165,13 +165,15 @@ func (a *Element) Err() error {
 	return a.err
 }
 
-// SetUnsigned sets the value of a to the element corresponding to val.
+// SetUnsigned sets the value of a to the element corresponding to val. It then
+// returns a.
 //
 // The value is automatically reduced modulo the characteristic.
-func (a *Element) SetUnsigned(val uint) {
+func (a *Element) SetUnsigned(val uint) ff.Element {
 	a.val = a.field.polyRing.Polynomial(
 		[]ff.Element{a.field.baseField.ElementFromUnsigned(val)},
 	)
+	return a
 }
 
 // Equal tests equality of elements a and b.

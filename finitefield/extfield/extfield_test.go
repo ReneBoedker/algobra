@@ -22,6 +22,7 @@ func defineField(card uint) *Field {
 	return f
 }
 
+// assertError checks that err is non-nil and that it has kind k.
 func assertError(t *testing.T, err error, k errors.Kind, desc string, args ...interface{}) {
 	if err == nil {
 		t.Errorf(desc+" returned no error", args)
@@ -81,13 +82,13 @@ func TestConstructors(t *testing.T) {
 	d, _ := field.Element([]int{-1})
 	e, _ := field.ElementFromString("4")
 	f, _ := field.ElementFromString("-1")
-	g := field.Zero()
-	g.SetUnsigned(4)
 
 	elems := []ff.Element{
-		a, b, c, d, e, f, g,
+		a, b, c, d, e, f,
 		field.ElementFromUnsigned(4),
 		field.ElementFromSigned(-1),
+		field.Zero().SetUnsigned(4),
+		field.One().SetNeg(),
 	}
 
 	for i, a := range elems {
@@ -108,6 +109,7 @@ func TestArithmeticErrors(t *testing.T) {
 
 	a := fieldA.element([]uint{0})
 	b := fieldB.element([]uint{10})
+
 	// Cannot invert zero
 	if e := a.Inv(); true {
 		assertError(t, e.Err(), errors.InputValue, "Inverting zero")
