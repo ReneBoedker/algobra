@@ -1,4 +1,6 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/ReneBoedker/algobra)](https://goreportcard.com/report/github.com/ReneBoedker/algobra)
 ![coverage-badge](https://img.shields.io/badge/coverage-91.7%25-brightgreen?cacheSeconds=86400&style=flat)
+[![GoDoc](https://godoc.org/github.com/ReneBoedker/algobra/finitefield/extfield?status.svg)](https://godoc.org/github.com/ReneBoedker/algobra/finitefield/extfield)
 # Algobra: Extension fields
 This package implements arithmetic in finite fields of any prime power cardinality.
 

@@ -1,4 +1,6 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/ReneBoedker/algobra)](https://goreportcard.com/report/github.com/ReneBoedker/algobra)
 ![coverage-badge](https://img.shields.io/badge/coverage-100.0%25-brightgreen?cacheSeconds=86400&style=flat)
+[![GoDoc](https://godoc.org/github.com/ReneBoedker/algobra/errors?status.svg)](https://godoc.org/github.com/ReneBoedker/algobra/errors)
 # Errors
 ## Third party licenses
 Parts of the error package are heavily inspired by the corresponding package in [Upspin](https://github.com/upspin/upspin), which is published under the following license:
