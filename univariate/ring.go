@@ -107,7 +107,8 @@ func (r *QuotientRing) One() *Polynomial {
 	}
 }
 
-// Polynomial defines a new polynomial with the given coefficients
+// Polynomial defines a new polynomial with the given coefficients. The
+// coefficient of X^i is set to coefs[i].
 func (r *QuotientRing) Polynomial(coefs []ff.Element) *Polynomial {
 	out := r.Zero()
 	for d, e := range coefs {
@@ -119,7 +120,8 @@ func (r *QuotientRing) Polynomial(coefs []ff.Element) *Polynomial {
 	return out
 }
 
-// PolynomialFromUnsigned defines a new polynomial with the given coefficients
+// PolynomialFromUnsigned defines a new polynomial with the given coefficients.
+// The coefficient of X^i is set to coefs[i].
 func (r *QuotientRing) PolynomialFromUnsigned(coefs []uint) *Polynomial {
 	out := r.Zero()
 	for d, c := range coefs {
@@ -132,7 +134,8 @@ func (r *QuotientRing) PolynomialFromUnsigned(coefs []uint) *Polynomial {
 	return out
 }
 
-// PolynomialFromSigned defines a new polynomial with the given coefficients
+// PolynomialFromSigned defines a new polynomial with the given coefficients.
+// The coefficient of X^i is set to coefs[i].
 func (r *QuotientRing) PolynomialFromSigned(coefs []int) *Polynomial {
 	out := r.Zero()
 	for d, e := range coefs {

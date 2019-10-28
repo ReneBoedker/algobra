@@ -295,7 +295,7 @@ func (f *Polynomial) IsMonomial() bool {
 	return false
 }
 
-// Reduces f in-place and sets its error state if needed
+// Reduces f in-place and sets its error state if needed.
 func (f *Polynomial) reduce() {
 	const op = "Reducing polynomial"
 

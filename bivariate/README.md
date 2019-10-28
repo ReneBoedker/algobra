@@ -23,7 +23,7 @@ g := ring.PolynomialFromSigned(map[[2]uint]int{
 fmt.Println(f.Equal(g))	// Prints 'true'
 ```
 
-In addition to the polynomial definition from maps as above, it is also possible to define polynomials from strings in a natural way by using `PolynomialFromString`. When doing so, the variable names must be 'X' and 'Y' -- but not necessarily capitalized -- and each monomial can contain at most one of each variable. The order of the variables does not matter. Using `*` to indicate multiplication is optional. In addition, the parser supports _Singular-style_ exponents, meaning that `5X2Y3` is interpreted as `5X^2Y^3`.
+In addition to the polynomial definition from maps as above, it is also possible to define polynomials from strings in a natural way by using `PolynomialFromString`. When doing so, each monomial can contain at most one of each variable. The order of the variables does not matter, and capitalization is ignored. Using `*` to indicate multiplication is optional. In addition, the parser supports _Singular-style_ exponents, meaning that `5X2Y3` is interpreted as `5X^2Y^3`.
 
 ### Ideals
 The package provides support for computations modulo an ideal.

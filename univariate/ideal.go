@@ -23,8 +23,11 @@ func (id *Ideal) String() string {
 }
 
 // NewIdeal returns a new polynomial ideal over the given ring. If the
-// generators are not defined over the given ring, the function panics.
-// Internally, this function computes a reduced Gröbner basis.
+// generators are not defined over the given ring, the function returns an
+// InputIncompatible-error.
+//
+// Internally, this computes the greatest common divisor of the generators to
+// find a single generator.
 func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 	const op = "Defining ideal"
 
@@ -92,14 +95,20 @@ func (id *Ideal) Copy() *Ideal {
 	}
 }
 
-// Reduce sets f to f modulo id
-func (id *Ideal) Reduce(f *Polynomial) {
-	// TODO: Ought id to be a Gröbner basis here?
+// Reduce sets f to f modulo id.
+//
+// Note that when a Gröbner basis has not been computed for id, the reduction is
+// not necessarily unique.
+func (id *Ideal) Reduce(f *Polynomial) error {
+	const op = "Reducing polynomial"
+
 	_, r, err := f.QuoRem(id.generator)
 	if err != nil {
-		panic(err)
+		return errors.Wrap(op, errors.Inherit, err)
 	}
-	*f = *r // For some reason using pointers alone is not enough
+
+	*f = *r
+	return nil
 }
 
 /* Copyright 2019 René Bødker Christensen

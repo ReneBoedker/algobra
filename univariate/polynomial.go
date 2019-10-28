@@ -219,10 +219,21 @@ func (f *Polynomial) IsMonomial() bool {
 	return false
 }
 
-// Reduces f in-place
+// Reduces f in-place and sets its error state if needed.
 func (f *Polynomial) reduce() {
-	if f.baseRing.id != nil {
-		f.baseRing.id.Reduce(f)
+	const op = "Reducing polynomial"
+
+	if tmp := hasErr(op, f); tmp != nil {
+		return
+	}
+
+	if f.baseRing.id == nil {
+		return
+	}
+
+	err := f.baseRing.id.Reduce(f)
+	if err != nil {
+		f.err = err
 	}
 }
 
