@@ -5,7 +5,7 @@ This package and its subpackages implement arithmetic in finite fields.
 In itself, this package only provides a convenient method for defining finite fields. Based on the cardinality, it will automatically choose the appropriate underlying implementation. The return value is the interface `ff.Field`.
 
 ## Basic usage
-To use the package, simply define the field -- or fields -- that you want to work:
+To use the package, simply define the field &ndash; or fields &ndash; that you want to work:
 ```go
 gf7, err := finitefield.Define(7)
 if err != nil {
@@ -49,7 +49,7 @@ Additional functions such as `Neg`, `SetNeg`, and `Pow` are also defined. For de
 To test if two elements `a` and `b` are equal, `a == b` will not work since this compares pointers rather than the underlying data. Instead, use `a.Equal(b)`. In addition, the expressions `a.IsZero()`, `a.IsNonzero()`, and `a.IsOne()` provide shorthands for common comparisons.
 
 ### Error handling
-In order to allow method chaining for arithmetic operations -- such as `a.Add(b).Mult(c.Inv())` -- the methods themselves do not return errors. Instead, potential errors are tied to the resulting field element, and the error can be retrieved with the `Err`-method. For instance, you might do something like this:
+In order to allow method chaining for arithmetic operations &ndash; such as `a.Add(b).Mult(c.Inv())` &ndash; the methods themselves do not return errors. Instead, potential errors are tied to the resulting field element, and the error can be retrieved with the `Err`-method. For instance, you might do something like this:
 ``` go
 a:=gf9.Element(0).Inv()
 if a.Err()!=nil {

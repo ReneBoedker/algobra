@@ -34,5 +34,5 @@ Once the quotient ring has been defined, polynomials are defined as before. For 
 Internally, this is achieved by finding a single element that generates the ideal. Hence, calling `Generators` at a later point will not necessarily return the polynomials that were used to define the ideal. Instead, it will return the greatest common divisor of these polynomials.
 
 ### Error handling
-In order to allow method chaining for arithmetic operations -- such as `f.Plus(g).Mult(h.Inv())` -- the methods themselves do not return errors. Instead, potential errors are tied to the resulting polynomial, and the error can be retrieved with the `Err`-method.
+In order to allow method chaining for arithmetic operations &ndash; such as `f.Plus(g).Mult(h.Inv())` &ndash; the methods themselves do not return errors. Instead, potential errors are tied to the resulting polynomial, and the error can be retrieved with the `Err`-method.
 

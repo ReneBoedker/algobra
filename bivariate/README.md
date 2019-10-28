@@ -51,5 +51,5 @@ The following monomial orderings are defined by default.
 Additional orderings can be defined by writing a function with signature `func(deg1, deg2 [2]uint) int`. For more information, see the documentation for the `Order` type.
 
 ### Error handling
-In order to allow method chaining for arithmetic operations -- such as `f.Plus(g).Mult(h.Inv())` -- the methods themselves do not return errors. Instead, potential errors are tied to the resulting polynomial, and the error can be retrieved with the `Err`-method.
+In order to allow method chaining for arithmetic operations &ndash; such as `f.Plus(g).Mult(h.Inv())` &ndash; the methods themselves do not return errors. Instead, potential errors are tied to the resulting polynomial, and the error can be retrieved with the `Err`-method.
 
