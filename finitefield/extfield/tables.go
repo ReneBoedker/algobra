@@ -3,8 +3,8 @@ package extfield
 import (
 	"math/bits"
 
-	"algobra/errors"
-	"algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 // DefaultMaxMem is the default maximal memory consumption for a table of

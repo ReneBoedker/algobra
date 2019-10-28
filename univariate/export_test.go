@@ -1,8 +1,8 @@
 package univariate
 
 import (
-	"algobra/errors"
-	"algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 func (f *Polynomial) SetError(err error) {

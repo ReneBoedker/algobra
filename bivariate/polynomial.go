@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"algobra/errors"
-	"algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 // Polynomial implements bivariate polynomials.

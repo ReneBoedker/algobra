@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"testing"
 
-	"algobra/errors"
+	"github.com/ReneBoedker/algobra/errors"
 )
 
 func TestFactorizePower(t *testing.T) {

@@ -3,8 +3,8 @@
 package conway
 
 import (
-	"algobra/errors"
 	"fmt"
+	"github.com/ReneBoedker/algobra/errors"
 	"regexp"
 	"strconv"
 	"strings"

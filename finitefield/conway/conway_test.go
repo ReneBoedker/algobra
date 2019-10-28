@@ -1,7 +1,7 @@
 package conway
 
 import (
-	"algobra/errors"
+	"github.com/ReneBoedker/algobra/errors"
 	"testing"
 )
 

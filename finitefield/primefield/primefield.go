@@ -6,9 +6,9 @@ import (
 	"math/rand"
 	"time"
 
-	"algobra/auxmath"
-	"algobra/errors"
-	"algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/auxmath"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 func init() {

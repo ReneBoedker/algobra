@@ -3,9 +3,9 @@ package bivariate
 import (
 	"testing"
 
-	"algobra/errors"
-	"algobra/finitefield"
-	"algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 func defineField(char uint, t *testing.T) ff.Field {

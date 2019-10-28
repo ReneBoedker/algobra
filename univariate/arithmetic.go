@@ -1,8 +1,8 @@
 package univariate
 
 import (
-	"algobra/errors"
-	"algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 // Add sets f to the sum of the two polynomials f and g and returns f.

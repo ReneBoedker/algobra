@@ -5,7 +5,7 @@
 package algobra
 
 import (
-	_ "algobra/bivariate"   // Bivariate polynomials
-	_ "algobra/finitefield" // Finite field elements
-	_ "algobra/univariate"  // Univariate polynomials
+	_ "github.com/ReneBoedker/algobra/bivariate"   // Bivariate polynomials
+	_ "github.com/ReneBoedker/algobra/finitefield" // Finite field elements
+	_ "github.com/ReneBoedker/algobra/univariate"  // Univariate polynomials
 )

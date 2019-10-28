@@ -2,11 +2,11 @@
 package finitefield
 
 import (
-	"algobra/auxmath"
-	"algobra/errors"
-	"algobra/finitefield/extfield"
-	"algobra/finitefield/ff"
-	"algobra/finitefield/primefield"
+	"github.com/ReneBoedker/algobra/auxmath"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/extfield"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/finitefield/primefield"
 )
 
 // Define returns a new finite field with the given cardinality.

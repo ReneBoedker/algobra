@@ -3,7 +3,7 @@ package bivariate
 import (
 	"testing"
 
-	"algobra/errors"
+	"github.com/ReneBoedker/algobra/errors"
 )
 
 func TestHasErr(t *testing.T) {

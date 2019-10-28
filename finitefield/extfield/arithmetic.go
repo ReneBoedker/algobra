@@ -1,8 +1,8 @@
 package extfield
 
 import (
-	"algobra/errors"
-	"algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 // Add sets a to the sum of a and b. It then returns a.

@@ -1,9 +1,9 @@
 package univariate
 
 import (
-	"algobra/auxmath"
-	"algobra/errors"
-	"algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/auxmath"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 // Interpolate computes the Lagrange interpolation polynomial evaluating to

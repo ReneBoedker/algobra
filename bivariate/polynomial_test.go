@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 var prg = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))

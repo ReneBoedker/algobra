@@ -4,9 +4,9 @@ import (
 	"math/bits"
 	"math/rand"
 
-	"algobra/errors"
-	"algobra/finitefield/ff"
-	"algobra/univariate"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/univariate"
 )
 
 // Ensure that Element implements the ff.Element interface

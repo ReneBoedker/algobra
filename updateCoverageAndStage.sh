@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for subpkg in $(go list ./... | sed "s/algobra/./g")
+for subpkg in $(go list ./... | sed "s#github.com/ReneBoedker/algobra#.#g")
 do
 	## Run the coverage test
 	go test -coverprofile=$subpkg/coverage.out -coverpkg $subpkg/... $subpkg/... > /dev/null

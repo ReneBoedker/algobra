@@ -3,7 +3,7 @@ package univariate
 import (
 	"fmt"
 
-	"algobra/errors"
+	"github.com/ReneBoedker/algobra/errors"
 )
 
 // Ideal is the implementation of a polynomial ideal.

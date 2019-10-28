@@ -1,4 +1,4 @@
-![coverage-badge](https://img.shields.io/badge/coverage-91.0%25-brightgreen?cacheSeconds=86400&style=flat)
+![coverage-badge](https://img.shields.io/badge/coverage-90.7%25-brightgreen?cacheSeconds=86400&style=flat)
 # Algobra: Bivariate Polynomials
 This package implements bivariate polynomials over prime fields.
 

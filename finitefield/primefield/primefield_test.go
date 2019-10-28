@@ -7,7 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"algobra/errors"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 var prg = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
@@ -183,6 +184,34 @@ func TestConversion(t *testing.T) {
 			t.Errorf("Conversion to uint failed for b = %d. Received %d",
 				val, b.Uint(),
 			)
+		}
+	}
+}
+
+func TestConstructors(t *testing.T) {
+	field := DefineField(5)
+
+	a, _ := field.Element(uint(4))
+	b, _ := field.Element(-1)
+	c, _ := field.ElementFromString("4")
+	d, _ := field.ElementFromString("-1")
+
+	elems := []ff.Element{
+		a, b, c, d,
+		field.ElementFromUnsigned(4),
+		field.ElementFromSigned(-1),
+		field.Zero().SetUnsigned(4),
+		field.One().SetNeg(),
+	}
+
+	for i, a := range elems {
+		for j, b := range elems {
+			if !a.Equal(b) {
+				t.Errorf(
+					"Elements %v and %v are not equal (indices %d and %d)",
+					a, b, i, j,
+				)
+			}
 		}
 	}
 }

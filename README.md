@@ -1,4 +1,4 @@
-![coverage-badge](https://img.shields.io/badge/coverage-92.5%25-brightgreen?cacheSeconds=86400&style=flat)
+![coverage-badge](https://img.shields.io/badge/coverage-92.6%25-brightgreen?cacheSeconds=86400&style=flat)
 # Algobra
 Algobra is a collection of packages that implement finite field arithmetic as well as univariate and bivariate polynomials over finite fields.
 

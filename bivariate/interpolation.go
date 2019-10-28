@@ -1,9 +1,9 @@
 package bivariate
 
 import (
-	"algobra/auxmath"
-	"algobra/errors"
-	"algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/auxmath"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 // Interpolate computes an interpolation polynomial evaluating to values in the

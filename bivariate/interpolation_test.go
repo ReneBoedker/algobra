@@ -3,8 +3,8 @@ package bivariate
 import (
 	"testing"
 
-	"algobra/errors"
-	"algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 func TestLagrangeBasis(t *testing.T) {

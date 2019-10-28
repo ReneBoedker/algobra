@@ -1,8 +1,8 @@
 package bivariate
 
 import (
-	"algobra/errors"
-	"algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 // Plus returns the sum of the two polynomials f and g.

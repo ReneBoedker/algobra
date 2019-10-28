@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"algobra/errors"
-	"algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 // Polynomial denotes a bivariate polynomial.

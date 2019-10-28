@@ -5,12 +5,12 @@ import (
 	"math/rand"
 	"time"
 
-	"algobra/auxmath"
-	"algobra/errors"
-	"algobra/finitefield/conway"
-	"algobra/finitefield/ff"
-	"algobra/finitefield/primefield"
-	"algobra/univariate"
+	"github.com/ReneBoedker/algobra/auxmath"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/conway"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/finitefield/primefield"
+	"github.com/ReneBoedker/algobra/univariate"
 )
 
 func init() {

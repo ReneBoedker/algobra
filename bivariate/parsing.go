@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"algobra/errors"
-	"algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 type monomialMatch struct {

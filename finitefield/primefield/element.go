@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"algobra/errors"
-	"algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
 
 // Ensure that Element implements the ff.Element interface

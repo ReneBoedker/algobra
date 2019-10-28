@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"algobra/errors"
-	"algobra/finitefield"
-	"algobra/finitefield/ff"
-	"algobra/univariate"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/univariate"
 )
 
 var prg = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))

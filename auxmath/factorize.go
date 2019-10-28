@@ -1,7 +1,7 @@
 package auxmath
 
 import (
-	"algobra/errors"
+	"github.com/ReneBoedker/algobra/errors"
 )
 
 // FactorizePrimePower computes p and n such that q=p^n.

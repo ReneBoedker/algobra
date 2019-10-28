@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"algobra/errors"
+	"github.com/ReneBoedker/algobra/errors"
 )
 
 // Ideal is the implementation of a polynomial ideal.
@@ -61,6 +61,9 @@ func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 		)
 	}
 
+	id = id.GroebnerBasis()
+	id.ReduceBasis() // Safe to ignore error (id is Gröbner basis)
+
 	return id, nil
 }
 
@@ -80,9 +83,11 @@ func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 // 	}
 // }
 
-// Reduce sets f to f modulo id
+// Reduce sets f to f modulo id.
+//
+// Note that when a Gröbner basis has not been computed for id, the reduction is
+// not necessarily unique.
 func (id *Ideal) Reduce(f *Polynomial) error {
-	// TODO: Ought id to be a Gröbner basis here?
 	const op = "Reducing polynomial"
 
 	_, r, err := f.QuoRem(id.generators...)

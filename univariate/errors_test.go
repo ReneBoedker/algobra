@@ -3,8 +3,8 @@ package univariate_test
 import (
 	"testing"
 
-	"algobra/errors"
-	"algobra/univariate"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/univariate"
 )
 
 func TestHasErr(t *testing.T) {

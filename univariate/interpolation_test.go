@@ -3,9 +3,9 @@ package univariate_test
 import (
 	"testing"
 
-	"algobra/errors"
-	"algobra/finitefield/ff"
-	"algobra/univariate"
+	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/univariate"
 )
 
 func TestLagrangeBasis(t *testing.T) {
