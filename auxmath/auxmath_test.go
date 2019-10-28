@@ -68,6 +68,7 @@ func TestFactorizePower(t *testing.T) {
 func TestFactorize(t *testing.T) {
 	tests := []uint{
 		0,
+		1,
 		75,
 		139,
 		444,
@@ -75,6 +76,7 @@ func TestFactorize(t *testing.T) {
 		952875,
 	}
 	expected := [][2][]uint{
+		{{0}, {1}},
 		{{}, {}},
 		{{3, 5}, {1, 2}},
 		{{139}, {1}},
@@ -84,11 +86,7 @@ func TestFactorize(t *testing.T) {
 	}
 
 	for i, q := range tests {
-		p, n, err := Factorize(q)
-		if err != nil {
-			t.Errorf("Factorize(%d) returned error", q)
-			return
-		}
+		p, n := Factorize(q)
 		if len(expected[i][0]) != len(p) {
 			t.Errorf(
 				"Factorize(%d) gave factors %v, but expected %v",

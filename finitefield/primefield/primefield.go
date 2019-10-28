@@ -119,9 +119,8 @@ func (f *Field) MultGenerator() ff.Element {
 		return f.One()
 	}
 
-	// The possible orders of elements divide p-1 (we can ignore errors since
-	// input is non-zero)
-	factors, _, _ := auxmath.Factorize(f.Card() - 1)
+	// The possible orders of elements divide p-1
+	factors, _ := auxmath.Factorize(f.Card() - 1)
 
 	var e *Element
 outer:

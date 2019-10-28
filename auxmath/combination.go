@@ -13,7 +13,7 @@ type CombinIter struct {
 	atEnd bool
 }
 
-// NewCombinIter return a new iterator for combinations.
+// NewCombinIter returns a new iterator for k-combinations of n elements.
 func NewCombinIter(n, k int) *CombinIter {
 	s := make([]int, k, k)
 	for i := range s {
@@ -25,13 +25,13 @@ func NewCombinIter(n, k int) *CombinIter {
 	}
 }
 
-// Current returns the current combination.
+// Current returns the slice of indices representing the current combination.
 func (ci *CombinIter) Current() []int {
 	return ci.slice
 }
 
-// Active returns a boolean describing whether all combinations have been
-// considered.
+// Active returns a boolean describing whether there are more combinations that
+// have not been considered.
 func (ci *CombinIter) Active() bool {
 	return !ci.atEnd
 }

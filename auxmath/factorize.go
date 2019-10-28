@@ -50,17 +50,25 @@ func FactorizePrimePower(q uint) (p uint, n uint, err error) {
 }
 
 // Factorize computes the prime factorization of n.
-func Factorize(n uint) (factors, exponents []uint, err error) {
+//
+// The output slice factors contains each distinct prime factor, and exponents
+// contains the corresponding exponents. When n is one, both will be empty,
+// representing the empty product.
+//
+// As an exception, the function will return 0 as the only factor and
+// 1 as the exponent when given zero as input.
+func Factorize(n uint) (factors, exponents []uint) {
 	const op = "Factorizing integer"
+
 	factors = make([]uint, 0)
 	exponents = make([]uint, 0)
 
 	switch n {
 	case 0:
-		return []uint{}, []uint{}, nil
+		return []uint{0}, []uint{1}
 	case 1:
-		// Factorization is the empty sum
-		return
+		// Factorization is the empty product
+		return []uint{}, []uint{}
 	}
 
 	for p := uint(2); p <= 3; p++ {
@@ -73,7 +81,7 @@ func Factorize(n uint) (factors, exponents []uint, err error) {
 			factors = append(factors, p)
 			exponents = append(exponents, exp)
 
-			rFact, rExp, _ := Factorize(n)
+			rFact, rExp := Factorize(n)
 			factors = append(factors, rFact...)
 			exponents = append(exponents, rExp...)
 
@@ -93,7 +101,7 @@ func Factorize(n uint) (factors, exponents []uint, err error) {
 				factors = append(factors, p)
 				exponents = append(exponents, exp)
 
-				rFact, rExp, _ := Factorize(n)
+				rFact, rExp := Factorize(n)
 				factors = append(factors, rFact...)
 				exponents = append(exponents, rExp...)
 

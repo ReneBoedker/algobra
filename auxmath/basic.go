@@ -1,4 +1,7 @@
 // Package auxmath contains a number of auxiliary mathematical functions.
+//
+// These functions are mainly intended for internal use in the algobra package,
+// but because of their generality, they have been exported.
 package auxmath
 
 import (
@@ -22,8 +25,6 @@ func BoundSqrt(a uint) uint {
 }
 
 // boundLog2 returns an upper bound on the logarithm of a in base 2.
-//
-//
 func boundLog2(a uint) uint {
 	if a == 0 {
 		return 0
@@ -36,7 +37,10 @@ func boundLog2(a uint) uint {
 	return uint(bits.Len(a))
 }
 
-// Pow returns a to the power of n
+// Pow returns a to the power of n.
+//
+// It returns an Overflow-error if the input is likely to overflow the uint
+// type.
 func Pow(a, n uint) (uint, error) {
 	const op = "Computing power of unsigned integer"
 
