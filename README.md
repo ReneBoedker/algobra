@@ -12,6 +12,9 @@ go get github.com/ReneBoedker/algobra/...
 ```
 Note that this top-level package does not provide any functionality in itself. It simply contains documentation for the package as a whole.
 
+## Example usage
+For examples on how to use the package, please refer to the [documentation](https://godoc.org/github.com/ReneBoedker/algobra).
+
 ## References
 * Gathen, Joachim von zur &amp; Gerhard, Jürgen: _Modern Computer Algebra_, 3rd edition. Cambridge University Press. ISBN 978-1-107-03903-2.
 * Lübeck, Frank: [_Conway polynomials for finite fields_](http://www.math.rwth-aachen.de/~Frank.Luebeck/data/ConwayPol/index.html?LANG=en)
