@@ -8,6 +8,10 @@ Algobra is a collection of packages that implement finite field arithmetic as we
 ## Installation
 To install the full set of packages, you can run
 ```sh
-go get github.com/ReneBoedker/algobra
+go get github.com/ReneBoedker/algobra/...
 ```
-Note that this top-level package does not provide any functionality in itself. It simply imports each subpackage to allow easier installation.
+Note that this top-level package does not provide any functionality in itself. It simply contains documentation for the package as a whole.
+
+## References
+* Gathen, Joachim von zur &amp; Gerhard, Jürgen: _Modern Computer Algebra_, 3rd edition. Cambridge University Press. ISBN 978-1-107-03903-2.
+* Lübeck, Frank: [_Conway polynomials for finite fields_](http://www.math.rwth-aachen.de/~Frank.Luebeck/data/ConwayPol/index.html?LANG=en)
