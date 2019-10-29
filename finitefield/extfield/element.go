@@ -37,6 +37,10 @@ func (f *Field) One() ff.Element {
 
 // RandElement returns a pseudo-random element in f.
 //
+// This function uses the default source from the math/rand package. The seed is
+// set automatically when loading the primefield package, but a new seed can be
+// set by calling rand.Seed().
+//
 // The pseudo-random generator used is not cryptographically safe.
 func (f *Field) RandElement() ff.Element {
 	prg := func() uint {
@@ -57,7 +61,7 @@ func (f *Field) RandElement() ff.Element {
 }
 
 // Element defines a new element over f with value val, which must be either
-// uint, int, []uint or []int.
+// uint, int, []uint, []int, or string.
 //
 // If type of val is unsupported, the function returns an Input-error.
 func (f *Field) Element(val interface{}) (ff.Element, error) {
@@ -72,6 +76,8 @@ func (f *Field) Element(val interface{}) (ff.Element, error) {
 		return f.ElementFromUnsignedSlice(v), nil
 	case []int:
 		return f.ElementFromSignedSlice(v), nil
+	case string:
+		return f.ElementFromString(v)
 	default:
 		return nil, errors.New(
 			op, errors.Input,

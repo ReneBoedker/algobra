@@ -34,14 +34,15 @@ func (f *Polynomial) Coef(deg int) ff.Element {
 	return f.BaseField().Zero()
 }
 
-// SetCoef sets the coefficient of the monomial with degree deg in f to val.
-func (f *Polynomial) SetCoef(deg int, val ff.Element) {
+// SetCoef sets the coefficient of the monomial with degree deg in f to val. It
+// returns f itself.
+func (f *Polynomial) SetCoef(deg int, val ff.Element) *Polynomial {
 	if deg <= f.Ld() {
 		f.coefs[deg] = val.Copy()
 		if val.IsZero() {
 			f.reslice()
 		}
-		return
+		return f
 	}
 	// Otherwise, grow the slice to needed length
 	grow := make([]ff.Element, deg-f.Ld())
@@ -50,6 +51,8 @@ func (f *Polynomial) SetCoef(deg int, val ff.Element) {
 	}
 	f.coefs = append(f.coefs, grow...)
 	f.coefs[deg] = val.Copy()
+
+	return f
 }
 
 // IncrementCoef increments the coefficient of the monomial with degree deg in f

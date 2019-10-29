@@ -32,6 +32,10 @@ func (f *Field) One() ff.Element {
 
 // RandElement returns a pseudo-random element in f.
 //
+// This function uses the default source from the math/rand package. The seed is
+// set automatically when loading the primefield package, but a new seed can be
+// set by calling rand.Seed().
+//
 // The pseudo-random generator used is not cryptographically safe.
 func (f *Field) RandElement() ff.Element {
 	if bits.UintSize == 32 {
@@ -41,7 +45,7 @@ func (f *Field) RandElement() ff.Element {
 }
 
 // Element defines a new element over f with value val, which must be either
-// uint or int.
+// uint, int, or string.
 //
 // If type of val is unsupported, the function returns an Input-error.
 func (f *Field) Element(val interface{}) (ff.Element, error) {
@@ -192,7 +196,8 @@ func (a *Element) String() string {
 	return strconv.FormatUint(uint64(a.val), 10)
 }
 
-// NTerms returns the number of terms in the representation of a.
+// NTerms returns the number of terms in the representation of a. For prime
+// fields, this is always 1.
 func (a *Element) NTerms() uint {
 	return 1
 }

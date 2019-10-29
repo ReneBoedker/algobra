@@ -9,7 +9,8 @@ import (
 	"github.com/ReneBoedker/algobra/finitefield/primefield"
 )
 
-// Define returns a new finite field with the given cardinality.
+// Define returns a new finite field with the given cardinality. It will
+// automatically choose the appropriate implementation depending on the input.
 //
 // If card is not a prime power, an InputValue-error is returned.
 func Define(card uint) (ff.Field, error) {
