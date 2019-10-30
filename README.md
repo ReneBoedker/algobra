@@ -16,6 +16,6 @@ Note that this top-level package does not provide any functionality in itself. I
 For examples on how to use the package, please refer to the [documentation](https://godoc.org/github.com/ReneBoedker/algobra).
 
 ## References
-* Gathen, Joachim von zur &amp; Gerhard, Jürgen: _Modern Computer Algebra_(2013), 3rd edition. Cambridge University Press. ISBN 978-1-107-03903-2.
-* Lauritzen, Niels: _Concrete Abstract Algebra_(2003). Cambridge University Press. ISBN 978-0-521-53410-9
+* Gathen, Joachim von zur &amp; Gerhard, Jürgen: _Modern Computer Algebra_ (2013), 3rd edition. Cambridge University Press. ISBN 978-1-107-03903-2.
+* Lauritzen, Niels: _Concrete Abstract Algebra_ (2003). Cambridge University Press. ISBN 978-0-521-53410-9
 * Lübeck, Frank: [_Conway polynomials for finite fields_](http://www.math.rwth-aachen.de/~Frank.Luebeck/data/ConwayPol/index.html?LANG=en)
