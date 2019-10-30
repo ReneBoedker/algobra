@@ -32,8 +32,8 @@ func (r *QuotientRing) String() string {
 		return r.ring.String()
 	}
 	return fmt.Sprintf(
-		"Quotient ring of bivariate polynomials over %v modulo %v",
-		r.ring, r.id,
+		"Quotient ring of bivariate polynomials over %v modulo %s",
+		r.baseField, r.id.shortString(),
 	)
 }
 

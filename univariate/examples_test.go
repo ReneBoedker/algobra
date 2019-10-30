@@ -9,7 +9,7 @@ import (
 	"github.com/ReneBoedker/algobra/univariate"
 )
 
-// Set up the finitefield of 4 elements for examples where the cardinality does
+// Set up the finitefield of 9 elements for examples where the cardinality does
 // not matter
 func getGf9() ff.Field {
 	out, _ := finitefield.Define(9)

@@ -94,6 +94,87 @@ func TestGroebner1(t *testing.T) {
 	}
 }
 
+// Examples 5.7.1 and 5.8.4 in [Lauritzen]
+func TestGroebner2(t *testing.T) {
+	field := defineField(9, t)
+	r := DefRing(field, Lex(true))
+
+	generators := []*Polynomial{
+		r.Polynomial(map[[2]uint]ff.Element{
+			{2, 0}: field.One(),
+			{0, 1}: field.One(),
+		}),
+		r.Polynomial(map[[2]uint]ff.Element{
+			{2, 1}: field.One(),
+			{0, 0}: field.One(),
+		}),
+	}
+
+	id, _ := r.NewIdeal(generators...)
+
+	if id.IsGroebner() {
+		t.Errorf("IsGroebner returned true, but false was expected")
+	}
+
+	id = id.GroebnerBasis()
+
+	// Add the final generator
+	generators = append(
+		generators,
+		r.Polynomial(map[[2]uint]ff.Element{
+			{0, 2}: field.One(),
+			{0, 0}: field.One().SetNeg(),
+		}),
+	)
+
+	if len(id.Generators()) != 3 {
+		t.Errorf("Gröbner basis has %d generators, but expected 3", len(id.Generators()))
+	}
+outer:
+	for _, g := range generators {
+		for _, h := range id.generators {
+			if g.Equal(h) {
+				continue outer
+			}
+		}
+		t.Errorf("Generator %v was not in the Gröbner basis", g)
+	}
+
+	if id.IsMinimal() {
+		t.Errorf("IsMinimal returned true, but false was expected")
+	}
+	if id.IsReduced() {
+		t.Errorf("IsReduced returned true, but false was expected")
+	}
+
+	// Now compute the reduced basis
+	id.ReduceBasis()
+	// We expect the second generator to be removed
+	generators = append(generators[:1], generators[2])
+	if len(id.Generators()) != 2 {
+		t.Errorf(
+			"Reduced Gröbner basis has %d generators, but expected 3",
+			len(id.Generators()),
+		)
+	}
+outerReduced:
+	for _, g := range generators {
+		for _, h := range id.generators {
+			if g.Equal(h) {
+				continue outerReduced
+			}
+		}
+		t.Errorf("Generator %v was not in the reduced Gröbner basis", g)
+	}
+
+	if !id.IsMinimal() {
+		t.Errorf("IsMinimal returned false, but true was expected")
+	}
+	if !id.IsReduced() {
+		t.Errorf("IsReduced returned false, but true was expected")
+	}
+}
+
 func TestQuotientErrors(t *testing.T) {
 	field1 := defineField(49, t)
 	field2 := defineField(25, t)

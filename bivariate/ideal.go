@@ -16,20 +16,31 @@ type Ideal struct {
 	isReduced  int8 // 0=undecided, 1=true, -1=false
 }
 
-// String returns the string representation of id.
-func (id *Ideal) String() string {
+// shortString is an internal method returning a short string representation of
+// id.
+func (id *Ideal) shortString() string {
 	var sb strings.Builder
-	for _, g := range id.generators {
+	fmt.Fprint(&sb, "<")
+
+	for i, g := range id.generators {
+		if i > 0 {
+			fmt.Fprint(&sb, ", ")
+		}
 		fmt.Fprint(&sb, g)
 	}
-	return fmt.Sprintf("Ideal <%s> over %v", sb.String(), id.ring)
+
+	fmt.Fprint(&sb, ">")
+	return sb.String()
+}
+
+// String returns the string representation of id.
+func (id *Ideal) String() string {
+	return fmt.Sprintf("Ideal %s in %v", id.shortString(), id.ring)
 }
 
 // NewIdeal returns a new polynomial ideal over the given ring. If the
 // generators are not defined over the given ring, the function returns an
 // InputIncompatible-error.
-//
-// Internally, this function computes a reduced Gröbner basis.
 func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 	const op = "Defining ideal"
 	id := &Ideal{
@@ -61,34 +72,44 @@ func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 		)
 	}
 
-	id = id.GroebnerBasis()
-	id.ReduceBasis() // Safe to ignore error (id is Gröbner basis)
-
 	return id, nil
 }
 
 // Copy creates a copy of id.
-// func (id *Ideal) Copy() *Ideal {
-// 	generators := make([]*Polynomial, len(id.generators), len(id.generators))
-// 	for i, g := range id.generators {
-// 		generators[i] = g.Copy()
-// 	}
+func (id *Ideal) Copy() *Ideal {
+	generators := make([]*Polynomial, len(id.generators), len(id.generators))
+	for i, g := range id.generators {
+		generators[i] = g.Copy()
+	}
 
-// 	return &Ideal{
-// 		ring:       id.ring,
-// 		generators: generators,
-// 		isGroebner: id.isGroebner,
-// 		isMinimal:  id.isMinimal,
-// 		isReduced:  id.isReduced,
-// 	}
-// }
+	return &Ideal{
+		ring:       id.ring,
+		generators: generators,
+		isGroebner: id.isGroebner,
+		isMinimal:  id.isMinimal,
+		isReduced:  id.isReduced,
+	}
+}
+
+// Generators returns a copy of the generators of id.
+func (id *Ideal) Generators() []*Polynomial {
+	gens := make([]*Polynomial, len(id.generators), len(id.generators))
+	for i, g := range id.generators {
+		gens[i] = g.Copy()
+	}
+	return gens
+}
 
 // Reduce sets f to f modulo id.
 //
-// Note that when a Gröbner basis has not been computed for id, the reduction is
-// not necessarily unique.
+// Note that when the generators of id do not form a Gröbner basis, such a basis
+// will be computed. This alters the representation of id.
 func (id *Ideal) Reduce(f *Polynomial) error {
 	const op = "Reducing polynomial"
+
+	if !id.IsGroebner() {
+		id = id.GroebnerBasis()
+	}
 
 	_, r, err := f.QuoRem(id.generators...)
 	if err != nil {

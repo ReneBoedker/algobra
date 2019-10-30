@@ -50,6 +50,10 @@ func SPolynomial(f, g *Polynomial) (*Polynomial, error) {
 // GroebnerBasis computes a Gröbner basis for id. The result is returned as a
 // new ideal object.
 func (id *Ideal) GroebnerBasis() *Ideal {
+	if id.isGroebner == 1 {
+		return id.Copy()
+	}
+
 	gb := make([]*Polynomial, len(id.generators))
 	for i, g := range id.generators {
 		gb[i] = g.Copy()
@@ -62,8 +66,10 @@ func (id *Ideal) GroebnerBasis() *Ideal {
 				if j <= i {
 					continue
 				}
-				r, _ := SPolynomial(f, g)
-				id.Reduce(r)
+				s, _ := SPolynomial(f, g)
+				// Compute the remainder of s. Ignoring error is OK since ideal
+				// generators are compatible
+				_, r, _ := s.QuoRem(gb...)
 				if r.IsNonzero() {
 					newGens = append(newGens, r)
 				}
@@ -84,6 +90,46 @@ func (id *Ideal) GroebnerBasis() *Ideal {
 	}
 }
 
+// IsGroebner returns a boolean describing whether the generators of id form a
+// Gröbner basis.
+func (id *Ideal) IsGroebner() (b bool) {
+	switch id.isGroebner {
+	case 1:
+		return true
+	case -1:
+		return false
+	}
+
+	// Auto-set isGroebner to the return value
+	defer func() {
+		if b {
+			id.isGroebner = 1
+		} else {
+			id.isGroebner = -1
+		}
+	}()
+
+	// Otherwise, check each of the S-polynomials
+	for i, f := range id.generators {
+		for j, g := range id.generators {
+			if j <= i {
+				continue
+			}
+			s, _ := SPolynomial(f, g)
+			// Compute the remainder of s. Ignoring error is OK since ideal
+			// generators are compatible
+			_, r, _ := s.QuoRem(id.generators...)
+			if r.IsNonzero() {
+				// Non-zero S-polynomial was found. Not a Gröbner basis
+				return false
+			}
+		}
+	}
+
+	// All S-polynomials reduce to zero. Generators form Gröbner basis
+	return true
+}
+
 // MinimizeBasis transforms the generators of id into a minimal Gröbner basis.
 //
 // If the generators of id do not form a Gröbner basis, the function returns an
@@ -91,21 +137,19 @@ func (id *Ideal) GroebnerBasis() *Ideal {
 func (id *Ideal) MinimizeBasis() error {
 	const op = "Minimizing Gröbner basis"
 
-	if id.isGroebner != 1 {
+	if !id.IsGroebner() {
 		return errors.New(
 			op, errors.InputValue,
 			"Given ideal is not a Gröbner basis.",
 		)
 	}
 
-	lts := make([]*Polynomial, len(id.generators))
-	for i := range id.generators {
-		id.generators[i] = id.generators[i].Normalize()
-		lts[i] = id.generators[i].Lt()
-	}
+	lts := id.leadingTerms()
 
 	for i := 0; i < len(id.generators); {
 		if _, r, _ := lts[i].quoRemWithIgnore(i, lts...); r.IsZero() {
+			// The leading term of the i'th generator is spanned by the others.
+			// Remove this generator from the list.
 			id.generators = append(id.generators[:i], id.generators[i+1:]...)
 			lts = append(lts[:i], lts[i+1:]...)
 		} else {
@@ -117,6 +161,51 @@ func (id *Ideal) MinimizeBasis() error {
 	return nil
 }
 
+// IsMinimal returns a boolean describing whether the generators of id form a
+// minimal Gröbner basis.
+func (id *Ideal) IsMinimal() (b bool) {
+	switch id.isMinimal {
+	case 1:
+		return true
+	case -1:
+		return false
+	}
+	// Auto-set isMinimal to the return value
+	defer func() {
+		if b {
+			id.isMinimal = 1
+		} else {
+			id.isMinimal = -1
+		}
+	}()
+
+	if !id.IsGroebner() {
+		return false
+	}
+
+	lts := id.leadingTerms()
+
+	for i, f := range lts {
+		if _, r, _ := f.quoRemWithIgnore(i, lts...); r.IsZero() {
+			// The leading term of the i'th generator is spanned by the others.
+			// Thus the basis is not minimal
+			return false
+		}
+	}
+
+	return true
+}
+
+// leadingTerms returns the leading terms of the generators of id.
+func (id *Ideal) leadingTerms() []*Polynomial {
+	lts := make([]*Polynomial, len(id.generators))
+	for i := range id.generators {
+		id.generators[i] = id.generators[i].Normalize()
+		lts[i] = id.generators[i].Lt()
+	}
+	return lts
+}
+
 // ReduceBasis transforms the generators of id into a reduced Gröbner basis.
 //
 // If the generators of id do not form a Gröbner basis, the function returns an
@@ -124,14 +213,14 @@ func (id *Ideal) MinimizeBasis() error {
 func (id *Ideal) ReduceBasis() error {
 	const op = "Reducing Gröbner basis"
 
-	if id.isGroebner != 1 {
+	if !id.IsGroebner() {
 		return errors.New(
 			op, errors.InputValue,
 			"Given ideal is not a Gröbner basis.",
 		)
 	}
 	if id.isMinimal != 1 {
-		_ = id.MinimizeBasis()
+		_ = id.MinimizeBasis() // Ignore error since id is Gröbner basis
 	}
 
 	for i := range id.generators {
@@ -140,6 +229,38 @@ func (id *Ideal) ReduceBasis() error {
 
 	id.isReduced = 1
 	return nil
+}
+
+// IsReduced returns a boolean describing whether the generators of id form a
+// reduced Gröbner basis.
+func (id *Ideal) IsReduced() (b bool) {
+	switch id.isReduced {
+	case 1:
+		return true
+	case -1:
+		return false
+	}
+	// Auto-set isReduced to the return value
+	defer func() {
+		if b {
+			id.isReduced = 1
+		} else {
+			id.isReduced = -1
+		}
+	}()
+
+	if !id.IsMinimal() {
+		return false
+	}
+
+	for i := range id.generators {
+		_, r, _ := id.generators[i].quoRemWithIgnore(i, id.generators...)
+		if r.IsNonzero() {
+			return false
+		}
+	}
+
+	return true
 }
 
 // Write f=qg if possible; otherwise set ok=false
