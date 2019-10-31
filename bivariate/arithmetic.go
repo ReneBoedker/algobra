@@ -143,7 +143,7 @@ func (f *Polynomial) Normalize() *Polynomial {
 }
 
 // Scale scales all coefficients of f by the field element c and returns the
-// result as a new polynomial.
+// result as a new polynomial. See also SetScale.
 func (f *Polynomial) Scale(c ff.Element) *Polynomial {
 	if c.IsZero() {
 		return f.baseRing.Zero()
@@ -156,9 +156,9 @@ func (f *Polynomial) Scale(c ff.Element) *Polynomial {
 	return g
 }
 
-// ScaleInPlace scales all coefficients of f by the field element c and returns
-// f.
-func (f *Polynomial) ScaleInPlace(c ff.Element) *Polynomial {
+// SetScale scales all coefficients of f by the field element c and returns
+// f. See also Scale.
+func (f *Polynomial) SetScale(c ff.Element) *Polynomial {
 	if c.IsZero() {
 		return f.baseRing.Zero()
 	}

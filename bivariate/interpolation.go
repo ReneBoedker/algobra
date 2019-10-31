@@ -45,7 +45,7 @@ func (r *QuotientRing) Interpolate(
 		for j := 0; j < 2; j++ {
 			tmp.Mult(r.lagrangeBasis(dist, p[j], j))
 		}
-		f.Add(tmp.ScaleInPlace(values[i]))
+		f.Add(tmp.SetScale(values[i]))
 
 	}
 	if f.Err() != nil {
@@ -134,7 +134,7 @@ func (r *QuotientRing) lagrangeBasis(
 		denom.Mult(ignore.Minus(p))
 	}
 
-	f.ScaleInPlace(denom.Inv())
+	f.SetScale(denom.Inv())
 	return f
 }
 

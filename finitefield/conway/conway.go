@@ -11,7 +11,8 @@ import (
 )
 
 // Lookup returns the coefficients for a Conway polynomial for the finite field
-// of characteristic char and extension degree extDeg.
+// of characteristic char and extension degree extDeg. The element at position i
+// is the coefficient of X^i.
 //
 // If no such polynomial is in the database, an InputValue-error is returned.
 func Lookup(char, extDeg uint) (coefs []uint, err error) {

@@ -17,9 +17,15 @@ func (id *Ideal) Generator() *Polynomial {
 	return id.generator.Copy()
 }
 
-// String returns the string representation of id.
+// ShortString returns a short string description of id. More precisely, it
+// returns the string representation of the generators.
+func (id *Ideal) ShortString() string {
+	return "<" + id.generator.String() + ">"
+}
+
+// String returns the string representation of id. See also ShortString.
 func (id *Ideal) String() string {
-	return fmt.Sprintf("Ideal <%v> over %v", id.generator, id.ring)
+	return fmt.Sprintf("Ideal %s of %v", id.ShortString(), id.ring)
 }
 
 // NewIdeal returns a new polynomial ideal over the given ring. If the

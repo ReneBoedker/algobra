@@ -16,9 +16,9 @@ type Ideal struct {
 	isReduced  int8 // 0=undecided, 1=true, -1=false
 }
 
-// shortString is an internal method returning a short string representation of
-// id.
-func (id *Ideal) shortString() string {
+// ShortString returns a short string description of id. More precisely, it
+// returns the string representation of the generators.
+func (id *Ideal) ShortString() string {
 	var sb strings.Builder
 	fmt.Fprint(&sb, "<")
 
@@ -33,9 +33,9 @@ func (id *Ideal) shortString() string {
 	return sb.String()
 }
 
-// String returns the string representation of id.
+// String returns the string representation of id. See also ShortString.
 func (id *Ideal) String() string {
-	return fmt.Sprintf("Ideal %s in %v", id.shortString(), id.ring)
+	return fmt.Sprintf("Ideal %s of %v", id.ShortString(), id.ring)
 }
 
 // NewIdeal returns a new polynomial ideal over the given ring. If the
