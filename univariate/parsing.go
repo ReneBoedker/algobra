@@ -75,9 +75,15 @@ func polynomialStringToMap(s string, varName *string, field ff.Field) (map[int]f
 	const op = "Parsing polynomial from string"
 
 	pattern, err := regexp.Compile(
-		`\s*(?P<sign>\+|-)?\s*` +
-			`(?P<coef>` + field.RegexElement(true) + `)?\s*\*?\s*` +
-			`(?:(?P<name>(?i:` + regexp.QuoteMeta(*varName) + `))\^?(?P<deg1>[0-9]*))?\s*`,
+		`\s*(?P<sign>\+|-)?\s*` + // A sign (or start of string)
+			`(?P<coef>` + field.RegexElement(true) + `)?` + // A coefficient
+
+			`\s*\*?\s*` + // Optional multiplication sign
+
+			`(?:` + // Begin optional group
+			`(?P<var>(?i:` + regexp.QuoteMeta(*varName) + `))` + // Variable name
+			`\^?(?P<deg>[0-9]*)` + // Optional exponent
+			`)?\s*`, // End optional group
 	)
 	if err != nil {
 		return nil, errors.New(

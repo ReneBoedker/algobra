@@ -1,5 +1,5 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/ReneBoedker/algobra)](https://goreportcard.com/report/github.com/ReneBoedker/algobra)
-![coverage-badge](https://img.shields.io/badge/coverage-92.3%25-brightgreen?cacheSeconds=86400&style=flat)
+![coverage-badge](https://img.shields.io/badge/coverage-93.3%25-brightgreen?cacheSeconds=86400&style=flat)
 [![GoDoc](https://godoc.org/github.com/ReneBoedker/algobra/univariate?status.svg)](https://godoc.org/github.com/ReneBoedker/algobra/univariate)
 # Algobra: Univariate Polynomials
 This package implements univariate polynomials over prime fields.
@@ -8,7 +8,7 @@ This package implements univariate polynomials over prime fields.
 To perform computations on univariate polynomials, first define the finite field and the polynomial ring. Polynomials can then be constructed in several different ways.
 ```go
 field, _ := finitefield.Define(7)	// Ignoring errors in example
-ring := bivariate.DefRing(field)	// Use lex ordering with X>Y
+ring := bivariate.DefRing(field)
 
 // Define f = 3X^5+2X^2+6
 f := ring.PolynomialFromUnsigned([]uint{6,0,2,0,0,3})

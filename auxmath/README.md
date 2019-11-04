@@ -3,3 +3,5 @@
 [![GoDoc](https://godoc.org/github.com/ReneBoedker/algobra/auxmath?status.svg)](https://godoc.org/github.com/ReneBoedker/algobra/auxmath)
 # Algobra: Auxiliary Maths Functions
 This package contains a number of auxiliary mathematical functions.
+
+These functions are mainly intended for internal use in the algobra package, but because of their generality, they have been exported.
