@@ -2,7 +2,9 @@ package binfield
 
 import (
 	"fmt"
+	"math/bits"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/ReneBoedker/algobra/auxmath"
@@ -23,6 +25,9 @@ type Field struct {
 	conwayPoly uint
 	varName    string
 }
+
+// Ensure that binary fields satisfy the ff.Field interface
+var _ ff.Field = &Field{}
 
 // Define creates a new finite field with given cardinality.
 //
@@ -51,6 +56,13 @@ func Define(card uint) (*Field, error) {
 		)
 	}
 
+	if extDeg > bits.UintSize/2 {
+		return nil, errors.New(
+			op, errors.InputTooLarge,
+			"%d exceeds maximal field size (2^%d)", card, bits.UintSize/2,
+		)
+	}
+
 	conwayCoefs, err := conway.Lookup(2, extDeg)
 	if err != nil {
 		return nil, errors.Wrap(op, errors.Inherit, err)
@@ -74,6 +86,57 @@ func (f *Field) String() string {
 	return fmt.Sprintf("Finite field of %d elements", f.Card())
 }
 
+// SetVarName sets the variable name to be used in the given quotient ring.
+//
+// Leading and trailing whitespace characters are removed before setting the
+// variable name. If the string consists solely of whitespace characters, an
+// InputValue-error is returned.
+func (f *Field) SetVarName(varName string) error {
+	// TODO: Do more strings have to be disallowed (eg. +, -)?
+	const op = "Setting variable name"
+
+	varName = strings.TrimSpace(varName)
+	if len(varName) == 0 {
+		return errors.New(
+			op, errors.InputValue,
+			"Cannot use whitespace characters as variable name",
+		)
+	}
+	f.varName = varName
+	return nil
+}
+
+// VarName returns the string used to represent the variable of r.
+func (f *Field) VarName() string {
+	return f.varName
+}
+
+// RegexElement returns a string containing a regular expression describing an
+// element of f.
+//
+// The input argument requireParens indicates whether parentheses are required
+// around elements containing several terms. This has no effect for prime fields.
+func (f *Field) RegexElement(requireParens bool) string {
+	termPattern := `(?:[0-9]*(?:` + f.VarName() + `(?:\^?[0-9]+)?)|[0-9]+)`
+	moreTerms := `(?:` + // Optional group of additional terms consisting of
+		`\s*(?:\+|-)\s*` + // a sign
+		termPattern + // and a term
+		`)*`
+
+	var pattern string
+
+	if requireParens {
+		pattern = `(?:\(\s*` + termPattern + moreTerms + `\s*\)|` + // several
+			// terms in parentheses
+			termPattern + `)` // Or single term
+
+	} else {
+		pattern = termPattern + moreTerms
+	}
+
+	return pattern
+}
+
 // Char returns the characteristic of f.
 func (f *Field) Char() uint {
 	return 2
@@ -88,6 +151,18 @@ func (f *Field) Card() uint {
 func (f *Field) MultGenerator() ff.Element {
 	// The field is defined from a Conway polynomial, so alpha is a generator
 	return f.ElementFromBits(2)
+}
+
+// Elements returns a slice containing all elements of f.
+func (f *Field) Elements() []ff.Element {
+	out := make([]ff.Element, f.Card(), f.Card())
+	out[0] = f.Zero()
+
+	gen := f.MultGenerator()
+	for i, e := uint(1), f.One(); i < f.Card(); i, e = i+1, e.Mult(gen) {
+		out[i] = e.Copy()
+	}
+	return out
 }
 
 // checkErrAndCompatible is a wrapper for the two functions hasErr and

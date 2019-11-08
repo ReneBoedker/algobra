@@ -140,9 +140,7 @@ func TestArithmeticErrors(t *testing.T) {
 func TestPow(t *testing.T) {
 	field := defineField(9)
 	for rep := 0; rep < 50; rep++ {
-		a0 := uint(prg.Uint32())
-		a1 := uint(prg.Uint32())
-		a := field.ElementFromUnsignedSlice([]uint{a0, a1})
+		a := field.RandElement()
 
 		n := uint(prg.Uint32()) % 20
 

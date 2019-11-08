@@ -9,11 +9,12 @@ import (
 
 // reduce computes the reduction of a modulo the Conway polynomial of the field,
 // and sets a to this value.
-func (a *Element) reduce() {
+func (a *Element) reduce() *Element {
 	conwayLen := uint(bits.Len(a.field.conwayPoly))
 	for l := uint(bits.Len(a.val)); l > a.field.extDeg; l = uint(bits.Len(a.val)) {
 		a.val ^= (a.field.conwayPoly << (l - conwayLen))
 	}
+	return a
 }
 
 // Add sets a to the sum of a and b. It then returns a.
@@ -176,12 +177,67 @@ func (a *Element) Pow(n uint) ff.Element {
 	return out
 }
 
+// bitQuoRem computes the quotient and remainder of a divided by b when viewed
+// as binary polynomials.
+func bitQuoRem(a, b uint) (quo, rem uint) {
+	l := bits.Len(b)
+	for a > 0 {
+		if tmp := bits.Len(a); tmp >= l {
+			quo ^= 1 << (tmp - l)
+			a ^= b << (tmp - l)
+		} else {
+			break
+		}
+	}
+	return quo, a
+}
+
+// bitProd computes the product of a and b when viewed as binary polynomials.
+func bitProd(a, b uint) (out uint) {
+	for ; b > 0; b >>= 1 {
+		out ^= a * (b & 1)
+		a <<= 1
+	}
+	return out
+}
+
 // Inv returns the inverse of a.
 //
 // If a is the zero element, the return value is an element with
 // InputValue-error as error status.
 func (a *Element) Inv() ff.Element {
 	const op = "Inverting element"
-	// TODO
-	return a
+
+	if a.IsZero() {
+		o := a.field.Zero()
+		out := o.(*Element)
+		out.err = errors.New(
+			op, errors.InputValue,
+			"Cannot invert zero element",
+		)
+		return out
+	}
+
+	if a.IsOne() {
+		return a.Copy()
+	}
+
+	// Implemented using the extended euclidean algorithm (see for instance
+	// [GG13; Algorithm 3.14])
+	r0 := a.field.conwayPoly
+	r1 := a.val
+
+	i0 := uint(0)
+	i1 := uint(1)
+	for r1 > 0 {
+		quo, rem := bitQuoRem(r0, r1)
+
+		r0, r1 = r1, rem
+		i0, i1 = i1, i0^bitProd(i1, quo)
+	}
+
+	return (&Element{
+		field: a.field,
+		val:   i0,
+	}).reduce()
 }

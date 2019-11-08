@@ -30,9 +30,7 @@ type Field struct {
 
 // Define creates a new finite field with given cardinality.
 //
-// If card is not a prime power, the package returns an InputValue-error. If
-// card implies that multiplication will overflow uint, the function returns an
-// InputTooLarge-error.
+// If card is not a prime power, the package returns an InputValue-error.
 func Define(card uint) (*Field, error) {
 	const op = "Defining prime field"
 

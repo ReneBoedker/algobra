@@ -6,8 +6,12 @@ import (
 	"math/rand"
 	"strings"
 
+	"github.com/ReneBoedker/algobra/errors"
 	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
+
+// Ensure that elements in binary fields satisfy the ff.Element interface
+var _ ff.Element = &Element{}
 
 // Element is the implementation of an element in a finite field.
 type Element struct {
@@ -55,6 +59,28 @@ func (f *Field) RandElement() ff.Element {
 	}
 }
 
+// Element defines a new element over f with value val, which must be either
+// uint, int, or string.
+//
+// If type of val is unsupported, the function returns an Input-error.
+func (f *Field) Element(val interface{}) (ff.Element, error) {
+	const op = "Defining element"
+
+	switch v := val.(type) {
+	case uint:
+		return f.ElementFromUnsigned(v), nil
+	case int:
+		return f.ElementFromSigned(v), nil
+	case string:
+		return f.ElementFromString(v)
+	default:
+		return nil, errors.New(
+			op, errors.Input,
+			"Cannot define element in %v from type %T", f, v,
+		)
+	}
+}
+
 // ElementFromBits defines a new element over f with value specified by the
 // bitstring val.
 //
@@ -78,6 +104,31 @@ func (f *Field) ElementFromUnsigned(val uint) ff.Element {
 		field: f,
 		val:   val % 2,
 	}
+}
+
+// ElementFromSigned defines a new element over f with value val.
+//
+// The returned element will be reduced modulo the characteristic automatically.
+// That is, the additive identity is returned if val is even, and the
+// multiplicative identity is returned if val is odd.
+func (f *Field) ElementFromSigned(val int) ff.Element {
+	val %= 2
+	if val < 0 {
+		val += 2
+	}
+	return &Element{
+		field: f,
+		val:   uint(val),
+	}
+}
+
+// ElementFromString defines a new element over f from the given string.
+//
+// A Parsing-error is returned if the string cannot be parsed.
+func (f *Field) ElementFromString(val string) (ff.Element, error) {
+	const op = "Defining element from string"
+	// TODO
+	return nil, nil
 }
 
 // Copy returns a copy of a.
