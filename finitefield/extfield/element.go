@@ -48,7 +48,7 @@ func (f *Field) RandElement() ff.Element {
 	}
 	if bits.UintSize == 32 {
 		prg = func() uint {
-			return uint(rand.Uint64())
+			return uint(rand.Uint32())
 		}
 	}
 
