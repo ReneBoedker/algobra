@@ -177,6 +177,22 @@ func TestRegexElement(t *testing.T) {
 	}
 }
 
+func TestParseOutput(t *testing.T) {
+	field, _ := Define(256)
+	for _, varName := range []string{"a", "α", "\\beta"} {
+		field.SetVarName(varName)
+		for rep := 0; rep < 25; rep++ {
+			a := field.RandElement()
+
+			if b, err := field.ElementFromString(a.String()); err != nil {
+				t.Errorf("Parsing formatted output of %v returns error %q", a, err)
+			} else if !a.Equal(b) {
+				t.Errorf("Formatted output of %v is parsed as %v", a, b)
+			}
+		}
+	}
+}
+
 func hardcodedTableTest(
 	f *Field,
 	elems []ff.Element,

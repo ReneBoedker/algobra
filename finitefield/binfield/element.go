@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"math/bits"
 	"math/rand"
+	"regexp"
 	"strings"
 
 	"github.com/ReneBoedker/algobra/errors"
 	"github.com/ReneBoedker/algobra/finitefield/ff"
+	"strconv"
 )
 
 // Ensure that elements in binary fields satisfy the ff.Element interface
@@ -55,7 +57,7 @@ func (f *Field) RandElement() ff.Element {
 
 	return &Element{
 		field: f,
-		val:   prg() % (2 << f.extDeg), // Discard anything but the first extDeg+1 bits
+		val:   prg() % (1 << f.extDeg), // Discard anything but the first extDeg bits
 	}
 }
 
@@ -125,10 +127,85 @@ func (f *Field) ElementFromSigned(val int) ff.Element {
 // ElementFromString defines a new element over f from the given string.
 //
 // A Parsing-error is returned if the string cannot be parsed.
-func (f *Field) ElementFromString(val string) (ff.Element, error) {
+func (f *Field) ElementFromString(s string) (ff.Element, error) {
 	const op = "Defining element from string"
-	// TODO
-	return nil, nil
+
+	pattern, err := regexp.Compile(
+		`\s*(?:^|\+|-)\s*` + // A sign
+			`(` + // Consider two options:
+			`(?:0|1)` + // Option 1: A constant coefficient
+			`|` + // or
+			regexp.QuoteMeta(f.varName) + // Option 2: The variable name
+			`(?:\^?([0-9]+))?` + // followed by an optional exponent
+			`)\s*`,
+	)
+	if err != nil {
+		return nil, errors.New(
+			op, errors.InputValue,
+			"Cannot construct regular expression with variable name %q. "+
+				"Received error %q.",
+			f.varName, err,
+		)
+	}
+
+	matches := pattern.FindAllStringSubmatch(s, -1)
+
+	// Check that total match length is the full input string
+	matchLen := 0
+	for _, m := range matches {
+		matchLen += len(m[0])
+	}
+	if matchLen != len(s) {
+		return nil, errors.New(
+			op, errors.Parsing,
+			"Cannot parse %s; lengths do not match (%d ≠ %d).",
+			s, matchLen, len(s),
+		)
+	}
+
+	val := uint(0)
+	for _, m := range matches {
+		switch m[1] {
+		case "0":
+			// The term is zero
+			continue
+		case "1":
+			// The term contains no variable. Add one to constant term
+			val ^= 1
+			continue
+		}
+
+		var deg uint
+		if m[2] == "" {
+			// No degree was given. Implicit degree is one
+			deg = 1
+		} else {
+			// Convert the given degree
+			tmp, err := strconv.ParseUint(m[2], 10, 0)
+			if err != nil {
+				return nil, errors.New(
+					op, errors.InputValue,
+					"Failed to parse exponent %q as unsigned integer",
+					m[2],
+				)
+			}
+			deg = uint(tmp)
+
+			// Ensure that the degree is less than the uint size
+			if deg >= bits.UintSize {
+				return nil, errors.New(
+					op, errors.InputTooLarge,
+					"Degree %d exceeds the maximal value (%d)",
+					deg, bits.UintSize-1,
+				)
+			}
+		}
+
+		// Add one to the term with given degree
+		val ^= (1 << deg)
+	}
+
+	return f.ElementFromBits(val), nil
 }
 
 // Copy returns a copy of a.

@@ -102,6 +102,14 @@ func (f *Field) SetVarName(varName string) error {
 			"Cannot use whitespace characters as variable name",
 		)
 	}
+
+	if varName == "1" {
+		return errors.New(
+			op, errors.InputValue,
+			"Cannot use 1 as variable name",
+		)
+	}
+
 	f.varName = varName
 	return nil
 }
