@@ -4,6 +4,7 @@ package finitefield
 import (
 	"github.com/ReneBoedker/algobra/auxmath"
 	"github.com/ReneBoedker/algobra/errors"
+	"github.com/ReneBoedker/algobra/finitefield/binfield"
 	"github.com/ReneBoedker/algobra/finitefield/extfield"
 	"github.com/ReneBoedker/algobra/finitefield/ff"
 	"github.com/ReneBoedker/algobra/finitefield/primefield"
@@ -16,13 +17,17 @@ import (
 func Define(card uint) (ff.Field, error) {
 	const op = "Defining finite field"
 
-	_, extDeg, err := auxmath.FactorizePrimePower(card)
+	char, extDeg, err := auxmath.FactorizePrimePower(card)
 	if err != nil {
 		return nil, errors.Wrap(op, errors.InputValue, err)
 	}
 
-	if extDeg == 1 {
+	switch {
+	case char == 2:
+		return binfield.Define(card)
+	case char != 2 && extDeg == 1:
 		return primefield.Define(card)
+	default:
+		return extfield.Define(card)
 	}
-	return extfield.Define(card)
 }
