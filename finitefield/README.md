@@ -1,5 +1,5 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/ReneBoedker/algobra)](https://goreportcard.com/report/github.com/ReneBoedker/algobra)
-![coverage-badge](https://img.shields.io/badge/coverage-87.8%25-green?cacheSeconds=86400&style=flat)
+![coverage-badge](https://img.shields.io/badge/coverage-90.5%25-brightgreen?cacheSeconds=86400&style=flat)
 [![GoDoc](https://godoc.org/github.com/ReneBoedker/algobra/finitefield?status.svg)](https://godoc.org/github.com/ReneBoedker/algobra/finitefield)
 # Algobra: Finite Fields
 This package and its subpackages implement arithmetic in finite fields.
@@ -19,11 +19,12 @@ Elements in the field can be constructed in several different ways. The two meth
 Each field also has a general method `Element` which will call the appropriate constructor based on the input type. The accepted types depends on the type of field:
 
 * **Prime fields:** uint, int, string
+* **Binary fields:** uint, int, string
 * **Extension fields:** uint, []uint, int, []int, string
 
 If any other type is given as input, the method returns an error.
 
-For extension fields, `Elements` provides access to constructors that are otherwise not callable from this package. If desired, the user can import `finitefield/extfield` directly and define the fields from there. Then all implemented constructors are available.
+For extension fields, `Elements` provides access to constructors that are otherwise not callable from this package. If desired, the user can import `finitefield/extfield` directly and define the fields from there. Then all implemented constructors are available. The same holds true for binary fields, where the `ElementFromBits` can be used by importing `finitefield/binfield`.
 
 The following examples illustrate how elements are constructed.
 ```go
