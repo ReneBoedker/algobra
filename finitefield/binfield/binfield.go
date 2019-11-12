@@ -35,7 +35,7 @@ var _ ff.Field = &Field{}
 // card implies that multiplication will overflow uint, the function returns an
 // InputTooLarge-error.
 func Define(card uint) (*Field, error) {
-	const op = "Defining prime field"
+	const op = "Defining binary field"
 
 	if card == 0 {
 		return nil, errors.New(
@@ -91,6 +91,9 @@ func (f *Field) String() string {
 // Leading and trailing whitespace characters are removed before setting the
 // variable name. If the string consists solely of whitespace characters, an
 // InputValue-error is returned.
+//
+// Additionally, the variable name is not allowed to be "0" or "1". If this is
+// the case, an InputValue-error is returned.
 func (f *Field) SetVarName(varName string) error {
 	// TODO: Do more strings have to be disallowed (eg. +, -)?
 	const op = "Setting variable name"
@@ -103,7 +106,7 @@ func (f *Field) SetVarName(varName string) error {
 		)
 	}
 
-	if varName == "1" {
+	if varName == "0" || varName == "1" {
 		return errors.New(
 			op, errors.InputValue,
 			"Cannot use 1 as variable name",

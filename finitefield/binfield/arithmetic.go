@@ -139,13 +139,15 @@ func (a *Element) Mult(b ff.Element) ff.Element {
 	return a.Prod(a, b)
 }
 
-// Neg returns a scaled by negative one (modulo the characteristic).
+// Neg returns a scaled by negative one (modulo the characteristic). Since the
+// field has characteristic two, this function simply returns a copy of a.
 func (a *Element) Neg() ff.Element {
 	return a.Copy()
 }
 
 // SetNeg sets a to a scaled by negative one (modulo the characteristic). It
-// then returns a.
+// then returns a. Since the field has characteristic two, this function simply
+// returns a.
 func (a *Element) SetNeg() ff.Element {
 	return a
 }

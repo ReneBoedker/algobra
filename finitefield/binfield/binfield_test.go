@@ -78,11 +78,11 @@ func TestElements(t *testing.T) {
 }
 
 func TestPow(t *testing.T) {
-	field, _ := Define(128)
+	field, _ := Define(16)
 	for rep := 0; rep < 50; rep++ {
 		a := field.RandElement()
 
-		n := uint(prg.Uint32()) % 20
+		n := uint(prg.Uint32()) % 32
 
 		expected := field.One()
 		if n > 0 && a.IsZero() {
@@ -189,6 +189,32 @@ func TestParseOutput(t *testing.T) {
 			} else if !a.Equal(b) {
 				t.Errorf("Formatted output of %v is parsed as %v", a, b)
 			}
+		}
+	}
+}
+
+func TestSetVarName(t *testing.T) {
+	field, _ := Define(32)
+	a := field.ElementFromBits(0b10)
+	// Check that the printed variable is correct
+	for _, varName := range []string{"X", "y", "(ω^2)", "", "c\td"} {
+		if err := field.SetVarName(varName); err != nil {
+			t.Errorf("An error was returned for varName = %q", varName)
+		}
+		if a.String() != varName {
+			t.Errorf("Variable name was not printed as expected")
+		}
+	}
+
+	// Check that errors are returned if appropriate
+	for _, varName := range []string{"\t", "  \n\t", "	", "", "1", "0"} {
+		if err := field.SetVarName(varName); err == nil {
+			t.Errorf("No error was returned for varName = %q", varName)
+		} else if !errors.Is(errors.InputValue, err) {
+			t.Errorf(
+				"An error was returned for varName = %q, but it was of "+
+					"unexpected type.", varName,
+			)
 		}
 	}
 }

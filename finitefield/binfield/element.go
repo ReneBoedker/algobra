@@ -84,7 +84,8 @@ func (f *Field) Element(val interface{}) (ff.Element, error) {
 }
 
 // ElementFromBits defines a new element over f with value specified by the
-// bitstring val.
+// bitstring val. That is, the i'th bit in val determines the coefficient of the
+// i'th term in the representation of the element.
 //
 // The returned element will automatically be reduced modulo the characteristic.
 func (f *Field) ElementFromBits(val uint) ff.Element {
