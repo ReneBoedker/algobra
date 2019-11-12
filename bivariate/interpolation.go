@@ -122,7 +122,7 @@ func (r *QuotientRing) lagrangeBasis(
 	for k := 0; k < len(points[variable]); k++ {
 		f.SetCoefPtr(
 			deg(variable, k),
-			r.coefK(points[variable], ignoreIndex, len(points[variable])-1-k),
+			r.coefK(points[variable], ignoreIndex, k),
 		)
 	}
 
@@ -145,8 +145,11 @@ func (r *QuotientRing) coefK(points []ff.Element, ignore, k int) ff.Element {
 	out := r.baseField.Zero()
 	tmp := r.baseField.Zero()
 
+	// Pick the X-term from k factors. This implies that the constant term in
+	// chosen from len(points)-1-k
+	chosen := len(points) - 1 - k
 outer:
-	for ci := auxmath.NewCombinIter(len(points), k); ci.Active(); ci.Next() {
+	for ci := auxmath.NewCombinIter(len(points), chosen); ci.Active(); ci.Next() {
 		tmp.SetUnsigned(1)
 
 		for _, i := range ci.Current() {
@@ -158,7 +161,7 @@ outer:
 
 		out.Add(tmp)
 	}
-	if k%2 != 0 {
+	if chosen%2 != 0 {
 		// (-1)^k == -1
 		out.SetNeg()
 	}
