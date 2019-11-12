@@ -40,10 +40,9 @@ func (a *Element) Add(b ff.Element) ff.Element {
 		return a
 	}
 
-	return &Element{
-		field: a.field,
-		val:   a.val ^ bb.val,
-	}
+	a.val ^= bb.val
+
+	return a
 }
 
 // Plus returns the sum of elements a and b.
