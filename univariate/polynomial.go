@@ -44,7 +44,10 @@ func (f *Polynomial) SetCoef(deg int, val ff.Element) *Polynomial {
 		}
 		return f
 	}
-	// Otherwise, grow the slice to needed length
+	// Otherwise, grow the slice to needed length unless val is zero
+	if val.IsZero() {
+		return f
+	}
 	grow := make([]ff.Element, deg-f.Ld())
 	for i := range grow {
 		grow[i] = f.BaseField().Zero()
@@ -143,6 +146,9 @@ func (f *Polynomial) Normalize() *Polynomial {
 // Scale scales all coefficients of f by the field element c and returns the
 // result as a new polynomial.
 func (f *Polynomial) Scale(c ff.Element) *Polynomial {
+	if c.IsZero() {
+		return f.baseRing.Zero()
+	}
 	g := f.Copy()
 	for deg := range g.coefs {
 		g.SetCoef(deg, g.Coef(deg).Times(c))
