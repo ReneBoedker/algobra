@@ -181,8 +181,9 @@ func hasErr(op errors.Op, a, b *Element) *Element {
 			b.err,
 		)
 		return b
+	default:
+		return nil
 	}
-	return nil
 }
 
 // checkCompatible is an internal method for checking if a and b are compatible;
