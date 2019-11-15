@@ -123,6 +123,7 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 				)
 				return h
 			}
+
 			h.IncrementCoef(degSum, cf.Times(cg))
 		}
 	}
@@ -188,7 +189,7 @@ func (f *Polynomial) Pow(n uint) *Polynomial {
 	return out
 }
 
-// QuoRem return the polynomial quotient and remainder under division by the
+// QuoRem returns the polynomial quotient and remainder under division by the
 // given list of polynomials.
 //
 // Loosely based on [GG; Algorithm 2.5].
@@ -222,10 +223,48 @@ outer:
 			}
 		}
 		// No polynomials divide the leading term of f
-		r.Add(p.Lt())
-		p.Sub(p.Lt())
+		//r.Add(p.Lt())
+		r.IncrementCoef(p.Ld(), p.Lc())
+		p.SetCoef(p.Ld(), p.BaseField().Zero())
 	}
 	return q, r, nil
+}
+
+// Reduce computes the polynomial remainder under division by the given list of
+// polynomials, and sets f to this value. See also QuoRem for a non-destructive
+// method.
+//
+// Loosely based on [GG; Algorithm 2.5].
+func (f *Polynomial) Reduce(list ...*Polynomial) (r *Polynomial, err error) {
+	const op = "Computing polynomial quotient and remainder"
+
+	if tmp := checkErrAndCompatible(op, f, list...); tmp != nil {
+		err = tmp.Err()
+		return
+	}
+
+	r = f.baseRing.Zero()
+
+outer:
+	for f.IsNonzero() {
+		for _, g := range list {
+			if f.Ld() >= g.Ld() {
+				tmp := f.baseRing.Zero()
+				tmp.SetCoefPtr(
+					f.Ld()-g.Ld(),
+					f.Lc().Times(g.Lc().Inv()),
+				)
+				f.Sub(tmp.multNoReduce(g))
+				continue outer
+			}
+		}
+		// No polynomials divide the leading term of f
+		//r.Add(p.Lt())
+		r.IncrementCoef(f.Ld(), f.Lc())
+		f.SetCoefPtr(f.Ld(), f.BaseField().Zero())
+	}
+	*f = *r
+	return f, nil
 }
 
 /* Copyright 2019 René Bødker Christensen

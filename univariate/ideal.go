@@ -108,12 +108,11 @@ func (id *Ideal) Copy() *Ideal {
 func (id *Ideal) Reduce(f *Polynomial) error {
 	const op = "Reducing polynomial"
 
-	_, r, err := f.QuoRem(id.generator)
+	_, err := f.Reduce(id.generator)
 	if err != nil {
 		return errors.Wrap(op, errors.Inherit, err)
 	}
 
-	*f = *r
 	return nil
 }
 
