@@ -188,13 +188,8 @@ func (f *Polynomial) Mult(g *Polynomial) *Polynomial {
 
 // SetZero sets f to the zero polynomial.
 func (f *Polynomial) SetZero() {
-	for _, c := range f.coefs {
-		if c == nil {
-			continue
-		}
-		c.SetUnsigned(0)
-	}
-	f.reslice()
+	f.coefs[0].SetUnsigned(0)
+	f.coefs = f.coefs[:1]
 }
 
 // Pow raises f to the power of n.

@@ -12,7 +12,11 @@ func bench(f ff.Field, b *testing.B) {
 	res := f.One()
 	l := make([]ff.Element, b.N, b.N)
 	for i := 0; i < b.N; i++ {
-		l[i] = f.RandElement()
+		tmp := f.RandElement()
+		for tmp.IsZero() {
+			tmp = f.RandElement()
+		}
+		l[i] = tmp
 	}
 
 	b.ResetTimer() // Ignore the cost of generating (and storing) random elements
