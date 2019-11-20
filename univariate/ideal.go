@@ -108,11 +108,26 @@ func (id *Ideal) Copy() *Ideal {
 func (id *Ideal) Reduce(f *Polynomial) error {
 	const op = "Reducing polynomial"
 
-	_, err := f.Reduce(id.generator)
-	if err != nil {
-		return errors.Wrap(op, errors.Inherit, err)
+	if tmp := checkErrAndCompatible(op, f, id.generator); tmp != nil {
+		return tmp.Err()
 	}
 
+	if f.IsZero() {
+		return nil
+	}
+
+	for d := f.Ld(); d >= id.generator.Ld(); d-- {
+		if f.Coef(d).IsZero() {
+			continue
+		}
+
+		tmp := f.baseRing.Zero()
+		tmp.SetCoefPtr(
+			d-id.generator.Ld(),
+			f.Lc().Times(id.generator.Lc().Inv()),
+		)
+		f.Sub(tmp.multNoReduce(id.generator))
+	}
 	return nil
 }
 

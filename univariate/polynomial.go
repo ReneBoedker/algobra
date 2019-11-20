@@ -84,6 +84,26 @@ func (f *Polynomial) IncrementCoef(deg int, val ff.Element) {
 	f.coefs[deg].Add(val)
 }
 
+// DedrementCoef decrements the coefficient of the monomial with degree deg in f
+// by val.
+func (f *Polynomial) DecrementCoef(deg int, val ff.Element) {
+	if val.IsZero() {
+		return
+	}
+	if deg <= f.Ld() {
+		f.coefs[deg].Sub(val)
+		f.reslice()
+		return
+	}
+	// Otherwise, grow the slice to needed length
+	grow := make([]ff.Element, deg-f.Ld())
+	for i := range grow {
+		grow[i] = f.BaseField().Zero()
+	}
+	f.coefs = append(f.coefs, grow...)
+	f.coefs[deg].Sub(val)
+}
+
 // reslice ensures that the coefficients of f do not contain leading zeros
 func (f *Polynomial) reslice() {
 	for i := len(f.coefs) - 1; i >= 0; i-- {

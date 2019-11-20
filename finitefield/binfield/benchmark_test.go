@@ -40,3 +40,8 @@ func BenchmarkGF256Extension(b *testing.B) {
 	field, _ := extfield.Define(256)
 	bench(field, b)
 }
+
+func BenchmarkGFHugeExtension(b *testing.B) {
+	field, _ := extfield.Define(282429536481)
+	bench(field, b)
+}
