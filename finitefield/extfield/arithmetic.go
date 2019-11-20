@@ -109,11 +109,12 @@ func (a *Element) Prod(b, c ff.Element) ff.Element {
 	// Set the correct field of a
 	a.field = bb.field
 
-	if a.field.logTable != nil {
-		if bb.IsZero() || cc.IsZero() {
-			return a.field.Zero()
-		}
+	if bb.IsZero() || cc.IsZero() {
+		a.val.SetZero()
+		return a
+	}
 
+	if a.field.logTable != nil {
 		s := a.field.logTable.lookup(bb)
 		t := a.field.logTable.lookup(cc)
 

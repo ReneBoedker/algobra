@@ -117,7 +117,7 @@ func (a *Element) Prod(b, c ff.Element) ff.Element {
 	// Set the correct field of a
 	a.field = bb.field
 
-	if b.IsZero() || c.IsZero() {
+	if bb.IsZero() || cc.IsZero() {
 		a.val = 0
 		return a
 	}

@@ -21,6 +21,9 @@ func (f *Polynomial) Add(g *Polynomial) *Polynomial {
 	}
 
 	for deg, c := range g.coefs {
+		if c == nil {
+			continue
+		}
 		f.IncrementCoef(deg, c)
 	}
 	return f
@@ -47,6 +50,9 @@ func (f *Polynomial) Neg() *Polynomial {
 // characteristic).
 func (f *Polynomial) SetNeg() *Polynomial {
 	for _, c := range f.coefs {
+		if c == nil {
+			continue
+		}
 		c.SetNeg()
 	}
 	return f
@@ -62,6 +68,12 @@ func (f *Polynomial) Equal(g *Polynomial) bool {
 		return false
 	}
 	for deg, cf := range f.coefs {
+		if cf == nil {
+			if g.Coef(deg).IsNonzero() {
+				return false
+			}
+			continue
+		}
 		if !g.Coef(deg).Equal(cf) {
 			return false
 		}
@@ -85,6 +97,9 @@ func (f *Polynomial) Sub(g *Polynomial) *Polynomial {
 	}
 
 	for deg, c := range g.coefs {
+		if c == nil {
+			continue
+		}
 		f.DecrementCoef(deg, c)
 	}
 	return f
@@ -115,11 +130,11 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 	}
 	h := f.baseRing.zeroWithCap(f.Ld() + g.Ld() + 1)
 	for degf, cf := range f.coefs {
-		if cf.IsZero() {
+		if cf == nil || cf.IsZero() {
 			continue
 		}
 		for degg, cg := range g.coefs {
-			if cg.IsZero() {
+			if cg == nil || cg.IsZero() {
 				continue
 			}
 			degSum := degf + degg
@@ -133,7 +148,7 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 				return h
 			}
 
-			h.IncrementCoef(degSum, cf.Times(cg))
+			h.incrementCoefPtr(degSum, cf.Times(cg))
 		}
 	}
 	return h
@@ -169,6 +184,17 @@ func (f *Polynomial) Mult(g *Polynomial) *Polynomial {
 	}
 	f.reduce()
 	return f
+}
+
+// SetZero sets f to the zero polynomial.
+func (f *Polynomial) SetZero() {
+	for _, c := range f.coefs {
+		if c == nil {
+			continue
+		}
+		c.SetUnsigned(0)
+	}
+	f.reslice()
 }
 
 // Pow raises f to the power of n.

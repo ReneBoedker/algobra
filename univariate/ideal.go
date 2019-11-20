@@ -45,7 +45,7 @@ func (r *QuotientRing) NewIdeal(generators ...*Polynomial) (*Ideal, error) {
 
 	id := &Ideal{
 		ring:      r.ring,
-		generator: gcd,
+		generator: gcd.Normalize(),
 	}
 	return id, nil
 }
@@ -112,19 +112,15 @@ func (id *Ideal) Reduce(f *Polynomial) error {
 		return tmp.Err()
 	}
 
-	if f.IsZero() {
-		return nil
-	}
-
 	for d := f.Ld(); d >= id.generator.Ld(); d-- {
-		if f.Coef(d).IsZero() {
+		if f.coefIsZero(d) {
 			continue
 		}
 
 		tmp := f.baseRing.Zero()
 		tmp.SetCoefPtr(
 			d-id.generator.Ld(),
-			f.Lc().Times(id.generator.Lc().Inv()),
+			f.Lc(), // Note that id.generator is normalized
 		)
 		f.Sub(tmp.multNoReduce(id.generator))
 	}

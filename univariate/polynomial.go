@@ -28,10 +28,17 @@ func (f *Polynomial) Err() error {
 // Coef returns the coefficient of the monomial with degree specified by the
 // input. The return value is a finite field element.
 func (f *Polynomial) Coef(deg int) ff.Element {
-	if deg < len(f.coefs) {
+	if deg < len(f.coefs) && f.coefs[deg] != nil {
 		return f.coefs[deg]
 	}
 	return f.BaseField().Zero()
+}
+
+func (f *Polynomial) coefIsZero(deg int) bool {
+	if deg < len(f.coefs) && f.coefs[deg] != nil {
+		return false
+	}
+	return true
 }
 
 // SetCoefPtr sets the coefficient of the monomial with degree deg in f to val
@@ -48,11 +55,10 @@ func (f *Polynomial) SetCoefPtr(deg int, val ff.Element) *Polynomial {
 	if val.IsZero() {
 		return f
 	}
-	grow := make([]ff.Element, deg-f.Ld())
-	for i := range grow {
-		grow[i] = f.BaseField().Zero()
-	}
-	f.coefs = append(f.coefs, grow...)
+	// for i := range grow {
+	// 	grow[i] = f.BaseField().Zero()
+	// }
+	f.coefs = append(f.coefs, make([]ff.Element, deg-f.Ld())...)
 	f.coefs[deg] = val
 
 	return f
@@ -71,17 +77,43 @@ func (f *Polynomial) IncrementCoef(deg int, val ff.Element) {
 		return
 	}
 	if deg <= f.Ld() {
-		f.coefs[deg].Add(val)
-		f.reslice()
+		if f.coefs[deg] != nil {
+			f.coefs[deg].Add(val)
+			f.reslice()
+		} else {
+			f.coefs[deg] = val.Copy()
+		}
 		return
 	}
 	// Otherwise, grow the slice to needed length
-	grow := make([]ff.Element, deg-f.Ld())
-	for i := range grow {
-		grow[i] = f.BaseField().Zero()
+	// for i := range grow {
+	// 	grow[i] = f.BaseField().Zero()
+	// }
+	f.coefs = append(f.coefs, make([]ff.Element, deg-f.Ld())...)
+	f.coefs[deg] = val.Copy()
+}
+
+// incrementCoef increments the coefficient of the monomial with degree deg in f
+// by val.
+func (f *Polynomial) incrementCoefPtr(deg int, val ff.Element) {
+	if val.IsZero() {
+		return
 	}
-	f.coefs = append(f.coefs, grow...)
-	f.coefs[deg].Add(val)
+	if deg <= f.Ld() {
+		if f.coefs[deg] != nil {
+			f.coefs[deg].Add(val)
+			f.reslice()
+		} else {
+			f.coefs[deg] = val
+		}
+		return
+	}
+	// Otherwise, grow the slice to needed length
+	// for i := range grow {
+	// 	grow[i] = f.BaseField().Zero()
+	// }
+	f.coefs = append(f.coefs, make([]ff.Element, deg-f.Ld())...)
+	f.coefs[deg] = val
 }
 
 // DedrementCoef decrements the coefficient of the monomial with degree deg in f
@@ -91,23 +123,26 @@ func (f *Polynomial) DecrementCoef(deg int, val ff.Element) {
 		return
 	}
 	if deg <= f.Ld() {
-		f.coefs[deg].Sub(val)
-		f.reslice()
+		if f.coefs[deg] != nil {
+			f.coefs[deg].Sub(val)
+			f.reslice()
+		} else {
+			f.coefs[deg] = val.Neg()
+		}
 		return
 	}
 	// Otherwise, grow the slice to needed length
-	grow := make([]ff.Element, deg-f.Ld())
-	for i := range grow {
-		grow[i] = f.BaseField().Zero()
-	}
-	f.coefs = append(f.coefs, grow...)
-	f.coefs[deg].Sub(val)
+	// for i := range grow {
+	// 	grow[i] = f.BaseField().Zero()
+	// }
+	f.coefs = append(f.coefs, make([]ff.Element, deg-f.Ld())...)
+	f.coefs[deg] = val.Neg()
 }
 
 // reslice ensures that the coefficients of f do not contain leading zeros
 func (f *Polynomial) reslice() {
 	for i := len(f.coefs) - 1; i >= 0; i-- {
-		if f.Coef(i).IsNonzero() {
+		if f.coefs[i] != nil && f.coefs[i].IsNonzero() {
 			f.coefs = f.coefs[:i+1]
 			return
 		}
@@ -122,6 +157,9 @@ func (f *Polynomial) Copy() *Polynomial {
 	h := f.baseRing.Zero()
 	h.coefs = make([]ff.Element, len(f.coefs))
 	for deg, c := range f.coefs {
+		if c == nil {
+			continue
+		}
 		h.coefs[deg] = c.Copy()
 	}
 	return h
@@ -153,6 +191,9 @@ func (f *Polynomial) EmbedIn(r *QuotientRing, reduce bool) error {
 func (f *Polynomial) Eval(point ff.Element) ff.Element {
 	out := f.BaseField().Zero()
 	for deg, c := range f.coefs {
+		if c == nil {
+			continue
+		}
 		out.Add(point.Pow(uint(deg)).Mult(c))
 	}
 	return out
@@ -202,7 +243,11 @@ func (f *Polynomial) Degrees() []int {
 func (f *Polynomial) Coefs() []ff.Element {
 	coefs := make([]ff.Element, len(f.coefs), len(f.coefs))
 	for i, c := range f.coefs {
-		coefs[i] = c.Copy()
+		if c == nil {
+			coefs[i] = f.BaseField().Zero()
+		} else {
+			coefs[i] = c.Copy()
+		}
 	}
 	return coefs
 }
