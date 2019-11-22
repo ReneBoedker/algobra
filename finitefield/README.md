@@ -1,5 +1,5 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/ReneBoedker/algobra)](https://goreportcard.com/report/github.com/ReneBoedker/algobra)
-![coverage-badge](https://img.shields.io/badge/coverage-90.5%25-brightgreen?cacheSeconds=86400&style=flat)
+![coverage-badge](https://img.shields.io/badge/coverage-93.9%25-brightgreen?cacheSeconds=86400&style=flat)
 [![GoDoc](https://godoc.org/github.com/ReneBoedker/algobra/finitefield?status.svg)](https://godoc.org/github.com/ReneBoedker/algobra/finitefield)
 # Algobra: Finite Fields
 This package and its subpackages implement arithmetic in finite fields.

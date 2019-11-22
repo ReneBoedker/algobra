@@ -123,6 +123,45 @@ func TestBools(t *testing.T) {
 	}
 }
 
+func TestArithmeticErrors(t *testing.T) {
+	fieldA, _ := Define(8)
+	fieldB, _ := Define(64)
+
+	a := fieldA.Zero()
+	b := fieldB.ElementFromBits(0b10)
+	// Cannot invert zero
+	if e := a.Inv(); e.Err() == nil {
+		t.Errorf("Inverting zero did not set error status")
+	} else if !errors.Is(errors.InputValue, e.Err()) {
+		t.Errorf("Inverting zero set error status, but not InputValue-error")
+	}
+
+	// Cannot use elements from different fields
+	if e := a.Plus(b); e.Err() == nil {
+		t.Errorf("Adding elements from different fields did not set error status")
+	}
+	if e := a.Times(b); e.Err() == nil {
+		t.Errorf("Multiplying elements from different fields did not set error status")
+	}
+	if e := a.Minus(b); e.Err() == nil {
+		t.Errorf("Subtracting elements from different fields did not set error status")
+	}
+
+	// Error is passed on to last result
+	if e := b.Plus(b.Minus(a.Inv())); e.Err() == nil {
+		t.Errorf("Last result in b+b-a^(-1) did not have error status")
+	} else if !errors.Is(errors.InputValue, e.Err()) {
+		// Inverting gives InputValue-error. This should be the last kind as well
+		t.Errorf("Last result did not retain the original error status")
+	}
+	if e := b.Minus(b).Inv().Times(b); e.Err() == nil {
+		t.Errorf("Last result in b-b^(-1)*b did not have error status")
+	} else if !errors.Is(errors.InputValue, e.Err()) {
+		// Inverting gives InputValue-error. This should be the last kind as well
+		t.Errorf("Last result did not retain the original error status")
+	}
+}
+
 func TestRegexElement(t *testing.T) {
 	for _, card := range []uint{2, 4, 8, 16, 32, 64} {
 		field, _ := Define(card)
