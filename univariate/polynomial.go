@@ -116,7 +116,7 @@ func (f *Polynomial) incrementCoefPtr(deg int, val ff.Element) {
 	f.coefs[deg] = val
 }
 
-// DedrementCoef decrements the coefficient of the monomial with degree deg in f
+// DecrementCoef decrements the coefficient of the monomial with degree deg in f
 // by val.
 func (f *Polynomial) DecrementCoef(deg int, val ff.Element) {
 	if val.IsZero() {
