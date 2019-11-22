@@ -36,7 +36,7 @@ func (f *Polynomial) Coef(deg int) ff.Element {
 
 func (f *Polynomial) coefIsZero(deg int) bool {
 	if deg < len(f.coefs) && f.coefs[deg] != nil {
-		return false
+		return f.coefs[deg].IsZero()
 	}
 	return true
 }
