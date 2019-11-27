@@ -210,17 +210,26 @@ func (f *Polynomial) Normalize() *Polynomial {
 	return f.Scale(f.Lc().Inv())
 }
 
+// SetScale scales all coefficients of f by the field element c. It then returns
+// f.
+func (f *Polynomial) SetScale(c ff.Element) *Polynomial {
+	if c.IsZero() {
+		f.SetZero()
+		return f
+	}
+	for deg, coef := range f.coefs {
+		if coef == nil {
+			continue
+		}
+		f.coefs[deg].Mult(c)
+	}
+	return f
+}
+
 // Scale scales all coefficients of f by the field element c and returns the
 // result as a new polynomial.
 func (f *Polynomial) Scale(c ff.Element) *Polynomial {
-	if c.IsZero() {
-		return f.baseRing.Zero()
-	}
-	g := f.Copy()
-	for deg := range g.coefs {
-		g.SetCoef(deg, g.Coef(deg).Times(c))
-	}
-	return g
+	return f.Copy().SetScale(c)
 }
 
 // Degrees returns a slice containing the degrees in the support of f.

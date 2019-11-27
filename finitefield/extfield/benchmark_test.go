@@ -1,11 +1,24 @@
-package binfield_test
+package extfield_test
 
 import (
 	"testing"
 
-	"github.com/ReneBoedker/algobra/finitefield/binfield"
+	"github.com/ReneBoedker/algobra/finitefield/extfield"
 	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
+
+func benchSum(f ff.Field, b *testing.B) {
+	res := f.Zero()
+	l := make([]ff.Element, b.N, b.N)
+	for i := 0; i < b.N; i++ {
+		l[i] = f.RandElement()
+	}
+
+	b.ResetTimer() // Ignore the cost of generating (and storing) random elements
+	for _, v := range l {
+		res.Add(v)
+	}
+}
 
 func benchProd(f ff.Field, b *testing.B) {
 	res := f.One()
@@ -21,19 +34,6 @@ func benchProd(f ff.Field, b *testing.B) {
 	b.ResetTimer() // Ignore the cost of generating (and storing) random elements
 	for _, v := range l {
 		res.Mult(v)
-	}
-}
-
-func benchSum(f ff.Field, b *testing.B) {
-	res := f.Zero()
-	l := make([]ff.Element, b.N, b.N)
-	for i := 0; i < b.N; i++ {
-		l[i] = f.RandElement()
-	}
-
-	b.ResetTimer() // Ignore the cost of generating (and storing) random elements
-	for _, v := range l {
-		res.Add(v)
 	}
 }
 
@@ -57,32 +57,32 @@ func benchInv(f ff.Field, b *testing.B) {
 	}
 }
 
-func BenchmarkProd256(b *testing.B) {
-	field, _ := binfield.Define(256)
+func BenchmarkProd343(b *testing.B) {
+	field, _ := extfield.Define(343)
 	benchProd(field, b)
 }
 
-func BenchmarkSum256(b *testing.B) {
-	field, _ := binfield.Define(256)
+func BenchmarkSum343(b *testing.B) {
+	field, _ := extfield.Define(343)
 	benchSum(field, b)
 }
 
-func BenchmarkInv256(b *testing.B) {
-	field, _ := binfield.Define(256)
+func BenchmarkInv343(b *testing.B) {
+	field, _ := extfield.Define(343)
 	benchInv(field, b)
 }
 
-func BenchmarkProd4096(b *testing.B) {
-	field, _ := binfield.Define(4096)
+func BenchmarkProd390625(b *testing.B) {
+	field, _ := extfield.Define(390625)
 	benchProd(field, b)
 }
 
-func BenchmarkSum4096(b *testing.B) {
-	field, _ := binfield.Define(4096)
+func BenchmarkSum390625(b *testing.B) {
+	field, _ := extfield.Define(390625)
 	benchSum(field, b)
 }
 
-func BenchmarkInv4096(b *testing.B) {
-	field, _ := binfield.Define(4096)
+func BenchmarkInv390625(b *testing.B) {
+	field, _ := extfield.Define(390625)
 	benchInv(field, b)
 }

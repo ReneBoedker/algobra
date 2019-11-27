@@ -1,10 +1,10 @@
-package binfield_test
+package primefield_test
 
 import (
 	"testing"
 
-	"github.com/ReneBoedker/algobra/finitefield/binfield"
 	"github.com/ReneBoedker/algobra/finitefield/ff"
+	"github.com/ReneBoedker/algobra/finitefield/primefield"
 )
 
 func benchProd(f ff.Field, b *testing.B) {
@@ -57,32 +57,32 @@ func benchInv(f ff.Field, b *testing.B) {
 	}
 }
 
-func BenchmarkProd256(b *testing.B) {
-	field, _ := binfield.Define(256)
+func BenchmarkProd101(b *testing.B) {
+	field, _ := primefield.Define(101)
 	benchProd(field, b)
 }
 
-func BenchmarkSum256(b *testing.B) {
-	field, _ := binfield.Define(256)
+func BenchmarkSum101(b *testing.B) {
+	field, _ := primefield.Define(101)
 	benchSum(field, b)
 }
 
-func BenchmarkInv256(b *testing.B) {
-	field, _ := binfield.Define(256)
+func BenchmarkInv101(b *testing.B) {
+	field, _ := primefield.Define(101)
 	benchInv(field, b)
 }
 
-func BenchmarkProd4096(b *testing.B) {
-	field, _ := binfield.Define(4096)
+func BenchmarkProd10007(b *testing.B) {
+	field, _ := primefield.Define(10007)
 	benchProd(field, b)
 }
 
-func BenchmarkSum4096(b *testing.B) {
-	field, _ := binfield.Define(4096)
+func BenchmarkSum10007(b *testing.B) {
+	field, _ := primefield.Define(10007)
 	benchSum(field, b)
 }
 
-func BenchmarkInv4096(b *testing.B) {
-	field, _ := binfield.Define(4096)
+func BenchmarkInv10007(b *testing.B) {
+	field, _ := primefield.Define(10007)
 	benchInv(field, b)
 }
