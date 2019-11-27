@@ -132,7 +132,7 @@ func subtractDegs(deg1, deg2 [2]uint) (deg [2]uint, ok bool) {
 // input. The return value is a finite field element.
 func (f *Polynomial) Coef(deg [2]uint) ff.Element {
 	if c, ok := f.coefs[deg]; ok {
-		return c
+		return c.Copy()
 	}
 	return f.BaseField().Zero()
 }

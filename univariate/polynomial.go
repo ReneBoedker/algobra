@@ -29,7 +29,7 @@ func (f *Polynomial) Err() error {
 // input. The return value is a finite field element.
 func (f *Polynomial) Coef(deg int) ff.Element {
 	if deg < len(f.coefs) && f.coefs[deg] != nil {
-		return f.coefs[deg]
+		return f.coefs[deg].Copy()
 	}
 	return f.BaseField().Zero()
 }
