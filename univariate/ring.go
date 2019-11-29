@@ -75,11 +75,11 @@ func (r *QuotientRing) VarName() string {
 }
 
 // zeroWithCap returns a zero polynomial over the specified ring, where the
-// underlying representation has given capacity. If cap is negative, the default
-// map capacity is used.
+// underlying representation has given capacity. If cap is less than one, the
+// default map capacity is used.
 func (r *QuotientRing) zeroWithCap(cap int) *Polynomial {
 	var coefs []ff.Element
-	if cap < 0 {
+	if cap < 1 {
 		coefs = make([]ff.Element, 1)
 	} else {
 		coefs = make([]ff.Element, 1, cap)
@@ -110,7 +110,7 @@ func (r *QuotientRing) One() *Polynomial {
 // Polynomial defines a new polynomial with the given coefficients. The
 // coefficient of X^i is set to coefs[i].
 func (r *QuotientRing) Polynomial(coefs []ff.Element) *Polynomial {
-	out := r.Zero()
+	out := r.zeroWithCap(len(coefs))
 	for d, e := range coefs {
 		if e.IsNonzero() {
 			out.SetCoef(d, e.Copy())
@@ -123,11 +123,11 @@ func (r *QuotientRing) Polynomial(coefs []ff.Element) *Polynomial {
 // PolynomialFromUnsigned defines a new polynomial with the given coefficients.
 // The coefficient of X^i is set to coefs[i].
 func (r *QuotientRing) PolynomialFromUnsigned(coefs []uint) *Polynomial {
-	out := r.Zero()
+	out := r.zeroWithCap(len(coefs))
 	for d, c := range coefs {
 		e := r.baseField.ElementFromUnsigned(c)
 		if e.IsNonzero() {
-			out.SetCoef(d, e)
+			out.SetCoefPtr(d, e)
 		}
 	}
 	out.reduce()
@@ -137,7 +137,7 @@ func (r *QuotientRing) PolynomialFromUnsigned(coefs []uint) *Polynomial {
 // PolynomialFromSigned defines a new polynomial with the given coefficients.
 // The coefficient of X^i is set to coefs[i].
 func (r *QuotientRing) PolynomialFromSigned(coefs []int) *Polynomial {
-	out := r.Zero()
+	out := r.zeroWithCap(len(coefs))
 	for d, e := range coefs {
 		if e != 0 {
 			out.SetCoef(d, r.baseField.ElementFromSigned(e))

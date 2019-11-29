@@ -64,6 +64,15 @@ func (f *Polynomial) SetCoefPtr(deg int, val ff.Element) *Polynomial {
 	return f
 }
 
+// removeCoef sets the given coefficient to zero, and reslices the internal
+// representation if needed.
+func (f *Polynomial) removeCoef(deg int) {
+	if deg <= f.Ld() {
+		f.coefs[deg].SetUnsigned(0)
+		f.reslice()
+	}
+}
+
 // SetCoef sets the coefficient of the monomial with degree deg in f to val. It
 // returns f itself.
 func (f *Polynomial) SetCoef(deg int, val ff.Element) *Polynomial {
@@ -204,10 +213,10 @@ func (f *Polynomial) Eval(point ff.Element) ff.Element {
 //
 // If f is the zero polynomial, a copy of f is returned.
 func (f *Polynomial) Normalize() *Polynomial {
-	if f.IsZero() {
+	if f.IsZero() || f.lcPtr().IsOne() {
 		return f.Copy()
 	}
-	return f.Scale(f.Lc().Inv())
+	return f.Scale(f.lcPtr().Inv())
 }
 
 // SetScale scales all coefficients of f by the field element c. It then returns
@@ -271,6 +280,11 @@ func (f *Polynomial) Lc() ff.Element {
 	return f.Coef(f.Ld())
 }
 
+// lcPtr returns a pointer to the leading coefficient of f.
+func (f *Polynomial) lcPtr() ff.Element {
+	return f.coefs[f.Ld()]
+}
+
 // Lt returns the leading term of f.
 func (f *Polynomial) Lt() *Polynomial {
 	h := f.baseRing.Zero()
@@ -281,7 +295,7 @@ func (f *Polynomial) Lt() *Polynomial {
 
 // IsZero determines whether f is the zero polynomial.
 func (f *Polynomial) IsZero() bool {
-	if len(f.coefs) == 1 && f.Coef(0).IsZero() {
+	if len(f.coefs) == 1 && f.coefs[0].IsZero() {
 		return true
 	}
 	return false
