@@ -1,7 +1,6 @@
 package binfield
 
 import (
-	"fmt"
 	"math/bits"
 	"math/rand"
 	"regexp"
@@ -267,6 +266,7 @@ func (a *Element) String() string {
 	}
 
 	var b strings.Builder
+
 	nPlus := a.NTerms() - 1
 	for term, d := uint(1)<<a.field.extDeg, a.field.extDeg; term > 0; term, d = term>>1, d-1 {
 		if term&a.val == 0 {
@@ -274,18 +274,19 @@ func (a *Element) String() string {
 		}
 
 		if d == 0 {
-			fmt.Fprint(&b, 1)
+			b.WriteByte('1') // Always returns nil error
 			break
 		}
 
-		fmt.Fprint(&b, a.field.varName)
+		b.WriteString(a.field.varName) // Always returns nil error
 		if d > 1 {
-			fmt.Fprintf(&b, "^%d", d)
+			b.WriteByte('^')
+			b.WriteString(strconv.FormatUint(uint64(d), 10))
 		}
 
 		// Print a plus if necessary
 		if nPlus > 0 {
-			fmt.Fprint(&b, " + ")
+			b.Write([]byte(" + "))
 			nPlus--
 		}
 	}

@@ -217,5 +217,5 @@ func (a *Element) String() string {
 
 // NTerms returns the number of terms in the representation of a.
 func (a *Element) NTerms() uint {
-	return uint(len(a.val.Degrees()))
+	return a.val.NTerms()
 }
