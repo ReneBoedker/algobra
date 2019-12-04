@@ -219,7 +219,7 @@ func (a *Element) Inv() ff.Element {
 
 	i0 := a.field.polyRing.Zero()
 	i1 := a.field.polyRing.Polynomial([]ff.Element{a.val.Lc().Inv()})
-	for r1.IsNonzero() {
+	for true {
 		quo, rem, err := r0.QuoRem(r1)
 		if err != nil {
 			o := a.field.Zero()
@@ -227,13 +227,18 @@ func (a *Element) Inv() ff.Element {
 			out.err = err
 			return out
 		}
+
+		if rem.IsZero() {
+			break
+		}
+
 		lcInv := rem.Lc().Inv()
-		r0, r1 = r1, rem.Scale(lcInv)
-		i0, i1 = i1, i0.Minus(quo[0].Mult(i1)).Scale(lcInv)
+		r0, r1 = r1, rem.SetScale(lcInv)
+		i0, i1 = i1, i0.Sub(quo[0].Mult(i1)).SetScale(lcInv)
 	}
 	return &Element{
 		field: a.field,
-		val:   i0,
+		val:   i1,
 	}
 }
 

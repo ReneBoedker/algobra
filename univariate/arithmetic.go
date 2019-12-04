@@ -116,6 +116,34 @@ func (f *Polynomial) Minus(g *Polynomial) *Polynomial {
 	return f.Copy().Sub(g)
 }
 
+// subWithShiftAndScale sets f to the polynomial f-a*X^i*g. This is done without
+// allocating a new polynomial
+func (f *Polynomial) subWithShiftAndScale(g *Polynomial, i int, a ff.Element) {
+	if i < 0 {
+		i = 0
+	}
+	switch {
+	case a.IsZero():
+		return
+	case a.IsOne():
+		for d, c := range g.coefs {
+			if c == nil || c.IsZero() {
+				continue
+			}
+			f.DecrementCoef(d+i, c)
+		}
+	default:
+		tmp := f.BaseField().Zero()
+		for d, c := range g.coefs {
+			if c == nil || c.IsZero() {
+				continue
+			}
+			tmp.Prod(a, c)
+			f.DecrementCoef(d+i, tmp)
+		}
+	}
+}
+
 // Internal method. Multiplies the two polynomials f and g, but does not reduce
 // the result according to the specified ring.
 func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
@@ -128,7 +156,9 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 	if f.IsZero() || g.IsZero() {
 		return f.baseRing.Zero()
 	}
+
 	h := f.baseRing.zeroWithCap(f.Ld() + g.Ld() + 1)
+	tmp := f.BaseField().Zero()
 	for degf, cf := range f.coefs {
 		if cf == nil || cf.IsZero() {
 			continue
@@ -148,7 +178,8 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 				return h
 			}
 
-			h.incrementCoefPtr(degSum, cf.Times(cg))
+			tmp.Prod(cf, cg)
+			h.IncrementCoef(degSum, tmp)
 		}
 	}
 	return h
@@ -238,24 +269,26 @@ func (f *Polynomial) QuoRem(list ...*Polynomial) (q []*Polynomial, r *Polynomial
 	for i := range list {
 		q[i] = f.baseRing.Zero()
 	}
+
+	tmp := f.BaseField().Zero()
 outer:
 	for p.IsNonzero() {
 		for i, g := range list {
 			if p.Ld() >= g.Ld() {
-				tmp := f.baseRing.Zero()
-				tmp.SetCoef(
-					p.Ld()-g.Ld(),
-					p.Lc().Times(g.Lc().Inv()),
-				)
-				q[i].Add(tmp)
-				p.Sub(tmp.multNoReduce(g))
+				if g.lcPtr().IsOne() {
+					tmp.Prod(p.lcPtr(), g.lcPtr())
+				} else {
+					tmp.Prod(p.lcPtr(), g.lcPtr().Inv())
+				}
+				q[i].IncrementCoef(p.Ld()-g.Ld(), tmp)
+				p.subWithShiftAndScale(g, p.Ld()-g.Ld(), tmp)
 				continue outer
 			}
 		}
 		// No polynomials divide the leading term of f
-		//r.Add(p.Lt())
-		r.IncrementCoef(p.Ld(), p.Lc())
-		p.SetCoef(p.Ld(), p.BaseField().Zero())
+		r.IncrementCoef(p.Ld(), p.lcPtr())
+		p.removeCoef(p.Ld())
+		//p.SetCoefPtr(p.Ld(), p.BaseField().Zero())
 	}
 	return q, r, nil
 }

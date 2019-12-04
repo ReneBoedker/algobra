@@ -216,9 +216,7 @@ func (a *Element) Inv() ff.Element {
 		r0, r1 = r1, r0-q*r1
 		i0, i1 = i1, i0-int(q)*i1
 	}
-	for i0 < 0 {
-		i0 += int(a.field.char)
-	}
+
 	return a.field.ElementFromSigned(i0)
 }
 

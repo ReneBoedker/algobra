@@ -112,17 +112,12 @@ func (id *Ideal) Reduce(f *Polynomial) error {
 		return tmp.Err()
 	}
 
-	for d := f.Ld(); d >= id.generator.Ld(); d-- {
-		if f.coefIsZero(d) {
-			continue
-		}
-
-		tmp := f.baseRing.Zero()
-		tmp.SetCoefPtr(
+	for d := f.Ld(); d >= id.generator.Ld(); d = f.Ld() {
+		f.subWithShiftAndScale(
+			id.generator,
 			d-id.generator.Ld(),
-			f.Lc(), // Note that id.generator is normalized
+			f.coefs[f.Ld()], // Note that id.generator is normalized
 		)
-		f.Sub(tmp.multNoReduce(id.generator))
 	}
 	return nil
 }

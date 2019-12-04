@@ -1,7 +1,7 @@
 package univariate
 
 import (
-	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/ReneBoedker/algobra/errors"
@@ -25,11 +25,19 @@ func (f *Polynomial) Err() error {
 	return f.err
 }
 
+// coefPtr returns a pointer to the coefficient of the monomial of degree deg.
+func (f *Polynomial) coefPtr(deg int) ff.Element {
+	if deg < len(f.coefs) {
+		return f.coefs[deg]
+	}
+	return nil
+}
+
 // Coef returns the coefficient of the monomial with degree specified by the
 // input. The return value is a finite field element.
 func (f *Polynomial) Coef(deg int) ff.Element {
 	if deg < len(f.coefs) && f.coefs[deg] != nil {
-		return f.coefs[deg]
+		return f.coefs[deg].Copy()
 	}
 	return f.BaseField().Zero()
 }
@@ -64,6 +72,15 @@ func (f *Polynomial) SetCoefPtr(deg int, val ff.Element) *Polynomial {
 	return f
 }
 
+// removeCoef sets the given coefficient to zero, and reslices the internal
+// representation if needed.
+func (f *Polynomial) removeCoef(deg int) {
+	if deg <= f.Ld() {
+		f.coefs[deg].SetUnsigned(0)
+		f.reslice()
+	}
+}
+
 // SetCoef sets the coefficient of the monomial with degree deg in f to val. It
 // returns f itself.
 func (f *Polynomial) SetCoef(deg int, val ff.Element) *Polynomial {
@@ -91,29 +108,6 @@ func (f *Polynomial) IncrementCoef(deg int, val ff.Element) {
 	// }
 	f.coefs = append(f.coefs, make([]ff.Element, deg-f.Ld())...)
 	f.coefs[deg] = val.Copy()
-}
-
-// incrementCoef increments the coefficient of the monomial with degree deg in f
-// by val.
-func (f *Polynomial) incrementCoefPtr(deg int, val ff.Element) {
-	if val.IsZero() {
-		return
-	}
-	if deg <= f.Ld() {
-		if f.coefs[deg] != nil {
-			f.coefs[deg].Add(val)
-			f.reslice()
-		} else {
-			f.coefs[deg] = val
-		}
-		return
-	}
-	// Otherwise, grow the slice to needed length
-	// for i := range grow {
-	// 	grow[i] = f.BaseField().Zero()
-	// }
-	f.coefs = append(f.coefs, make([]ff.Element, deg-f.Ld())...)
-	f.coefs[deg] = val
 }
 
 // DecrementCoef decrements the coefficient of the monomial with degree deg in f
@@ -204,23 +198,32 @@ func (f *Polynomial) Eval(point ff.Element) ff.Element {
 //
 // If f is the zero polynomial, a copy of f is returned.
 func (f *Polynomial) Normalize() *Polynomial {
-	if f.IsZero() {
+	if f.IsZero() || f.lcPtr().IsOne() {
 		return f.Copy()
 	}
-	return f.Scale(f.Lc().Inv())
+	return f.Scale(f.lcPtr().Inv())
+}
+
+// SetScale scales all coefficients of f by the field element c. It then returns
+// f.
+func (f *Polynomial) SetScale(c ff.Element) *Polynomial {
+	if c.IsZero() {
+		f.SetZero()
+		return f
+	}
+	for deg, coef := range f.coefs {
+		if coef == nil {
+			continue
+		}
+		f.coefs[deg].Mult(c)
+	}
+	return f
 }
 
 // Scale scales all coefficients of f by the field element c and returns the
 // result as a new polynomial.
 func (f *Polynomial) Scale(c ff.Element) *Polynomial {
-	if c.IsZero() {
-		return f.baseRing.Zero()
-	}
-	g := f.Copy()
-	for deg := range g.coefs {
-		g.SetCoef(deg, g.Coef(deg).Times(c))
-	}
-	return g
+	return f.Copy().SetScale(c)
 }
 
 // Degrees returns a slice containing the degrees in the support of f.
@@ -229,12 +232,25 @@ func (f *Polynomial) Scale(c ff.Element) *Polynomial {
 func (f *Polynomial) Degrees() []int {
 	degs := make([]int, 0, len(f.coefs))
 	for deg := len(f.coefs) - 1; deg >= 0; deg-- {
-		if f.Coef(deg).IsZero() {
+		if f.coefIsZero(deg) {
 			continue
 		}
 		degs = append(degs, deg)
 	}
 	return degs
+}
+
+// NTerms returns the number of terms in f.
+func (f *Polynomial) NTerms() (c uint) {
+	if f.IsZero() {
+		return 1
+	}
+	for deg := len(f.coefs) - 1; deg >= 0; deg-- {
+		if !f.coefIsZero(deg) {
+			c++
+		}
+	}
+	return c
 }
 
 // Coefs returns a slice containing the coefficients of f.
@@ -262,6 +278,11 @@ func (f *Polynomial) Lc() ff.Element {
 	return f.Coef(f.Ld())
 }
 
+// lcPtr returns a pointer to the leading coefficient of f.
+func (f *Polynomial) lcPtr() ff.Element {
+	return f.coefs[f.Ld()]
+}
+
 // Lt returns the leading term of f.
 func (f *Polynomial) Lt() *Polynomial {
 	h := f.baseRing.Zero()
@@ -272,7 +293,7 @@ func (f *Polynomial) Lt() *Polynomial {
 
 // IsZero determines whether f is the zero polynomial.
 func (f *Polynomial) IsZero() bool {
-	if len(f.coefs) == 1 && f.Coef(0).IsZero() {
+	if len(f.coefs) == 1 && f.coefs[0].IsZero() {
 		return true
 	}
 	return false
@@ -285,7 +306,7 @@ func (f *Polynomial) IsNonzero() bool {
 
 // IsOne determines whether f is the constant 1.
 func (f *Polynomial) IsOne() bool {
-	if len(f.coefs) == 1 && f.Coef(0).IsOne() {
+	if len(f.coefs) == 1 && f.coefPtr(0).IsOne() {
 		return true
 	}
 	return false
@@ -384,22 +405,32 @@ func (f *Polynomial) String() string {
 	}
 
 	var b strings.Builder
-	for i, d := range f.Degrees() {
-		if i > 0 {
-			fmt.Fprint(&b, " + ")
+	for d := f.Ld(); d >= 0; d-- {
+		if f.coefIsZero(d) {
+			continue
 		}
-		if tmp := f.Coef(d); !tmp.IsOne() || d == 0 {
+
+		if d < f.Ld() {
+			b.Write([]byte(" + "))
+		}
+
+		if tmp := f.coefPtr(d); !tmp.IsOne() || d == 0 {
 			if tmp.NTerms() > 1 {
-				fmt.Fprintf(&b, "(%v)", tmp)
+				b.WriteByte('(')
+				b.WriteString(tmp.String())
+				b.WriteByte(')')
 			} else {
-				fmt.Fprintf(&b, "%v", tmp)
+				b.WriteString(tmp.String())
 			}
 		}
 		if d == 1 {
-			fmt.Fprint(&b, f.baseRing.varName)
+			b.WriteString(f.baseRing.varName)
 		}
 		if d > 1 {
-			fmt.Fprintf(&b, "%s^%d", f.baseRing.varName, d)
+			//fmt.Fprintf(&b, "%s^%d", f.baseRing.varName, d)
+			b.WriteString(f.baseRing.varName)
+			b.WriteByte('^')
+			b.WriteString(strconv.FormatInt(int64(d), 10))
 		}
 	}
 	return b.String()
