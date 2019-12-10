@@ -1,8 +1,8 @@
 package bivariate
 
 import (
-	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/ReneBoedker/algobra/errors"
@@ -137,6 +137,16 @@ func (f *Polynomial) Coef(deg [2]uint) ff.Element {
 	return f.BaseField().Zero()
 }
 
+// coefPtr returns a pointer to the coefficient of the monomial with degree
+// specified by the input. The return value is nil if the coefficient does not
+// exist.
+func (f *Polynomial) coefPtr(deg [2]uint) ff.Element {
+	if c, ok := f.coefs[deg]; ok {
+		return c
+	}
+	return nil
+}
+
 // SetCoef sets the coefficient of the monomial with degree deg in f to val by
 // copying. See also SetCoefPtr.
 func (f *Polynomial) SetCoef(deg [2]uint, val ff.Element) {
@@ -250,9 +260,12 @@ func (f *Polynomial) SortedDegrees() [][2]uint {
 	for deg := range f.coefs {
 		degs = append(degs, deg)
 	}
-	sort.Slice(degs, func(i, j int) bool {
-		return (f.baseRing.ord(degs[i], degs[j]) >= 0)
-	})
+
+	if len(degs) > 1 {
+		sort.Slice(degs, func(i, j int) bool {
+			return (f.baseRing.ord(degs[i], degs[j]) >= 0)
+		})
+	}
 	return degs
 }
 
@@ -327,33 +340,45 @@ func (f *Polynomial) reduce() {
 // String returns the string representation of f. Variables are 'X' and 'Y' by
 // default. To change this, see the SetVarNames method.
 func (f *Polynomial) String() string {
-	degs := f.SortedDegrees()
-	if len(degs) == 0 {
+	if f.IsZero() {
 		return "0"
 	}
+
+	degs := f.SortedDegrees()
+
 	var b strings.Builder
 	for i, d := range degs {
 		if i > 0 {
-			fmt.Fprint(&b, " + ")
+			b.Write([]byte(" + "))
 		}
-		if tmp := f.Coef(d); !tmp.IsOne() || (d[0] == 0 && d[1] == 0) {
+
+		// Append the coefficient
+		if tmp := f.coefPtr(d); !tmp.IsOne() || (d[0] == 0 && d[1] == 0) {
 			if tmp.NTerms() > 1 {
-				fmt.Fprintf(&b, "(%v)", tmp)
+				b.WriteByte('(')
+				b.WriteString(tmp.String())
+				b.WriteByte(')')
 			} else {
-				fmt.Fprintf(&b, "%v", tmp)
+				b.WriteString(tmp.String())
 			}
 		}
-		if d[0] == 1 {
-			fmt.Fprint(&b, f.baseRing.VarNames()[0])
+
+		// Append the first variable name and its degree
+		if d[0] >= 1 {
+			b.WriteString(f.baseRing.VarNames()[0])
 		}
 		if d[0] > 1 {
-			fmt.Fprintf(&b, "%s^%d", f.baseRing.VarNames()[0], d[0])
+			b.WriteByte('^')
+			b.WriteString(strconv.FormatUint(uint64(d[0]), 10))
 		}
-		if d[1] == 1 {
-			fmt.Fprint(&b, f.baseRing.VarNames()[1])
+
+		// Append the second variable name and its degree
+		if d[1] >= 1 {
+			b.WriteString(f.baseRing.VarNames()[1])
 		}
 		if d[1] > 1 {
-			fmt.Fprintf(&b, "%s^%d", f.baseRing.VarNames()[1], d[1])
+			b.WriteByte('^')
+			b.WriteString(strconv.FormatUint(uint64(d[1]), 10))
 		}
 	}
 	return b.String()
