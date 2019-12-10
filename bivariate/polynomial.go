@@ -258,12 +258,23 @@ func (f *Polynomial) SortedDegrees() [][2]uint {
 
 // Ld returns the leading degree of f.
 func (f *Polynomial) Ld() [2]uint {
-	return f.SortedDegrees()[0]
+	ld := [2]uint{0, 0}
+	for deg := range f.coefs {
+		if f.baseRing.ord(deg, ld) == 1 {
+			ld = deg
+		}
+	}
+	return ld
 }
 
 // Lc returns the leading coefficient of f.
 func (f *Polynomial) Lc() ff.Element {
 	return f.Coef(f.Ld())
+}
+
+// lcPtr returns a pointer to the leading coefficient of f.
+func (f *Polynomial) lcPtr() ff.Element {
+	return f.coefs[f.Ld()]
 }
 
 // Lt returns the leading term of f.

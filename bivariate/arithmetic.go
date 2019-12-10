@@ -139,7 +139,7 @@ func (f *Polynomial) Normalize() *Polynomial {
 	if f.IsZero() {
 		return f.Copy()
 	}
-	return f.Scale(f.Lc().Inv())
+	return f.Scale(f.lcPtr().Inv())
 }
 
 // Scale scales all coefficients of f by the field element c and returns the
