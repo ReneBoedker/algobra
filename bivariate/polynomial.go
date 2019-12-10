@@ -206,12 +206,29 @@ func (f *Polynomial) IncrementCoef(deg [2]uint, val ff.Element) {
 	}
 }
 
+// DecrementCoef decrements the coefficient of the monomial with degree deg in f
+// by val.
+func (f *Polynomial) DecrementCoef(deg [2]uint, val ff.Element) {
+	if val.IsZero() {
+		return
+	}
+
+	if c, ok := f.coefs[deg]; ok {
+		c.Sub(val)
+		if c.IsZero() {
+			delete(f.coefs, deg)
+		}
+	} else {
+		f.coefs[deg] = val.Neg()
+	}
+}
+
 // Copy returns a new polynomial object over the same ring and with the same
 // coefficients as f.
 func (f *Polynomial) Copy() *Polynomial {
 	h := f.baseRing.zeroWithCap(len(f.coefs))
 	for deg, c := range f.coefs {
-		h.SetCoef(deg, c)
+		h.coefs[deg] = c.Copy()
 	}
 	return h
 }

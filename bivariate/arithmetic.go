@@ -13,17 +13,7 @@ import (
 // When f or g has a non-nil error status, its error is wrapped and the same
 // polynomial is returned.
 func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
-	const op = "Adding polynomials"
-
-	if tmp := checkErrAndCompatible(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	h := f.Copy()
-	for deg, c := range g.coefs {
-		h.IncrementCoef(deg, c)
-	}
-	return h
+	return f.Copy().Add(g)
 }
 
 // Add sets f to the sum of the two polynomials f and g and returns f.
@@ -56,6 +46,26 @@ func (f *Polynomial) Neg() *Polynomial {
 	return g
 }
 
+// Sub sets f to the difference of the two polynomials f and g and returns f.
+//
+// If f and g are defined over different rings, a new polynomial is returned
+// with an ArithmeticIncompat-error as error status.
+//
+// When f or g has a non-nil error status, its error is wrapped and the same
+// polynomial is returned.
+func (f *Polynomial) Sub(g *Polynomial) *Polynomial {
+	const op = "Subtracting polynomials"
+
+	if tmp := checkErrAndCompatible(op, f, g); tmp != nil {
+		return tmp
+	}
+
+	for deg, c := range g.coefs {
+		f.DecrementCoef(deg, c)
+	}
+	return f
+}
+
 // Minus returns polynomial difference f-g.
 //
 // If f and g are defined over different rings, a new polynomial is returned
@@ -64,13 +74,7 @@ func (f *Polynomial) Neg() *Polynomial {
 // When f or g has a non-nil error status, its error is wrapped and the same
 // polynomial is returned.
 func (f *Polynomial) Minus(g *Polynomial) *Polynomial {
-	const op = "Subtracting polynomials"
-
-	if tmp := checkErrAndCompatible(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	return f.Plus(g.Neg())
+	return f.Copy().Sub(g)
 }
 
 // Internal method. Multiplies the two polynomials f and g, but does not reduce
@@ -232,14 +236,14 @@ outer:
 			if mquo, ok, _ := p.Lt().monomialDivideBy(g.Lt()); ok {
 				// Lt(g) divides p.Lt()
 				q[i] = q[i].Plus(mquo)
-				p = p.Minus(g.multNoReduce(mquo))
+				p.Sub(g.multNoReduce(mquo))
 				continue outer
 			}
 		}
 		// No generators divide
 		tmp := p.Lt()
-		r = r.Plus(tmp)
-		p = p.Minus(tmp)
+		r.Add(tmp)
+		p.Sub(tmp)
 	}
 	return q, r, nil
 }
