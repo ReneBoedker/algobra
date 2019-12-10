@@ -39,7 +39,7 @@ func (r *QuotientRing) Zero() *Polynomial {
 func (r *QuotientRing) zeroWithCap(cap int) *Polynomial {
 	return &Polynomial{
 		baseRing: r,
-		coefs:    make(map[[2]uint]ff.Element),
+		coefs:    make(map[[2]uint]ff.Element, cap),
 	}
 }
 
