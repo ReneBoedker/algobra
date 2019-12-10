@@ -16,6 +16,7 @@ func TestFactorizePower(t *testing.T) {
 		9,
 		25,
 		24389,
+		28561,
 		92683,
 	}
 	expected := [][2]uint{
@@ -25,6 +26,7 @@ func TestFactorizePower(t *testing.T) {
 		{3, 2},
 		{5, 2},
 		{29, 3},
+		{13, 4},
 		{92683, 1},
 	}
 
