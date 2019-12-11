@@ -102,9 +102,6 @@ func (id *Ideal) Copy() *Ideal {
 }
 
 // Reduce sets f to f modulo id.
-//
-// Note that when a Gröbner basis has not been computed for id, the reduction is
-// not necessarily unique.
 func (id *Ideal) Reduce(f *Polynomial) error {
 	const op = "Reducing polynomial"
 

@@ -223,6 +223,11 @@ func (f *Polynomial) DecrementCoef(deg [2]uint, val ff.Element) {
 	}
 }
 
+// removeCoef sets the given coefficient to zero.
+func (f *Polynomial) removeCoef(deg [2]uint) {
+	delete(f.coefs, deg)
+}
+
 // Copy returns a new polynomial object over the same ring and with the same
 // coefficients as f.
 func (f *Polynomial) Copy() *Polynomial {

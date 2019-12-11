@@ -103,6 +103,31 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 	return h
 }
 
+// subWithShiftAndScale sets f to the polynomial f-a*X^i*g. This is done without
+// allocating a new polynomial
+func (f *Polynomial) subWithShiftAndScale(g *Polynomial, i [2]uint, a ff.Element) {
+	switch {
+	case a.IsZero():
+		return
+	case a.IsOne():
+		for d, c := range g.coefs {
+			if c.IsZero() {
+				continue
+			}
+			f.DecrementCoef([2]uint{d[0] + i[0], d[1] + i[1]}, c)
+		}
+	default:
+		tmp := f.BaseField().Zero()
+		for d, c := range g.coefs {
+			if c.IsZero() {
+				continue
+			}
+			tmp.Prod(a, c)
+			f.DecrementCoef([2]uint{d[0] + i[0], d[1] + i[1]}, tmp)
+		}
+	}
+}
+
 // Times returns the product of the polynomials f and g
 //
 // If f and g are defined over different rings, a new polynomial is returned
@@ -224,28 +249,81 @@ func (f *Polynomial) quoRemWithIgnore(
 	for i := range list {
 		q[i] = f.baseRing.Zero()
 	}
+
+	tmp := f.BaseField().Zero()
 outer:
 	for p.IsNonzero() {
+		pLd := p.Ld()
 		for i, g := range list {
+			gLd := g.Ld()
 			if i == ignoreIndex {
 				continue
 			}
-			// Below, err is ignored since both p and g are nonzero (so both
-			// leading terms are well defined, and monomialDivideBy will not
-			// return an error)
-			if mquo, ok, _ := p.Lt().monomialDivideBy(g.Lt()); ok {
-				// Lt(g) divides p.Lt()
-				q[i] = q[i].Plus(mquo)
-				p.Sub(g.multNoReduce(mquo))
-				continue outer
+
+			degDiff, ok := subtractDegs(pLd, g.Ld())
+
+			if !ok {
+				// Lt of g does not divide Lt of p
+				continue
 			}
+
+			if g.coefPtr(gLd).IsOne() {
+				tmp.Prod(p.coefPtr(pLd), g.coefPtr(gLd))
+			} else {
+				tmp.Prod(p.coefPtr(pLd), g.coefPtr(gLd).Inv())
+			}
+			q[i].IncrementCoef(degDiff, tmp)
+			p.subWithShiftAndScale(g, degDiff, tmp)
+			continue outer
 		}
 		// No generators divide
-		tmp := p.Lt()
-		r.Add(tmp)
-		p.Sub(tmp)
+
+		r.IncrementCoef(pLd, p.coefPtr(pLd))
+		p.removeCoef(pLd)
 	}
 	return q, r, nil
+}
+
+// Rem returns the polynomial remainder under division by the given list of
+// polynomials.
+func (f *Polynomial) Rem(list ...*Polynomial) (r *Polynomial, err error) {
+	const op = "Computing polynomial remainder"
+
+	if tmp := checkErrAndCompatible(op, f, list...); tmp != nil {
+		err = tmp.Err()
+		return
+	}
+
+	r = f.baseRing.Zero()
+	p := f.Copy()
+
+	tmp := f.BaseField().Zero()
+outer:
+	for p.IsNonzero() {
+		pLd := p.Ld()
+		for _, g := range list {
+			gLd := g.Ld()
+			degDiff, ok := subtractDegs(pLd, gLd)
+
+			if !ok {
+				// Lt of g does not divide Lt of p
+				continue
+			}
+
+			if g.coefPtr(gLd).IsOne() {
+				tmp.Prod(p.coefPtr(pLd), g.coefPtr(gLd))
+			} else {
+				tmp.Prod(p.coefPtr(pLd), g.coefPtr(gLd).Inv())
+			}
+			p.subWithShiftAndScale(g, degDiff, tmp)
+			//degs = degs[1:]
+			continue outer
+		}
+		// No generators divide
+		r.IncrementCoef(pLd, p.coefPtr(pLd))
+		p.removeCoef(pLd)
+	}
+	return r, nil
 }
 
 /* Copyright 2019 René Bødker Christensen

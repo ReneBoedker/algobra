@@ -69,7 +69,7 @@ func (id *Ideal) GroebnerBasis() *Ideal {
 				s, _ := SPolynomial(f, g)
 				// Compute the remainder of s. Ignoring error is OK since ideal
 				// generators are compatible
-				_, r, _ := s.QuoRem(gb...)
+				r, _ := s.Rem(gb...)
 				if r.IsNonzero() {
 					newGens = append(newGens, r)
 				}
@@ -118,7 +118,7 @@ func (id *Ideal) IsGroebner() (b bool) {
 			s, _ := SPolynomial(f, g)
 			// Compute the remainder of s. Ignoring error is OK since ideal
 			// generators are compatible
-			_, r, _ := s.QuoRem(id.generators...)
+			r, _ := s.Rem(id.generators...)
 			if r.IsNonzero() {
 				// Non-zero S-polynomial was found. Not a Gröbner basis
 				return false
