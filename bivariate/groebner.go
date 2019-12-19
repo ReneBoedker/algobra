@@ -263,32 +263,6 @@ func (id *Ideal) IsReduced() (b bool) {
 	return true
 }
 
-// Write f=qg if possible; otherwise set ok=false
-func (f *Polynomial) monomialDivideBy(g *Polynomial) (q *Polynomial, ok bool, err error) {
-	const op = "Dividing monomials"
-
-	if !f.IsMonomial() {
-		return nil, false, errors.New(
-			op, errors.InputValue,
-			"Object %v is not a monomial", f,
-		)
-	}
-	if !g.IsMonomial() {
-		return nil, false, errors.New(
-			op, errors.InputValue,
-			"Input %v is not a monomial", g,
-		)
-	}
-
-	ldf, ldg := f.Ld(), g.Ld()
-	if d, ok := subtractDegs(ldf, ldg); ok {
-		h := f.baseRing.Zero()
-		h.SetCoef(d, f.Coef(ldf).Times(g.Coef(ldg).Inv()))
-		return h, true, nil
-	}
-	return nil, false, nil
-}
-
 /* Copyright 2019 René Bødker Christensen
  *
  * Redistribution and use in source and binary forms, with or without

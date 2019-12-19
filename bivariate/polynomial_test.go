@@ -62,6 +62,96 @@ func TestPow(t *testing.T) {
 	}
 }
 
+func TestTimes(t *testing.T) {
+	field := defineField(5, t)
+	r := DefRing(field, Lex(true))
+	testPolys := [...]*Polynomial{
+		r.PolynomialFromUnsigned(map[[2]uint]uint{
+			{2, 1}: 2,
+			{1, 6}: 4,
+			{0, 1}: 3,
+		}),
+		r.PolynomialFromUnsigned(map[[2]uint]uint{
+			{1, 1}: 3,
+			{0, 0}: 1,
+		}),
+		r.PolynomialFromUnsigned(map[[2]uint]uint{
+			{0, 4}: 1,
+			{0, 3}: 2,
+			{0, 0}: 4,
+		}),
+	}
+
+	expected := map[[2]int]*Polynomial{
+		{0, 0}: r.PolynomialFromUnsigned(map[[2]uint]uint{
+			{4, 2}:  4,
+			{3, 7}:  16,
+			{2, 12}: 16,
+			{2, 2}:  12,
+			{1, 7}:  24,
+			{0, 2}:  9,
+		}),
+		{0, 1}: r.PolynomialFromUnsigned(map[[2]uint]uint{
+			{3, 2}: 6,
+			{2, 7}: 12,
+			{2, 1}: 2,
+			{1, 6}: 4,
+			{1, 2}: 9,
+			{0, 1}: 3,
+		}),
+		{0, 2}: r.PolynomialFromUnsigned(map[[2]uint]uint{
+			{2, 5}:  2,
+			{2, 4}:  4,
+			{2, 1}:  8,
+			{1, 10}: 4,
+			{1, 9}:  8,
+			{1, 6}:  16,
+			{0, 5}:  3,
+			{0, 4}:  6,
+			{0, 1}:  12,
+		}),
+		{1, 1}: r.PolynomialFromUnsigned(map[[2]uint]uint{
+			{2, 2}: 9,
+			{1, 1}: 6,
+			{0, 0}: 1,
+		}),
+		{1, 2}: r.PolynomialFromUnsigned(map[[2]uint]uint{
+			{1, 5}: 3,
+			{1, 4}: 6,
+			{1, 1}: 12,
+			{0, 4}: 1,
+			{0, 3}: 2,
+			{0, 0}: 4,
+		}),
+		{2, 2}: r.PolynomialFromUnsigned(map[[2]uint]uint{
+			{0, 8}: 1,
+			{0, 7}: 4,
+			{0, 6}: 4,
+			{0, 4}: 8,
+			{0, 3}: 16,
+			{0, 0}: 16,
+		}),
+	}
+
+	for i, f := range testPolys {
+		for j, g := range testPolys {
+			key := [2]int{i, j}
+			if j < i {
+				key = [2]int{j, i}
+			}
+
+			if _, ok := expected[key]; !ok {
+				t.Logf("Skipping (i,j)=(%d,%d): No expected result given", i, j)
+				continue
+			}
+
+			if tmp := f.Times(g); !tmp.Equal(expected[key]) {
+				t.Errorf("(%v)*(%v) = %v (Expected %v)", f, g, tmp, expected[key])
+			}
+		}
+	}
+}
+
 func TestEval(t *testing.T) {
 	field := defineField(13, t)
 	r := DefRing(field, WDegLex(13, 14, false))

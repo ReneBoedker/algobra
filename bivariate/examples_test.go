@@ -87,6 +87,24 @@ func ExamplePolynomial_Lt() {
 	// (a + 2)X^4Y
 }
 
+func ExamplePolynomial_SetCoef() {
+	gf5, _ := finitefield.Define(5)
+	ring := bivariate.DefRing(gf5, bivariate.WDegLex(2, 1, false))
+	f := ring.PolynomialFromUnsigned(map[[2]uint]uint{
+		{3, 1}: 3,
+		{1, 4}: 1,
+		{0, 0}: 3,
+	})
+	fmt.Println(f)
+
+	f.SetCoef([2]uint{1, 4}, gf5.ElementFromUnsigned(4))
+	f.SetCoef([2]uint{1, 1}, gf5.One())
+	fmt.Println(f)
+	// Output:
+	// 3X^3Y + XY^4 + 3
+	// 3X^3Y + 4XY^4 + XY + 3
+}
+
 func ExamplePolynomial_SortedDegrees() {
 	gf9, _ := finitefield.Define(9)
 	ring := bivariate.DefRing(gf9, bivariate.DegLex(true))
