@@ -13,17 +13,7 @@ import (
 // When f or g has a non-nil error status, its error is wrapped and the same
 // polynomial is returned.
 func (f *Polynomial) Plus(g *Polynomial) *Polynomial {
-	const op = "Adding polynomials"
-
-	if tmp := checkErrAndCompatible(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	h := f.Copy()
-	for deg, c := range g.coefs {
-		h.IncrementCoef(deg, c)
-	}
-	return h
+	return f.Copy().Add(g)
 }
 
 // Add sets f to the sum of the two polynomials f and g and returns f.
@@ -56,6 +46,26 @@ func (f *Polynomial) Neg() *Polynomial {
 	return g
 }
 
+// Sub sets f to the difference of the two polynomials f and g and returns f.
+//
+// If f and g are defined over different rings, a new polynomial is returned
+// with an ArithmeticIncompat-error as error status.
+//
+// When f or g has a non-nil error status, its error is wrapped and the same
+// polynomial is returned.
+func (f *Polynomial) Sub(g *Polynomial) *Polynomial {
+	const op = "Subtracting polynomials"
+
+	if tmp := checkErrAndCompatible(op, f, g); tmp != nil {
+		return tmp
+	}
+
+	for deg, c := range g.coefs {
+		f.DecrementCoef(deg, c)
+	}
+	return f
+}
+
 // Minus returns polynomial difference f-g.
 //
 // If f and g are defined over different rings, a new polynomial is returned
@@ -64,13 +74,7 @@ func (f *Polynomial) Neg() *Polynomial {
 // When f or g has a non-nil error status, its error is wrapped and the same
 // polynomial is returned.
 func (f *Polynomial) Minus(g *Polynomial) *Polynomial {
-	const op = "Subtracting polynomials"
-
-	if tmp := checkErrAndCompatible(op, f, g); tmp != nil {
-		return tmp
-	}
-
-	return f.Plus(g.Neg())
+	return f.Copy().Sub(g)
 }
 
 // Internal method. Multiplies the two polynomials f and g, but does not reduce
@@ -97,6 +101,31 @@ func (f *Polynomial) multNoReduce(g *Polynomial) *Polynomial {
 		}
 	}
 	return h
+}
+
+// subWithShiftAndScale sets f to the polynomial f-a*X^i*g. This is done without
+// allocating a new polynomial
+func (f *Polynomial) subWithShiftAndScale(g *Polynomial, i [2]uint, a ff.Element) {
+	switch {
+	case a.IsZero():
+		return
+	case a.IsOne():
+		for d, c := range g.coefs {
+			if c.IsZero() {
+				continue
+			}
+			f.DecrementCoef([2]uint{d[0] + i[0], d[1] + i[1]}, c)
+		}
+	default:
+		tmp := f.BaseField().Zero()
+		for d, c := range g.coefs {
+			if c.IsZero() {
+				continue
+			}
+			tmp.Prod(a, c)
+			f.DecrementCoef([2]uint{d[0] + i[0], d[1] + i[1]}, tmp)
+		}
+	}
 }
 
 // Times returns the product of the polynomials f and g
@@ -139,7 +168,7 @@ func (f *Polynomial) Normalize() *Polynomial {
 	if f.IsZero() {
 		return f.Copy()
 	}
-	return f.Scale(f.Lc().Inv())
+	return f.Scale(f.lcPtr().Inv())
 }
 
 // Scale scales all coefficients of f by the field element c and returns the
@@ -220,28 +249,81 @@ func (f *Polynomial) quoRemWithIgnore(
 	for i := range list {
 		q[i] = f.baseRing.Zero()
 	}
+
+	tmp := f.BaseField().Zero()
 outer:
 	for p.IsNonzero() {
+		pLd := p.Ld()
 		for i, g := range list {
+			gLd := g.Ld()
 			if i == ignoreIndex {
 				continue
 			}
-			// Below, err is ignored since both p and g are nonzero (so both
-			// leading terms are well defined, and monomialDivideBy will not
-			// return an error)
-			if mquo, ok, _ := p.Lt().monomialDivideBy(g.Lt()); ok {
-				// Lt(g) divides p.Lt()
-				q[i] = q[i].Plus(mquo)
-				p = p.Minus(g.multNoReduce(mquo))
-				continue outer
+
+			degDiff, ok := subtractDegs(pLd, g.Ld())
+
+			if !ok {
+				// Lt of g does not divide Lt of p
+				continue
 			}
+
+			if g.coefPtr(gLd).IsOne() {
+				tmp.Prod(p.coefPtr(pLd), g.coefPtr(gLd))
+			} else {
+				tmp.Prod(p.coefPtr(pLd), g.coefPtr(gLd).Inv())
+			}
+			q[i].IncrementCoef(degDiff, tmp)
+			p.subWithShiftAndScale(g, degDiff, tmp)
+			continue outer
 		}
 		// No generators divide
-		tmp := p.Lt()
-		r = r.Plus(tmp)
-		p = p.Minus(tmp)
+
+		r.IncrementCoef(pLd, p.coefPtr(pLd))
+		p.removeCoef(pLd)
 	}
 	return q, r, nil
+}
+
+// Rem returns the polynomial remainder under division by the given list of
+// polynomials.
+func (f *Polynomial) Rem(list ...*Polynomial) (r *Polynomial, err error) {
+	const op = "Computing polynomial remainder"
+
+	if tmp := checkErrAndCompatible(op, f, list...); tmp != nil {
+		err = tmp.Err()
+		return
+	}
+
+	r = f.baseRing.Zero()
+	p := f.Copy()
+
+	tmp := f.BaseField().Zero()
+outer:
+	for p.IsNonzero() {
+		pLd := p.Ld()
+		for _, g := range list {
+			gLd := g.Ld()
+			degDiff, ok := subtractDegs(pLd, gLd)
+
+			if !ok {
+				// Lt of g does not divide Lt of p
+				continue
+			}
+
+			if g.coefPtr(gLd).IsOne() {
+				tmp.Prod(p.coefPtr(pLd), g.coefPtr(gLd))
+			} else {
+				tmp.Prod(p.coefPtr(pLd), g.coefPtr(gLd).Inv())
+			}
+			p.subWithShiftAndScale(g, degDiff, tmp)
+			//degs = degs[1:]
+			continue outer
+		}
+		// No generators divide
+		r.IncrementCoef(pLd, p.coefPtr(pLd))
+		p.removeCoef(pLd)
+	}
+	return r, nil
 }
 
 /* Copyright 2019 René Bødker Christensen

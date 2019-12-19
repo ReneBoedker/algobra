@@ -1,5 +1,5 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/ReneBoedker/algobra)](https://goreportcard.com/report/github.com/ReneBoedker/algobra)
-![coverage-badge](https://img.shields.io/badge/coverage-90.6%25-brightgreen?cacheSeconds=86400&style=flat)
+![coverage-badge](https://img.shields.io/badge/coverage-90.1%25-brightgreen?cacheSeconds=86400&style=flat)
 [![GoDoc](https://godoc.org/github.com/ReneBoedker/algobra/bivariate?status.svg)](https://godoc.org/github.com/ReneBoedker/algobra/bivariate)
 # Algobra: Bivariate Polynomials
 This package implements bivariate polynomials over prime fields.

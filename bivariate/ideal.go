@@ -111,7 +111,7 @@ func (id *Ideal) Reduce(f *Polynomial) error {
 		id = id.GroebnerBasis()
 	}
 
-	_, r, err := f.QuoRem(id.generators...)
+	r, err := f.Rem(id.generators...)
 	if err != nil {
 		return errors.Wrap(op, errors.Inherit, err)
 	}

@@ -1,8 +1,8 @@
 package bivariate
 
 import (
-	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/ReneBoedker/algobra/errors"
@@ -39,7 +39,7 @@ func (r *QuotientRing) Zero() *Polynomial {
 func (r *QuotientRing) zeroWithCap(cap int) *Polynomial {
 	return &Polynomial{
 		baseRing: r,
-		coefs:    make(map[[2]uint]ff.Element),
+		coefs:    make(map[[2]uint]ff.Element, cap),
 	}
 }
 
@@ -137,6 +137,16 @@ func (f *Polynomial) Coef(deg [2]uint) ff.Element {
 	return f.BaseField().Zero()
 }
 
+// coefPtr returns a pointer to the coefficient of the monomial with degree
+// specified by the input. The return value is nil if the coefficient does not
+// exist.
+func (f *Polynomial) coefPtr(deg [2]uint) ff.Element {
+	if c, ok := f.coefs[deg]; ok {
+		return c
+	}
+	return nil
+}
+
 // SetCoef sets the coefficient of the monomial with degree deg in f to val by
 // copying. See also SetCoefPtr.
 func (f *Polynomial) SetCoef(deg [2]uint, val ff.Element) {
@@ -196,12 +206,34 @@ func (f *Polynomial) IncrementCoef(deg [2]uint, val ff.Element) {
 	}
 }
 
+// DecrementCoef decrements the coefficient of the monomial with degree deg in f
+// by val.
+func (f *Polynomial) DecrementCoef(deg [2]uint, val ff.Element) {
+	if val.IsZero() {
+		return
+	}
+
+	if c, ok := f.coefs[deg]; ok {
+		c.Sub(val)
+		if c.IsZero() {
+			delete(f.coefs, deg)
+		}
+	} else {
+		f.coefs[deg] = val.Neg()
+	}
+}
+
+// removeCoef sets the given coefficient to zero.
+func (f *Polynomial) removeCoef(deg [2]uint) {
+	delete(f.coefs, deg)
+}
+
 // Copy returns a new polynomial object over the same ring and with the same
 // coefficients as f.
 func (f *Polynomial) Copy() *Polynomial {
 	h := f.baseRing.zeroWithCap(len(f.coefs))
 	for deg, c := range f.coefs {
-		h.SetCoef(deg, c)
+		h.coefs[deg] = c.Copy()
 	}
 	return h
 }
@@ -250,20 +282,34 @@ func (f *Polynomial) SortedDegrees() [][2]uint {
 	for deg := range f.coefs {
 		degs = append(degs, deg)
 	}
-	sort.Slice(degs, func(i, j int) bool {
-		return (f.baseRing.ord(degs[i], degs[j]) >= 0)
-	})
+
+	if len(degs) > 1 {
+		sort.Slice(degs, func(i, j int) bool {
+			return (f.baseRing.ord(degs[i], degs[j]) >= 0)
+		})
+	}
 	return degs
 }
 
 // Ld returns the leading degree of f.
 func (f *Polynomial) Ld() [2]uint {
-	return f.SortedDegrees()[0]
+	ld := [2]uint{0, 0}
+	for deg := range f.coefs {
+		if f.baseRing.ord(deg, ld) == 1 {
+			ld = deg
+		}
+	}
+	return ld
 }
 
 // Lc returns the leading coefficient of f.
 func (f *Polynomial) Lc() ff.Element {
 	return f.Coef(f.Ld())
+}
+
+// lcPtr returns a pointer to the leading coefficient of f.
+func (f *Polynomial) lcPtr() ff.Element {
+	return f.coefs[f.Ld()]
 }
 
 // Lt returns the leading term of f.
@@ -316,33 +362,45 @@ func (f *Polynomial) reduce() {
 // String returns the string representation of f. Variables are 'X' and 'Y' by
 // default. To change this, see the SetVarNames method.
 func (f *Polynomial) String() string {
-	degs := f.SortedDegrees()
-	if len(degs) == 0 {
+	if f.IsZero() {
 		return "0"
 	}
+
+	degs := f.SortedDegrees()
+
 	var b strings.Builder
 	for i, d := range degs {
 		if i > 0 {
-			fmt.Fprint(&b, " + ")
+			b.Write([]byte(" + "))
 		}
-		if tmp := f.Coef(d); !tmp.IsOne() || (d[0] == 0 && d[1] == 0) {
+
+		// Append the coefficient
+		if tmp := f.coefPtr(d); !tmp.IsOne() || (d[0] == 0 && d[1] == 0) {
 			if tmp.NTerms() > 1 {
-				fmt.Fprintf(&b, "(%v)", tmp)
+				b.WriteByte('(')
+				b.WriteString(tmp.String())
+				b.WriteByte(')')
 			} else {
-				fmt.Fprintf(&b, "%v", tmp)
+				b.WriteString(tmp.String())
 			}
 		}
-		if d[0] == 1 {
-			fmt.Fprint(&b, f.baseRing.VarNames()[0])
+
+		// Append the first variable name and its degree
+		if d[0] >= 1 {
+			b.WriteString(f.baseRing.VarNames()[0])
 		}
 		if d[0] > 1 {
-			fmt.Fprintf(&b, "%s^%d", f.baseRing.VarNames()[0], d[0])
+			b.WriteByte('^')
+			b.WriteString(strconv.FormatUint(uint64(d[0]), 10))
 		}
-		if d[1] == 1 {
-			fmt.Fprint(&b, f.baseRing.VarNames()[1])
+
+		// Append the second variable name and its degree
+		if d[1] >= 1 {
+			b.WriteString(f.baseRing.VarNames()[1])
 		}
 		if d[1] > 1 {
-			fmt.Fprintf(&b, "%s^%d", f.baseRing.VarNames()[1], d[1])
+			b.WriteByte('^')
+			b.WriteString(strconv.FormatUint(uint64(d[1]), 10))
 		}
 	}
 	return b.String()

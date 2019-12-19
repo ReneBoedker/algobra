@@ -252,9 +252,8 @@ func (f *Polynomial) Pow(n uint) *Polynomial {
 
 // QuoRem returns the polynomial quotient and remainder under division by the
 // given list of polynomials.
-//
-// Loosely based on [GG; Algorithm 2.5].
 func (f *Polynomial) QuoRem(list ...*Polynomial) (q []*Polynomial, r *Polynomial, err error) {
+	// The implementation is loosely based on [GG; Algorithm 2.5].
 	const op = "Computing polynomial quotient and remainder"
 
 	if tmp := checkErrAndCompatible(op, f, list...); tmp != nil {

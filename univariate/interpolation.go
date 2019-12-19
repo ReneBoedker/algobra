@@ -108,7 +108,7 @@ func (r *QuotientRing) lagrangeBasis(
 		denom.Mult(ignore.Minus(p))
 	}
 
-	f = f.Scale(denom.Inv())
+	f.SetScale(denom.Inv())
 	return f
 }
 

@@ -69,7 +69,7 @@ func (id *Ideal) GroebnerBasis() *Ideal {
 				s, _ := SPolynomial(f, g)
 				// Compute the remainder of s. Ignoring error is OK since ideal
 				// generators are compatible
-				_, r, _ := s.QuoRem(gb...)
+				r, _ := s.Rem(gb...)
 				if r.IsNonzero() {
 					newGens = append(newGens, r)
 				}
@@ -118,7 +118,7 @@ func (id *Ideal) IsGroebner() (b bool) {
 			s, _ := SPolynomial(f, g)
 			// Compute the remainder of s. Ignoring error is OK since ideal
 			// generators are compatible
-			_, r, _ := s.QuoRem(id.generators...)
+			r, _ := s.Rem(id.generators...)
 			if r.IsNonzero() {
 				// Non-zero S-polynomial was found. Not a Gröbner basis
 				return false
@@ -261,32 +261,6 @@ func (id *Ideal) IsReduced() (b bool) {
 	}
 
 	return true
-}
-
-// Write f=qg if possible; otherwise set ok=false
-func (f *Polynomial) monomialDivideBy(g *Polynomial) (q *Polynomial, ok bool, err error) {
-	const op = "Dividing monomials"
-
-	if !f.IsMonomial() {
-		return nil, false, errors.New(
-			op, errors.InputValue,
-			"Object %v is not a monomial", f,
-		)
-	}
-	if !g.IsMonomial() {
-		return nil, false, errors.New(
-			op, errors.InputValue,
-			"Input %v is not a monomial", g,
-		)
-	}
-
-	ldf, ldg := f.Ld(), g.Ld()
-	if d, ok := subtractDegs(ldf, ldg); ok {
-		h := f.baseRing.Zero()
-		h.SetCoef(d, f.Coef(ldf).Times(g.Coef(ldg).Inv()))
-		return h, true, nil
-	}
-	return nil, false, nil
 }
 
 /* Copyright 2019 René Bødker Christensen

@@ -26,6 +26,8 @@ func NewCombinIter(n, k int) *CombinIter {
 }
 
 // Current returns the slice of indices representing the current combination.
+// The return value is a pointer to the underlying slice, meaning that changing
+// the slice values may cause unexpected results.
 func (ci *CombinIter) Current() []int {
 	return ci.slice
 }
@@ -37,7 +39,8 @@ func (ci *CombinIter) Active() bool {
 }
 
 // Next increments the iterator to the next combination with respect to the
-// lexicographical ordering.
+// lexicographical ordering. If the last combination has already been produced,
+// the function returns immediately.
 func (ci *CombinIter) Next() {
 	if ci.atEnd {
 		return

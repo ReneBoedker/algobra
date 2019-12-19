@@ -53,8 +53,12 @@ func Pow(a, n uint) (uint, error) {
 	}
 
 	res := uint(1)
-	for ; n > 0; n-- {
-		res *= a
+	tmp := a
+	for ; n > 0; n >>= 1 {
+		if (n & 1) == 1 {
+			res *= tmp
+		}
+		tmp *= tmp
 	}
 	return res, nil
 }

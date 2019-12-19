@@ -83,19 +83,11 @@ func TestNotMonomials(t *testing.T) {
 		)
 	}
 
-	funcs := [](func(*Polynomial, *Polynomial) error){
-		func(f, g *Polynomial) error {
-			_, _, err := f.monomialDivideBy(g)
-			return err
-		},
-		func(f, g *Polynomial) error {
-			_, _, err := g.monomialDivideBy(f)
-			return err
-		},
+	if !f.IsMonomial() {
+		t.Errorf("(%v).IsMonomial() returned false", f)
 	}
 
-	for i, fun := range funcs {
-		err := fun(f, g)
-		assertError(t, err, errors.InputValue, "Function %d", i+1)
+	if g.IsMonomial() {
+		t.Errorf("(%v).IsMonomial() returned true", f)
 	}
 }
