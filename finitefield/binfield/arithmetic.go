@@ -105,8 +105,13 @@ func (a *Element) Prod(b, c ff.Element) ff.Element {
 	a.field = bb.field
 
 	// TODO: Check that no overflow will occur
-	a.val = bitProd(bb.val, cc.val)
-	a.reduce()
+	res := uint(0)
+	for x, y := bb.val, cc.val; x > 0; x >>= 1 {
+		res ^= y * (x & 1)
+		y <<= 1
+		y ^= (y >> a.field.extDeg) * a.field.conwayPoly // reduce y at each step
+	}
+	a.val = res
 
 	return a
 }
