@@ -40,7 +40,7 @@
 //  b := gf7.ElementFromSigned(-2)  // b = 5
 //
 //  gf9, _ := finitefield.Define(9)
-//  c, err := gf9.Element([]int{1,2})   // c = 1 + α
+//  c, err := gf9.Element([]int{1,2})   // c = 1 + 2α
 //  d := gf9.Zero()                     // d = 0
 //
 // Arithmetic operations
@@ -52,7 +52,7 @@
 // the result is to be stored in a new object, the package provides the methods
 // Plus, Minus, and Times, which evaluate the arithmetic operation and
 // returns the result in a new object. As a mnemonic, methods named after the
-// operation are destructive, whereas those named after the mathematical sign
+// operation are destructive, whereas those named after the mathematical symbol
 // are non-destructive.
 //
 //  e := a.Plus(b)  // Returns a new element e with value a + b = 1
