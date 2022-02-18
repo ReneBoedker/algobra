@@ -184,11 +184,19 @@ func (f *Polynomial) EmbedIn(r *QuotientRing, reduce bool) error {
 // Eval evaluates f at the given point.
 func (f *Polynomial) Eval(point ff.Element) ff.Element {
 	out := f.BaseField().Zero()
+	power := f.BaseField().One()
+	tmp := f.BaseField().Zero()
 	for deg, c := range f.coefs {
+		if deg > 0 {
+			power.Mult(point)
+		}
+
 		if c == nil {
 			continue
 		}
-		out.Add(point.Pow(uint(deg)).Mult(c))
+
+		tmp.Prod(power, c)
+		out.Add(tmp)
 	}
 	return out
 }

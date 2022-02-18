@@ -87,6 +87,8 @@ func (f *Field) Element(val interface{}) (ff.Element, error) {
 // i'th term in the representation of the element.
 //
 // The returned element will automatically be reduced modulo the characteristic.
+//
+// See also AsBits.
 func (f *Field) ElementFromBits(val uint) ff.Element {
 	a := &Element{
 		field: f,
@@ -297,4 +299,13 @@ func (a *Element) String() string {
 // NTerms returns the number of terms in the representation of a.
 func (a *Element) NTerms() uint {
 	return uint(bits.OnesCount(a.val))
+}
+
+// AsBits returns the bitstring representation of a. That is, the i'th bit in
+// the output gives the coefficient of the i'th term in the representation of
+// the element.
+//
+// See also ElementFromBits.
+func (a *Element) AsBits() uint {
+	return a.val
 }

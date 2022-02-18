@@ -77,6 +77,26 @@ func TestElements(t *testing.T) {
 	}
 }
 
+func TestBitRepresentation(t *testing.T) {
+	field, err := Define(256)
+	if err != nil {
+		panic(err)
+	}
+
+	for i := 0; i < 10; i++ {
+		randBits := rand.Uint64()
+		for j := 0; j < 8; j++ {
+			randByte := uint(randBits % (1 << 8))
+			randBits <<= 8
+
+			a := field.ElementFromBits(randByte)
+			if got := a.(*Element).AsBits(); got != randByte {
+				t.Errorf("Element %v returned %b, but expected %b", a, got, randByte)
+			}
+		}
+	}
+}
+
 func TestPow(t *testing.T) {
 	field, _ := Define(16)
 	for rep := 0; rep < 50; rep++ {

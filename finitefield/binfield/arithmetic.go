@@ -10,9 +10,8 @@ import (
 // reduce computes the reduction of a modulo the Conway polynomial of the field,
 // and sets a to this value.
 func (a *Element) reduce() *Element {
-	conwayLen := uint(bits.Len(a.field.conwayPoly))
 	for l := uint(bits.Len(a.val)); l > a.field.extDeg; l = uint(bits.Len(a.val)) {
-		a.val ^= (a.field.conwayPoly << (l - conwayLen))
+		a.val ^= (a.field.conwayPoly << (l - a.field.extDeg - 1))
 	}
 	return a
 }
@@ -107,12 +106,12 @@ func (a *Element) Prod(b, c ff.Element) ff.Element {
 
 	// TODO: Check that no overflow will occur
 	res := uint(0)
-	for tmp, d := cc.val, 0; tmp > 0; tmp, d = tmp>>1, d+1 {
-		res ^= ((tmp & 1) * bb.val) << d
+	for x, y := bb.val, cc.val; x > 0; x >>= 1 {
+		res ^= y * (x & 1)
+		y <<= 1
+		y ^= (y >> a.field.extDeg) * a.field.conwayPoly // reduce y at each step
 	}
-
 	a.val = res
-	a.reduce()
 
 	return a
 }
