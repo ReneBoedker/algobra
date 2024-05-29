@@ -35,6 +35,21 @@ func ExampleElement_Err() {
 	// Inverting element: Cannot invert zero element
 }
 
+func ExampleElement_AsSlice() {
+	gf27, _ := extfield.Define(27)
+
+	a := gf27.ElementFromUnsignedSlice([]uint{1, 0, 2})
+	fmt.Println(a)
+
+	// a is of interface type ff.Element. Type assertion is necessary to access
+	// the methods of the extfield.Element type.
+	aAssert, _ := a.(*extfield.Element)
+	fmt.Println(aAssert.AsSlice())
+	// Output:
+	// 2a^2 + 1
+	// [1 0 2]
+}
+
 func ExampleElement_NTerms() {
 	a := gf4.ElementFromUnsignedSlice([]uint{1, 1}) // a + 1
 	b := gf4.One()

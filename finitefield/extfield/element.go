@@ -210,6 +210,11 @@ func (a *Element) IsOne() bool {
 	return a.val.IsOne()
 }
 
+// AsSlice returns the coefficients of a when expanded over the base field.
+func (a *Element) AsSlice() []ff.Element {
+	return a.val.Coefs()
+}
+
 // String returns the string representation of a.
 func (a *Element) String() string {
 	return a.val.String()
