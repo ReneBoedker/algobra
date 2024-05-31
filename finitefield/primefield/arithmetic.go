@@ -220,6 +220,13 @@ func (a *Element) Inv() ff.Element {
 	return a.field.ElementFromSigned(i0)
 }
 
+// Trace computes the field trace of a.
+//
+// For prime fields, this simply returns a copy of a.
+func (a *Element) Trace() ff.Element {
+	return a.Copy()
+}
+
 /* Copyright 2019 René Bødker Christensen
  *
  * Redistribution and use in source and binary forms, with or without

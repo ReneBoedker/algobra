@@ -182,11 +182,7 @@ func TestTrace(t *testing.T) {
 
 	// All elements must have trace in the base field. That is, tr(a)^p=tr(a)
 	// for every a.
-	for _, v := range field.Elements() {
-		a, ok := v.(*Element)
-		if !ok {
-			t.Errorf("Type assertion failed for %v", v)
-		}
+	for _, a := range field.Elements() {
 		tr := a.Trace()
 		if !tr.Pow(field.Char()).Equal(tr) {
 			t.Errorf("tr(%v) = %v, which is not in F_5", a, tr)

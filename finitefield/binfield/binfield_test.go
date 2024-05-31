@@ -127,6 +127,33 @@ func TestPow(t *testing.T) {
 	}
 }
 
+func TestTrace(t *testing.T) {
+	field, _ := Define(256)
+
+	// All elements must have trace in the base field.
+	for _, a := range field.Elements() {
+		tr := a.Trace()
+		if !(tr.IsZero() || tr.IsOne()) {
+			t.Errorf("tr(%v) = %v, which is not in F_2", a, tr)
+		}
+	}
+
+	// Use linearity to check correctness of all values in F_256
+	// Here, we use that alpha^5 is the only basis element with non-zero trace.
+	for _, v := range field.Elements() {
+		a, _ := v.(*Element)
+
+		expected := field.Zero()
+		if (a.AsBits() & (1 << 5)) > 0 {
+			expected = field.One()
+		}
+
+		if tr := a.Trace(); !tr.Equal(expected) {
+			t.Errorf("tr(%v) = %v, but expected %v", a, tr, expected)
+		}
+	}
+}
+
 func TestBools(t *testing.T) {
 	field, _ := Define(256)
 	if field.Zero().IsNonzero() {

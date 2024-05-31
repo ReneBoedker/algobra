@@ -40,4 +40,5 @@ type Element interface {
 	String() string
 	Sub(Element) Element
 	Times(Element) Element
+	Trace() Element
 }

@@ -241,3 +241,18 @@ func (a *Element) Inv() ff.Element {
 		val:   i0,
 	}).reduce()
 }
+
+// Trace computes the field trace of a.
+//
+// The resulting object is considered as an element of the extension field (i.e.
+// the same field as a).
+func (a *Element) Trace() ff.Element {
+	out := a.Copy()
+
+	for i := uint(1); i < a.field.extDeg; i++ {
+		out = out.Pow(2)
+		out.Add(a)
+	}
+
+	return out
+}
