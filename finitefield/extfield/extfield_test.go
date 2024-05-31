@@ -167,6 +167,58 @@ func TestPow(t *testing.T) {
 	}
 }
 
+func TestTrace(t *testing.T) {
+	field := defineField(125)
+
+	// For elements a in the base field (F_5), tr(a) must be the extension
+	// degree times a.
+	for i := uint(0); i < 5; i++ {
+		a, _ := field.ElementFromUnsigned(i).(*Element)
+		expected := field.ElementFromUnsigned(i * field.extDeg)
+		if tr := a.Trace(); !tr.Equal(expected) {
+			t.Errorf("tr(%v) = %v, but expected %v", a, tr, expected)
+		}
+	}
+
+	// All elements must have trace in the base field. That is, tr(a)^p=tr(a)
+	// for every a.
+	for _, v := range field.Elements() {
+		a, ok := v.(*Element)
+		if !ok {
+			t.Errorf("Type assertion failed for %v", v)
+		}
+		tr := a.Trace()
+		if !tr.Pow(field.Char()).Equal(tr) {
+			t.Errorf("tr(%v) = %v, which is not in F_5", a, tr)
+		}
+	}
+
+	// Use linearity to check correctness of all values
+	alphaTrace := [...]ff.Element{
+		field.baseField.ElementFromUnsigned(3), // tr(1) = 3
+		field.baseField.ElementFromUnsigned(0), // tr(alpha) = 0
+		field.baseField.ElementFromUnsigned(4), // tr(alpha^2) = 4
+	}
+
+	for _, v := range field.Elements() {
+		a, ok := v.(*Element)
+		if !ok {
+			t.Errorf("Type assertion failed for %v", v)
+		}
+
+		coefs := a.AsSlice()
+		expected := field.baseField.Zero()
+		for i := range coefs {
+			expected.Add(coefs[i].Times(alphaTrace[i]))
+		}
+
+		tr, _ := a.Trace().(*Element)
+		if tr := tr.AsSlice()[0]; !tr.Equal(expected) {
+			t.Errorf("tr(%v) = %v, but expected %v", a, tr, expected)
+		}
+	}
+}
+
 func TestBools(t *testing.T) {
 	field := defineField(49)
 	if field.element([]uint{0}).IsNonzero() {

@@ -242,6 +242,21 @@ func (a *Element) Inv() ff.Element {
 	}
 }
 
+// Trace computes the field trace of a.
+//
+// The resulting object is considered as an element of the extension field (i.e.
+// the same field as a).
+func (a *Element) Trace() ff.Element {
+	out := a.Copy()
+
+	for i := uint(1); i < a.field.extDeg; i++ {
+		out = out.Pow(a.field.Char())
+		out.Add(a)
+	}
+
+	return out
+}
+
 /* Copyright 2019 René Bødker Christensen
  *
  * Redistribution and use in source and binary forms, with or without
