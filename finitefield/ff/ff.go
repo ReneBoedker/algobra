@@ -1,4 +1,5 @@
-// Package ff contains the interfaces describing finite fields and their elements
+// Package ff contains the interfaces describing finite fields and their
+// elements.
 package ff
 
 // Field defines the methods that a finite field must support
