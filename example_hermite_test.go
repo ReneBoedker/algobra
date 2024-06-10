@@ -19,12 +19,8 @@ func Example_hermitianPlaces() {
 		return a.Pow(field.Char() + 1)
 	}
 
-	// Define the trace map given by Tr(a)=a^q+a in the Hermitian case
-	trace := func(field ff.Field, a ff.Element) ff.Element {
-		return a.Pow(field.Char()).Add(a)
-	}
-
-	// trInv computes the preimage of a with respect to the trace map.
+	// trInv computes the preimage of a with respect to the trace map. In the
+	// Hermitian case, the trace is given by Tr(a)=a^q+a.
 	trInv := func(field ff.Field, a ff.Element) ([]ff.Element, error) {
 		if !a.Equal(a.Pow(field.Char())) {
 			// The input must be in the image of the trace.
@@ -35,7 +31,7 @@ func Example_hermitianPlaces() {
 		out := make([]ff.Element, 0, field.Char())
 		for _, b := range field.Elements() {
 			// Search for those elements that map to a under the trace map
-			if trace(field, b).Equal(a) {
+			if b.Trace().Equal(a) {
 				out = append(out, b)
 			}
 			// Stop searching once all q solutions have been found
