@@ -1,6 +1,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/ReneBoedker/algobra)](https://goreportcard.com/report/github.com/ReneBoedker/algobra)
 ![coverage-badge](https://img.shields.io/badge/coverage-94.3%25-brightgreen?cacheSeconds=86400&style=flat)
-[![GoDoc](https://godoc.org/github.com/ReneBoedker/algobra/finitefield/primefield?status.svg)](https://godoc.org/github.com/ReneBoedker/algobra/finitefield/primefield)
+[![Go Reference](https://pkg.go.dev/badge/github.com/ReneBoedker/algobra/finitefield/primefield.svg)](https://pkg.go.dev/github.com/ReneBoedker/algobra/finitefield/primefield)
 # Algobra: Prime Fields
 This package implements arithmetic in finite fields of prime cardinality.
 
