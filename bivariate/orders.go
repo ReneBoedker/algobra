@@ -3,9 +3,9 @@ package bivariate
 // Order denotes an order function.
 //
 // Return value is meant to be interpreted in the following way:
-//  -1: deg1 < deg2
-//   0: deg1 == deg2
-//   1: deg1 > deg2
+// *	-1: deg1 < deg2
+// *	 0: deg1 == deg2
+// *	 1: deg1 > deg2
 // By defining functions of type Order, additional monomial orders can be used.
 type Order func(deg1, deg2 [2]uint) int
 
