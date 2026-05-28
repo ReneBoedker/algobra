@@ -309,3 +309,8 @@ func (a *Element) NTerms() uint {
 func (a *Element) AsBits() uint {
 	return a.val
 }
+
+// Field returns the field over which a is defined.
+func (a *Element) Field() ff.Field {
+	return a.field
+}

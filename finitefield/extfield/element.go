@@ -224,3 +224,8 @@ func (a *Element) String() string {
 func (a *Element) NTerms() uint {
 	return a.val.NTerms()
 }
+
+// Field returns the field over which a is defined.
+func (a *Element) Field() ff.Field {
+	return a.field
+}

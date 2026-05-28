@@ -3,6 +3,7 @@ package primefield_test
 import (
 	"fmt"
 
+	"github.com/ReneBoedker/algobra/finitefield/ff"
 	"github.com/ReneBoedker/algobra/finitefield/primefield"
 )
 
@@ -31,6 +32,25 @@ func ExampleElement_Err() {
 	fmt.Println(a.Err())
 	// Output:
 	// Inverting element: Cannot invert zero element
+}
+
+func ExampleElement_Field() {
+	a := gf3.One()
+
+	// Example of a function that accesses the field, despite having only the
+	// element itself as an input.
+	increment := func(x ff.Element) {
+		x.Add(x.Field().One())
+	}
+
+	increment(a)
+	fmt.Println(a)
+
+	increment(a)
+	fmt.Println(a)
+	// Output:
+	// 2
+	// 0
 }
 
 func ExampleField_Element() {

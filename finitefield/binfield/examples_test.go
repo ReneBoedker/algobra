@@ -70,6 +70,16 @@ func ExampleElement_SetUnsigned() {
 	// 0
 }
 
+func ExampleElement_Field() {
+	a := gf4.One()
+
+	// Extract the characteristic and cardinality of the field,
+	// over which a is defined.
+	fmt.Printf("%d, %d", a.Field().Char(), a.Field().Card())
+	// Output:
+	// 2, 4
+}
+
 func ExampleField_Char() {
 	field, _ := binfield.Define(1024)
 	fmt.Println(field.Char())

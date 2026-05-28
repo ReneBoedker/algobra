@@ -202,6 +202,11 @@ func (a *Element) NTerms() uint {
 	return 1
 }
 
+// Field returns the field over which a is defined.
+func (a *Element) Field() ff.Field {
+	return a.field
+}
+
 /* Copyright 2019 René Bødker Christensen
  *
  * Redistribution and use in source and binary forms, with or without

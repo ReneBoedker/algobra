@@ -25,6 +25,7 @@ type Element interface {
 	Copy() Element
 	Equal(Element) bool
 	Err() error
+	Field() Field
 	Inv() Element
 	IsNonzero() bool
 	IsOne() bool
