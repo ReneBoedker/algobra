@@ -127,8 +127,7 @@ outer:
 	for i := uint(2); true; i++ {
 		e = f.element(i)
 		for _, p := range factors {
-			// We need to check if p is a non-trivial factor
-			if p != f.Card()-1 && e.Pow(p).IsOne() {
+			if e.Pow((f.Card() - 1) / p).IsOne() {
 				// Not a generator
 				continue outer
 			}
