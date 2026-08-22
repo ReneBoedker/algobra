@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ReneBoedker/algobra/auxmath"
 	"github.com/ReneBoedker/algobra/errors"
 	"github.com/ReneBoedker/algobra/finitefield/ff"
 )
@@ -258,7 +259,25 @@ func TestPow(t *testing.T) {
 }
 
 func TestGenerator(t *testing.T) {
-	for _, p := range []uint{2, 3, 5, 7, 11} {
+	// Generate a list of prime field sizes to check
+	primes := []uint{2, 3}
+	maxSize := 101
+	if !testing.Short() {
+		maxSize = 9001
+	}
+
+	for i := 6; i+1 <= maxSize; i += 6 {
+		for j := -1; j <= 1; j += 2 {
+			// Every prime apart from 2 and 3 has the form 6k+1 or 6k-1
+			factors, exponents := auxmath.Factorize(uint(i + j))
+			if len(factors) != 1 || exponents[0] != 1 {
+				continue
+			}
+			primes = append(primes, uint(i+j))
+		}
+	}
+
+	for _, p := range primes {
 		unique := make(map[uint]struct{})
 
 		field, err := Define(p)
